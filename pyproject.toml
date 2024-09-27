@@ -1,12 +1,18 @@
 [tool.poetry]
 name = "motives"
-version = "0.1.0"
+version = "0.0.0.dev01"
 description = ""
-authors = ["Daniel Sánchez Sánchez <>", "David Alfaya Sánchez <dalfaya@icai.comillas.edu>", "Jaime Pizarroso <jpizarroso@comillas.edu>"]
+authors = ["Daniel Sánchez Sánchez <danielsanchezs1905@gmail.com>", "David Alfaya Sánchez <dalfaya@icai.comillas.edu>", "Jaime Pizarroso <jpizarroso@comillas.edu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+numpy = "1.26.2"
+sympy = "1.12"
+multipledispatch = "1.0.0"
+gmpy2 = "2.2.1"
+tqdm = "4.66.5"
+typeguard = "4.3.0"
 
 
 [build-system]
