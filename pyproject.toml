@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "motives"
+version = "0.1.0"
+description = ""
+authors = ["Daniel Sánchez Sánchez <>", "David Alfaya Sánchez <dalfaya@icai.comillas.edu>", "Jaime Pizarroso <jpizarroso@comillas.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
