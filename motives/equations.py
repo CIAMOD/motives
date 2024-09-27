@@ -1,6 +1,6 @@
-from src.expression_tree import ET, Curve, Lefschetz, Integer, Symbol, Add
-from src.utils import *
-from src.grothGroupContext import GrothGroupContext
+from motives.expression_tree import ET, Curve, Lefschetz, Integer, Symbol, Add
+from motives.utils import *
+from motives.grothGroupContext import GrothGroupContext
 
 import math
 import sympy as sp

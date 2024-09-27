@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.grothGroupContext import GrothGroupContext
-from src.utils import expr_from_pol
+from motives.grothGroupContext import GrothGroupContext
+from motives.utils import expr_from_pol
 
 import sympy as sp
 from sympy.polys.rings import PolyElement

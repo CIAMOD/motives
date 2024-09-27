@@ -1,5 +1,5 @@
 import sympy as sp
-from src.utils import generate_partitions, multinomial_coeff
+from motives.utils import generate_partitions, multinomial_coeff
 from functools import reduce
 
 
