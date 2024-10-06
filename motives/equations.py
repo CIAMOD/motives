@@ -1,6 +1,6 @@
-from motives.expression_tree import ET, Curve, Lefschetz, Integer, Symbol, Add
+from motives.core import ET, Curve, Lefschetz, Integer, Symbol, Add
 from motives.utils import *
-from motives.grothGroupContext import GrothGroupContext
+from motives.core import LambdaContext
 
 import math
 import sympy as sp
@@ -143,7 +143,7 @@ class DavidR:
         )
 
     def simplify(
-        self, group_context: GrothGroupContext = None, *, verbose: int = 0
+        self, group_context: LambdaContext = None, *, verbose: int = 0
     ) -> PolyElement:
         """
         Transforms the mozgovoy equation to lambda's and cancels it
@@ -154,9 +154,9 @@ class DavidR:
         result: sp.Poly = 0
         domain = QQ[[self.lef.L_VAR] + self.cur.curve_hodge.lambda_symbols[1:]]
 
-        # Initialize a GrothGroupContext that will be reused for all the vhs
+        # Initialize a LambdaContext that will be reused for all the vhs
         if group_context is None:
-            group_context = GrothGroupContext()
+            group_context = LambdaContext()
 
         if verbose > 0:
             print("Grothendieck group context computed")
@@ -264,7 +264,7 @@ class MozR:
     def moz_lambdas(
         self,
         r: int,
-        group_context: GrothGroupContext = None,
+        group_context: LambdaContext = None,
         *,
         verbose: int = 0,
     ) -> PolyElement:
@@ -301,7 +301,7 @@ class MozR:
         if self.coeff == {}:
 
             if group_context is None:
-                group_context = GrothGroupContext()
+                group_context = LambdaContext()
             sp_M_sum = self.gen_f.to_lambda(group_context=group_context)
 
             if verbose > 0:
@@ -382,7 +382,7 @@ def compare_equation(
     """
     start = perf_counter()
 
-    group_context = GrothGroupContext()
+    group_context = LambdaContext()
 
     # Compute the Mozgovoy formula of rank r using Mozgovoy's derivation
     moz = MozR(g=g, p=p, r_max=r)

@@ -14,7 +14,6 @@ gmpy2 = "2.2.1"
 tqdm = "4.66.5"
 typeguard = "4.3.0"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
