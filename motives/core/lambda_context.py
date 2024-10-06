@@ -3,7 +3,7 @@ from motives.utils import generate_partitions, multinomial_coeff
 from functools import reduce
 
 
-class GrothGroupContext:
+class LambdaContext:
     """
     A class representing a Grothendieck group context.
 
@@ -549,9 +549,9 @@ class GrothGroupContext:
 if __name__ == "__main__":
     from time import perf_counter
 
-    groth_old = GrothGroupContext(mode="old")
-    groth_rec = GrothGroupContext(mode="recurrent")
-    groth_part = GrothGroupContext(mode="partitions")
+    groth_old = LambdaContext(mode="old")
+    groth_rec = LambdaContext(mode="recurrent")
+    groth_part = LambdaContext(mode="partitions")
 
     n = 15
 
