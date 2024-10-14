@@ -1,145 +1,237 @@
 import sympy as sp
+from sympy.printing.str import StrPrinter
 
-from ..node import Node
+from ..expr import Expr
 from ..operand import Operand
-from ..lambda_context import LambdaContext
+from ..groth_ring_context import GrothendieckRingContext
 
-from .unary_operator import UnaryOperator
-from .nary_operator import NaryOperator
 
-class RingOperator(UnaryOperator):
+class RingOperator(Expr, sp.Function):
     """
-    An abstract node in an expression tree that represents a ring operator.
+    Represents an abstract ring operator in an expression tree.
 
-    Parameters:
+    The `RingOperator` class is an abstract base class that represents the three
+    ring operators: lambda, sigma, and adams. It serves as a parent class for these
+    specific ring operators in an expression. Each `RingOperator` has a degree and 
+    a child expression to which the operator is applied.
+
+    Attributes:
     -----------
-    degree : int
-        The degree of the ring operator.
-    child : Node
-        The child node of the ring operator.
-    parent : Node
-        The parent node of the ring operator.
-    """
-
-    def __init__(self, degree: int, child: Node, parent: Node = None):
-        super().__init__(child, parent)
-        self.degree: int = degree
-
-    def _get_max_adams_degree(self) -> int:
-        """
-        Returns the maximum adams degree of this subtree once converted to an adams
-        polynomial.
-        """
-        return self.degree * self.child._get_max_adams_degree()
-
-    @property
-    def sympy(self) -> sp.Symbol:
-        """
-        The sympy representation of the ring operator.
-        """
-        return sp.Function(f"{self}")(self.child.sympy)
-    
-
-class Sigma(RingOperator):
-    """
-    A unary operator node in an expression tree that represents the sigma operation.
-
-    Parameters:
-    -----------
-    degree : int
-        The degree of the sigma operator.
-    child : Node
-        The child node of the sigma operator.
-    parent : Node
-        The parent node of the sigma operator.
+    args : tuple[sp.Integer, Expr]
+        The arguments of the ring operator, where the first element is the degree 
+        (an integer) and the second element is the child expression.
 
     Properties:
     -----------
-    sympy : sp.Symbol
-        The sympy representation of the sigma operator.
+    degree : int
+        The degree of the ring operator.
+    child : Expr
+        The child node (expression) to which the ring operator is applied.
     """
 
-    def __init__(self, degree: int, child: Node, parent: Node = None):
-        super().__init__(degree, child, parent)
+    args: tuple[sp.Integer, Expr]
+
+    @property
+    def degree(self) -> int:
+        """
+        The degree of the ring operator.
+
+        The degree is the first argument passed to the ring operator, which represents
+        the power or level of the operation applied to the child node.
+
+        Returns:
+        --------
+        int
+            The degree of the ring operator.
+        """
+        return self.args[0].p
+
+    @property
+    def child(self) -> Expr:
+        """
+        The child node of the ring operator.
+
+        The child is the expression to which the ring operator is applied. It is 
+        the second argument of the ring operator.
+
+        Returns:
+        --------
+        Expr
+            The child expression of the ring operator.
+        """
+        return self.args[1]
+
+    def get_max_adams_degree(self) -> int:
+        """
+        Computes the maximum Adams degree of this tree.
+
+        The Adams degree of the tree is calculated by multiplying the degree of this 
+        ring operator with the maximum Adams degree of its child expression. This 
+        method recursively computes the maximum value by traversing all branches of the 
+        tree.
+
+        Returns:
+        --------
+        int
+            The maximum Adams degree of the expression tree once converted to an Adams polynomial.
+        """
+        return self.degree * self.child.get_max_adams_degree()
+
+class Sigma(RingOperator):
+    """
+    Represents the sigma ring operator in an expression tree.
+
+    The `Sigma` class is a specific type of `RingOperator` that applies the sigma operation
+    to an expression. It should be created using `Sigma(degree, child)`, where `degree`
+    is the degree of the sigma operator, and `child` is the expression to which the sigma
+    operator is applied.
+
+    Methods:
+    --------
+    __repr__() -> str:
+        Returns the string representation of the sigma operator.
+
+    _sympystr(printer: StrPrinter) -> str:
+        Returns the SymPy string representation of the sigma operator.
+
+    get_max_groth_degree() -> int:
+        Computes the maximum sigma or lambda degree needed to create a Grothendieck context
+        for the expression tree.
+
+    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        Converts the sigma subtree into an equivalent Adams polynomial.
+
+    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+        Converts the sigma subtree into an equivalent Adams polynomial, optimized when called 
+        from `to_lambda`.
+    """
 
     def __repr__(self) -> str:
-        return f"σ{self.degree}"
+        """
+        Returns the string representation of the sigma operator.
 
-    def _get_max_groth_degree(self) -> int:
+        Returns:
+        --------
+        str
+            A string representation in the form "σ{degree}(child)".
         """
-        Returns the degree of the highest degree sigma or lambda operator in the tree.
-        """
-        return max(self.degree, self.child._get_max_groth_degree())
+        return f"σ{self.degree}({self.child})"
 
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    def _sympystr(self, printer: StrPrinter) -> str:
         """
-        Converts this subtree into an equivalent adams polynomial. It calls _to_adams
-        on the child, then gets the jth adams of the result (j from 0 to its degree)
-        and substitutes it in the adams_to_sigma polynomial.
+        Returns the SymPy string representation of the sigma operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The SymPy printer used to generate the string representation.
+
+        Returns:
+        --------
+        str
+            The string representation of the sigma operator in the form "σ{degree}(child)".
+        """
+        return f"σ{self.degree}({printer._print(self.child)})"
+
+    def get_max_groth_degree(self) -> int:
+        """
+        Computes the maximum sigma or lambda degree required for the Grothendieck context.
+
+        The maximum degree is the higher of the sigma operator's degree or the maximum degree
+        of the child node.
+
+        Returns:
+        --------
+        int
+            The maximum sigma or lambda degree required for the tree.
+        """
+        return max(self.degree, self.child.get_max_groth_degree())
+
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        """
+        Converts the sigma subtree into an equivalent Adams polynomial.
+
+        This method converts the sigma operator into its corresponding Adams polynomial
+        by first converting the child to its Adams form, then applying Adams operators to 
+        the result. Finally, the Adams polynomials are substituted into the sigma to Adams 
+        conversion polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the sigma subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Get the polynomial that arrives to the sigma operator by calling _to_adams on the child
-        ph = self.child._to_adams(operands, group_context)
+        # Get the polynomial by calling _to_adams on the child
+        ph = self.child._to_adams(operands, gc)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
-        # Apply the adams operators to the polynomials in the list
+        # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_sigma = group_context.get_adams_2_sigma_pol(self.degree)
+        adams_to_sigma = gc.get_adams_2_sigma_pol(self.degree)
 
-        # Substitute the jth polynomial for the adams of degree j in the adams_to_sigma polynomial
+        # Substitute the jth polynomial for the Adams of degree j in the adams_to_sigma polynomial
         return adams_to_sigma.xreplace(
-            {group_context.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        group_context: LambdaContext,
+        gc: GrothendieckRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
-        Converts this subtree into an equivalent adams polynomial, when applying
-        to_lambda. Keeps some lambda variables as they are.
+        Converts the sigma subtree into an equivalent Adams polynomial, optimized for lambda conversion.
 
-        Parameters
-        ----------
+        This method is similar to `_to_adams`, but it includes an optimization when the sigma operator
+        is being converted directly to lambda in the `to_lambda` method. If the child is an operand and
+        there are no Adams operators above, the sigma operator can be converted to lambda directly.
+
+        Args:
+        -----
         operands : set[Operand]
-            The operands in the tree.
-        group_context : LambdaContext
-            The group context of the tree.
-        adams_degree : int
-            The degree of the adams operators on top of this node.
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        adams_degree : int, optional
+            The sum of the degree of all Adams operators higher than this node in the expression tree,
+            default is 1.
 
-        Returns
-        -------
-        The equivalent adams polynomial with some lambda variables.
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the sigma subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Optimization: if the child is an operand and there are no adams operators on top,
-        # we can convert the sigma to lambda directly
+        # Optimization: If the child is an operand and there are no Adams operators on top,
+        # convert sigma directly to lambda
         if isinstance(self.child, Operand) and adams_degree == 1:
-            lambda_to_sigma = group_context.get_lambda_2_sigma_pol(self.degree)
+            lambda_to_sigma = gc.get_lambda_2_sigma_pol(self.degree)
             return lambda_to_sigma.xreplace(
                 {
-                    group_context.lambda_vars[i]: self.child.get_lambda_var(i)
+                    gc.lambda_vars[i]: self.child.get_lambda_var(i, gc)
                     for i in range(self.degree + 1)
                 }
             )
 
-        # Get the polynomial that arrives to the sigma operator by calling _to_adams on the child
-        ph = self.child._to_adams_lambda(
-            operands, group_context, adams_degree + self.degree
-        )
+        # Get the polynomial by calling _to_adams on the child
+        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
@@ -147,107 +239,167 @@ class Sigma(RingOperator):
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
-        # Apply the adams operators to the polynomials in the list
+        # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_sigma = group_context.get_adams_2_sigma_pol(self.degree)
+        adams_to_sigma = gc.get_adams_2_sigma_pol(self.degree)
 
-        # Substitute the jth polynomial for the adams of degree j in the adams_to_sigma polynomial
+        # Substitute the jth polynomial for the Adams of degree j in the adams_to_sigma polynomial
         return adams_to_sigma.xreplace(
-            {group_context.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
-    
-class Lambda(RingOperator):
-    """
-    A unary operator node in an expression tree that represents the lambda operation.
 
-    Parameters:
-    -----------
-    degree : int
-        The degree of the lambda operator.
-    child : Node
-        The child node of the lambda operator.
-    parent : Node
-        The parent node of the lambda operator.
+class Lambda_(RingOperator):
     """
+    Represents the lambda ring operator in an expression tree.
 
-    def __init__(self, degree: int, child: Node, parent: Node = None):
-        super().__init__(degree, child, parent)
+    The `Lambda_` class is a specific type of `RingOperator` that applies the lambda operation
+    to an expression. It should be created using `Lambda_(degree, child)`, where `degree`
+    is the degree of the lambda operator, and `child` is the expression to which the lambda
+    operator is applied.
+
+    Methods:
+    --------
+    __repr__() -> str:
+        Returns the string representation of the lambda operator.
+
+    _sympystr(printer: StrPrinter) -> str:
+        Returns the SymPy string representation of the lambda operator.
+
+    get_max_groth_degree() -> int:
+        Computes the maximum sigma or lambda degree needed to create a Grothendieck context
+        for the expression tree.
+
+    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        Converts the lambda subtree into an equivalent Adams polynomial.
+
+    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+        Converts the lambda subtree into an equivalent Adams polynomial, optimized when called
+        from `to_lambda`.
+    """
 
     def __repr__(self) -> str:
-        return f"λ{self.degree}"
+        """
+        Returns the string representation of the lambda operator.
 
-    def _get_max_groth_degree(self) -> int:
+        Returns:
+        --------
+        str
+            A string representation in the form "λ{degree}(child)".
         """
-        Returns the degree of the highest degree sigma or lambda operator in the tree.
-        """
-        return max(self.degree, self.child._get_max_groth_degree())
+        return f"λ{self.degree}({self.child})"
 
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    def _sympystr(self, printer: StrPrinter) -> str:
         """
-        Converts this subtree into an equivalent adams polynomial. It calls _to_adams
-        on the child, then gets the jth adams of the result (j from 0 to its degree)
-        and substitutes it in the adams_to_lambda polynomial.
+        Returns the SymPy string representation of the lambda operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The SymPy printer used to generate the string representation.
+
+        Returns:
+        --------
+        str
+            The string representation of the lambda operator in the form "λ{degree}(child)".
+        """
+        return f"λ{self.degree}({printer._print(self.child)})"
+
+    def get_max_groth_degree(self) -> int:
+        """
+        Computes the maximum sigma or lambda degree required for the Grothendieck context.
+
+        The maximum degree is the higher of the lambda operator's degree or the maximum degree
+        of the child node.
+
+        Returns:
+        --------
+        int
+            The maximum sigma or lambda degree required for the tree.
+        """
+        return max(self.degree, self.child.get_max_groth_degree())
+
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        """
+        Converts the lambda subtree into an equivalent Adams polynomial.
+
+        This method converts the lambda operator into its corresponding Adams polynomial
+        by first converting the child to its Adams form, then applying Adams operators to
+        the result. Finally, the Adams polynomials are substituted into the lambda to Adams
+        conversion polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the lambda subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Get the polynomial that arrives to the lambda operator by calling _to_adams on the child
-        ph = self.child._to_adams(operands, group_context)
+        # Get the polynomial by calling _to_adams on the child
+        ph = self.child._to_adams(operands, gc)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
-        # Apply the adams operators to the polynomials in the list
+        # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_lambda = group_context.get_adams_2_lambda_pol(self.degree)
+        adams_to_lambda = gc.get_adams_2_lambda_pol(self.degree)
 
-        # Substitute the jth polynomial for the adams of degree j in the adams_to_lambda polynomial
+        # Substitute the jth polynomial for the Adams of degree j in the adams_to_lambda polynomial
         return adams_to_lambda.xreplace(
-            {group_context.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        group_context: LambdaContext,
+        gc: GrothendieckRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
-        Converts this subtree into an equivalent adams polynomial, when applying
-        to_lambda. Keeps some lambda variables as they are.
+        Converts the lambda subtree into an equivalent Adams polynomial, optimized for lambda conversion.
 
-        Parameters
-        ----------
+        This method is similar to `_to_adams`, but it includes an optimization when the lambda operator
+        is being converted directly to lambda in the `to_lambda` method. If the child is an operand and
+        there are no Adams operators above, the lambda operator can be converted directly.
+
+        Args:
+        -----
         operands : set[Operand]
-            The operands in the tree.
-        group_context : LambdaContext
-            The group context of the tree.
-        adams_degree : int
-            The degree of the adams operators on top of this node.
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        adams_degree : int, optional
+            The sum of the degree of all Adams operators higher than this node in the expression tree,
+            default is 1.
 
-        Returns
-        -------
-        The equivalent adams polynomial with some lambda variables.
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the lambda subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Optimization: if the child is an operand and there are no adams operators on top,
-        # we can return the lambda variable directly
+        # Optimization: If the child is an operand and there are no Adams operators on top,
+        # return the lambda variable directly
         if isinstance(self.child, Operand) and adams_degree == 1:
-            return self.child.get_lambda_var(self.degree)
+            return self.child.get_lambda_var(self.degree, gc)
 
-        # Get the polynomial that arrives to the lambda operator by calling _to_adams on the child
-        ph = self.child._to_adams_lambda(
-            operands, group_context, adams_degree + self.degree
-        )
+        # Get the polynomial by calling _to_adams_lambda on the child
+        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
@@ -255,87 +407,118 @@ class Lambda(RingOperator):
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
-        # Apply the adams operators to the polynomials in the list
+        # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_lambda = group_context.get_adams_2_lambda_pol(self.degree)
+        adams_to_lambda = gc.get_adams_2_lambda_pol(self.degree)
 
-        # Substitute the jth polynomial for the adams of degree j in the adams_to_lambda polynomial
+        # Substitute the jth polynomial for the Adams of degree j in the adams_to_lambda polynomial
         return adams_to_lambda.xreplace(
-            {group_context.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
-    
+
 class Adams(RingOperator):
     """
-    A unary operator node in an expression tree that represents the lambda operation.
+    Represents the Adams ring operator in an expression tree.
 
-    Parameters:
-    -----------
-    degree : int
-        The degree of the lambda operator.
-    child : Node
-        The child node of the lambda operator.
-    parent : Node
-        The parent node of the lambda operator.
+    The `Adams` class is a specific type of `RingOperator` that applies the Adams operation
+    to an expression. It should be created using `Adams(degree, child)`, where `degree`
+    is the degree of the Adams operator, and `child` is the expression to which the Adams
+    operator is applied.
+
+    Methods:
+    --------
+    __repr__() -> str:
+        Returns the string representation of the Adams operator.
+
+    _sympystr(printer: StrPrinter) -> str:
+        Returns the SymPy string representation of the Adams operator.
+
+    get_max_groth_degree() -> int:
+        Computes the maximum sigma or lambda degree needed to create a Grothendieck context
+        for the expression tree.
+
+    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        Converts the Adams subtree into an equivalent Adams polynomial.
+
+    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+        Converts the Adams subtree into an equivalent Adams polynomial, optimized when called 
+        from `to_lambda`.
     """
 
-    def __init__(self, degree: int, child: Node, parent: Node = None):
-        super().__init__(degree, child, parent)
-
     def __repr__(self) -> str:
-        return f"ψ{self.degree}"
-
-    def _get_max_groth_degree(self) -> int:
         """
-        Returns the degree of the highest degree sigma or lambda operator in the tree.
+        Returns the string representation of the Adams operator.
+
+        Returns:
+        --------
+        str
+            A string representation in the form "ψ{degree}(child)".
         """
-        return self.child._get_max_groth_degree()
+        return f"ψ{self.degree}({self.child})"
 
-    def to_adams_local(self):
-        if isinstance(self.child, Adams):
-            # We add the degrees of the Adams operators and remove the child
-            self.degree += self.child.degree
-            self.child = self.child.child
-            self.child.parent = self
-
-        elif isinstance(self.child, NaryOperator):
-            # We move the Adams operator as the children of the NaryOperator,
-            # using that it is additive and multiplicative
-            for child in self.child.children.copy():
-                new_adams = Adams(self.degree, child, self.child)
-                child.parent = new_adams
-                self.child.children.remove(child)
-                self.child.children.add(new_adams)
-                new_adams.to_adams()  # We repeat the process for the new Adams operator
-
-            # We remove the Adams operator from the tree, now that it is moved
-            if isinstance(self.parent, UnaryOperator):
-                self.parent.child = self.child
-            elif isinstance(self.parent, NaryOperator):
-                self.parent.children.remove(self)
-                self.parent.children.add(self.child)
-
-            self.child.parent = self.parent
-
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    def _sympystr(self, printer: StrPrinter) -> str:
         """
-        Converts this subtree into an equivalent adams polynomial. Calls _to_adams on the
-        child, then returns the `self.degree` adams of the result.
+        Returns the SymPy string representation of the Adams operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The SymPy printer used to generate the string representation.
+
+        Returns:
+        --------
+        str
+            The string representation of the Adams operator in the form "ψ{degree}(child)".
+        """
+        return f"ψ{self.degree}({printer._print(self.child)})"
+
+    def get_max_groth_degree(self) -> int:
+        """
+        Computes the maximum sigma or lambda degree required for the Grothendieck context.
+
+        Since the Adams operator does not change the Grothendieck degree, this method
+        returns the maximum Grothendieck degree of the child node.
+
+        Returns:
+        --------
+        int
+            The maximum sigma or lambda degree required for the tree.
+        """
+        return self.child.get_max_groth_degree()
+
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+        """
+        Converts the Adams subtree into an equivalent Adams polynomial.
+
+        This method converts the child expression into its Adams form, then applies the
+        Adams operator to the result. If the degree is 1, it directly returns the child.
+        For higher degrees, it applies the Adams operator to all operands in the expression.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the Adams subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Get the polynomial that arrives to the Adams operator by calling _to_adams on the child
-        ph = self.child._to_adams(operands, group_context)
+        # Get the polynomial by calling _to_adams on the child
+        ph = self.child._to_adams(operands, gc)
 
         if self.degree == 1:
             return ph
 
-        # Add the degree of the adams operator to all the operands
+        # Apply the Adams operator to all operands
         for operand in operands:
             ph = operand._to_adams(self.degree, ph)
 
@@ -344,38 +527,42 @@ class Adams(RingOperator):
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        group_context: LambdaContext,
+        gc: GrothendieckRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
-        Converts this subtree into an equivalent adams polynomial, when applying
-        to_lambda. Keeps some lambda variables as they are.
+        Converts the Adams subtree into an equivalent Adams polynomial, optimized for lambda conversion.
 
-        Parameters
-        ----------
+        This method is similar to `_to_adams`, but it includes an optimization when the Adams operator
+        is being converted directly to lambda in the `to_lambda` method. The child expression is first
+        converted to its Adams form, and if the degree is higher than 1, the Adams operator is applied
+        to all operands in the expression.
+
+        Args:
+        -----
         operands : set[Operand]
-            The operands in the tree.
-        group_context : LambdaContext
-            The group context of the tree.
-        adams_degree : int
-            The degree of the adams operators on top of this node.
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        adams_degree : int, optional
+            The sum of the degree of all Adams operators higher than this node in the expression tree,
+            default is 1.
 
-        Returns
-        -------
-        The equivalent adams polynomial with some lambda variables.
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to the Adams subtree.
         """
         if self.degree == 0:
-            return 1
+            return sp.Integer(1)
 
-        # Get the polynomial that arrives to the Adams operator by calling _to_adams on the child
-        ph = self.child._to_adams_lambda(
-            operands, group_context, adams_degree + self.degree
-        )
+        # Get the polynomial by calling _to_adams_lambda on the child
+        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
 
-        # Add the degree of the adams operator to all the operands
+        # Apply the Adams operator to all operands
         for operand in operands:
             ph = operand._to_adams(self.degree, ph)
 

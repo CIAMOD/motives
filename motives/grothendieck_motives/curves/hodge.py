@@ -7,8 +7,7 @@ from sympy.polys.rings import PolyElement
 
 from ...utils import expr_from_pol
 
-from ...core.operator.nary_operator import Add
-from ...core.lambda_context import LambdaContext
+from ...core import GrothendieckRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
@@ -16,95 +15,157 @@ from ..lefschetz import Lefschetz
 
 ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
 
-class Hodge(Motive):
+class Hodge(Motive, sp.AtomicExpr):
     """
-    An operand node in an expression tree that represents a Hodge motive.
+    Represents a Hodge motive for a curve in an expression tree.
 
-    Parameters:
+    A `Hodge` object is initialized with a name and genus (g), and it allows the generation
+    of Adams and Lambda variables based on the genus. It supports operations such as applying
+    Adams or Lambda operators, generating Adams and Lambda variables, and computing generating functions.
+
+    Attributes:
     -----------
-    value : sympy.Symbol
-        The value of the Hodge motive, i.e. how it is represented. It is
-        the same as the value of its curve.
     g : int
-        The genus of the Hodge motive. It is the same as the genus of its curve.
-    parent : Node
-        The parent node of the Hodge motive.
-    id_ : hashable
-        The id of the Hodge motive, used to identify it (if two operands
-        have the same id, they are the same operand).
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current Hodge motive.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current Hodge motive.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current Hodge motive.
-    Z(t: Operand | int) -> ET
-        Returns the generating function of the Hodge curve.
-
-    Properties:
-    -----------
-    sympy : sp.Symbol
-        The sympy representation of the Hodge motive.
+        The genus of the curve, which defines the degree limits of the Adams and Lambda operators.
+    name : str
+        The name of the Hodge motive.
+    lambda_symbols : list[sp.AtomicExpr]
+        A list of Lambda symbols generated for the Hodge motive.
+    _domain : sp.Domain
+        The domain used for the polynomial ring of Lambda operators.
+    _ring : PolyRing
+        The polynomial ring for the Hodge motive.
+    _domain_symbols : list[PolyElement]
+        The list of domain symbols used in the polynomial ring.
+    _lef_symbol : PolyElement
+        The Lefschetz motive symbol.
+    _px_inv : list[sp.Expr]
+        The list of inverse expressions used for Adams and Lambda conversions.
+    _lambda_vars_pol : list[PolyElement]
+        The list of polynomials representing Lambda variables.
+    _lambda_vars : list[sp.Expr]
+        The list of expressions representing Lambda variables.
+    _lambda_to_adams_pol : list[PolyElement]
+        The list of polynomials for converting Lambda to Adams variables.
+    _lambda_to_adams : list[sp.Expr]
+        The list of expressions for converting Lambda to Adams variables.
+    _adams_vars : list[sp.Expr]
+        The list of Adams variables generated for the Hodge motive.
     """
 
-    def __init__(
-        self, value: sp.Symbol | str, g: int = 1, parent=None, id_=None
-    ) -> None:
-        self.g: int = g
-        if isinstance(value, str):
-            value = sp.Symbol(value)
-        self.value: sp.Symbol = value
-        super().__init__(parent, id_)
+    def __new__(cls, name: str, g: int = 1, *args, **kwargs):
+        """
+        Creates a new instance of `Hodge`.
 
-        self.lambda_symbols: list[sp.Symbol] = [
-            1,
-            *[sp.Symbol(f"a{i}(h_{self.value})") for i in range(1, g + 1)],
+        Args:
+        -----
+        name : str
+            The name of the Hodge motive.
+        g : int, optional
+            The genus of the curve, default is 1.
+
+        Returns:
+        --------
+        Hodge
+            A new instance of `Hodge`.
+        """
+        new_hodge = sp.AtomicExpr.__new__(cls)
+        new_hodge._assumptions["commutative"] = True
+        return new_hodge
+
+    def __init__(self, name: str, g: int = 1, *args, **kwargs):
+        """
+        Initializes a `Hodge` instance.
+
+        Args:
+        -----
+        name : str
+            The name of the Hodge motive.
+        g : int, optional
+            The genus of the curve, default is 1.
+        """
+        self.g: int = g
+        self.name: str = name
+
+        # Lambda symbols and domain setup
+        self.lambda_symbols: list[sp.AtomicExpr] = [
+            sp.Integer(1),
+            self,
+            *[sp.Symbol(f"a{i}({self})") for i in range(2, g + 1)],
         ]
 
-        self._domain = sp.ZZ[[Lefschetz.L_VAR] + self.lambda_symbols[1:]]
+        self._domain: sp.Domain = sp.ZZ[[Lefschetz()] + self.lambda_symbols[1:]]
         self._ring: PolyRing = self._domain.ring
-        self._domain_symbols = [1] + [
+        self._domain_symbols: list[PolyElement] = [self._domain.one] + [
             self._domain(var) for var in self.lambda_symbols[1:]
         ]
-        self.lef_symbol = self._domain(Lefschetz.L_VAR)
+        self._lef_symbol: PolyElement = self._domain(Lefschetz())
 
-        self._px_inv: list[sp.Expr] = [1]
+        # Adams and Lambda variable setup
+        self._px_inv: list[sp.Expr] = [sp.Integer(1)]
         self._lambda_vars_pol: list[PolyElement] = [
             (
                 self._domain_symbols[i]
                 if i <= self.g
                 else self._domain_symbols[2 * self.g - i]
-                * self.lef_symbol ** (i - self.g)
+                * self._lef_symbol ** (i - self.g)
             )
             for i in range(2 * self.g + 1)
         ]
-        self._lambda_vars = [1] + [
+        self._lambda_vars = [sp.Integer(1)] + [
             expr_from_pol(pol) for pol in self._lambda_vars_pol[1:]
         ]
-        self._lambda_to_adams_pol: list[PolyElement] = [0]
-        self.lambda_to_adams: list[sp.Expr] = [0]
-        self._adams_vars: list[sp.Symbol] = [1, sp.Symbol(f"ψ_1(h_{self.value})")]
+        self._lambda_to_adams_pol: list[PolyElement] = [self._domain.zero]
+        self._lambda_to_adams: list[sp.Expr] = [sp.Integer(0)]
+        self._adams_vars: list[sp.Expr] = [sp.Integer(1), self]
 
     def __repr__(self) -> str:
-        return f"h_{self.value}"
+        """
+        Returns the string representation of the Hodge motive.
+
+        Returns:
+        --------
+        str
+            A string representation in the form of "h{g}_{name}".
+        """
+        return f"h{self.g}_{self.name}"
+
+    def _hashable_content(self) -> tuple:
+        """
+        Returns the hashable content of the Hodge motive.
+
+        Returns:
+        --------
+        tuple
+            A tuple containing the name and genus.
+        """
+        return (self.name, self.g)
 
     def _generate_adams_vars(self, n: int) -> None:
         """
-        Generates the adams variables needed up to degree n.
+        Generates the necessary Adams variables up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Adams variables to generate.
         """
         self._adams_vars += [
-            sp.Symbol(f"ψ_{i}(h_{self.value})")
-            for i in range(len(self._adams_vars), n + 1)
+            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
         ]
 
     def _generate_lambda_vars(self, n: int) -> None:
         """
-        Generates the lambda variables needed up to degree n.
+        Generates the necessary Lambda variables up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Lambda variables to generate.
         """
-        self._lambda_vars_pol += [0] * (n - len(self._lambda_vars_pol) + 1)
+        self._lambda_vars_pol += [self._domain.zero] * (
+            n - len(self._lambda_vars_pol) + 1
+        )
         self._generate_inverse(n)
 
         for i in range(len(self._lambda_to_adams_pol), n + 1):
@@ -117,81 +178,91 @@ class Hodge(Motive):
                 )
             )
 
-    def get_adams_var(self, i: int) -> sp.Symbol:
+    def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the adams variable of degree i.
+        Returns the Hodge motive with an Adams operation applied to it.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the adams variable.
+            The degree of the Adams operator.
 
-        Returns
-        -------
-        The adams variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The Hodge motive with the Adams operator applied.
         """
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int) -> sp.Symbol | int:
+    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
         """
-        Returns the lambda variable of degree i.
+        Returns the Hodge motive with a Lambda operation applied to it.
 
-        Parameters
-        ----------
+        For Lambda operations with degree greater than 2g, the result is 0.
+
+        Args:
+        -----
         i : int
-            The degree of the lambda variable.
+            The degree of the Lambda operator.
+        context : GrothendieckRingContext, optional
+            The ring context used for conversion between operators.
 
-        Returns
-        -------
-        The lambda variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The Hodge motive with the Lambda operator applied, or 0 if the degree exceeds 2g.
         """
-        return 0 if i >= len(self._lambda_vars) else self._lambda_vars[i]
+        return sp.Integer(0) if i >= len(self._lambda_vars) else self._lambda_vars[i]
 
     @typechecked
-    def Z(self, t: Operand | int | ET) -> ET:
+    def Z(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Returns the generating function of the hodge curve.
+        Computes the generating function of the Hodge curve.
 
-        Parameters
-        ----------
-        t : Operand or int or ET
+        The generating function is Σ_{i=0}^{2g} λ_i * t^i.
+
+        Args:
+        -----
+        t : int or sp.Expr
             The variable to use in the generating function.
 
-        Returns
-        -------
-        The generating function of the hodge curve.
+        Returns:
+        --------
+        sp.Expr
+            The generating function of the Hodge curve.
         """
         l = Lefschetz()
 
-        from ...core.expression_tree import ET as exp_tree  # Local import to avoid circular dependency
-        et = exp_tree(
-            Add(
-                [
-                    (
-                        self.lambda_(i) * t**i
-                        if i <= self.g
-                        else self.lambda_(2 * self.g - i) * l ** (i - self.g) * t**i
-                    )
-                    for i in range(2 * self.g + 1)
-                ]
-            )
+        et = sp.Add(
+            *[
+                (
+                    self.lambda_(i) * t**i
+                    if i <= self.g
+                    else self.lambda_(2 * self.g - i) * l ** (i - self.g) * t**i
+                )
+                for i in range(2 * self.g + 1)
+            ]
         )
 
         return et
 
-    @dispatch(int, int)
-    def _to_adams(self, degree: int, ph: int) -> int:
-        """
-        Catches the case where the polynomial is an integer.
-        """
-        return ph
-
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this hodge
-        motive in the polynomial `ph`.
+        Applies Adams operations to any instances of this Hodge motive in a polynomial.
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which the Adams operator is applied.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with Adams operators applied to the Hodge motive.
         """
         max_adams = -1
         operands = ph.free_symbols
@@ -207,18 +278,33 @@ class Hodge(Motive):
             }
         )
 
-    @dispatch(set, LambdaContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    @dispatch(set, GrothendieckRingContext)
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
         """
-        Returns the adams of degree 1 of the hodge motive.
+        Converts this subtree into an equivalent Adams polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for conversion between operators.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial equivalent to this subtree.
         """
         return self.get_adams_var(1)
 
     def _generate_inverse(self, n: int) -> None:
         """
-        Fills the inverse list with the first n elements of the inverse Hodge curve.
+        Fills the inverse list up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of the inverse needed.
         """
         for m in range(len(self._px_inv), n + 1):
             self._px_inv.append(
@@ -228,12 +314,25 @@ class Hodge(Motive):
                 )
             )
 
-    def _subs_adams(self, group_context: LambdaContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes any instances of an adams of this hodge motive (ψ_d(hodge)) into its
-        equivalent polynomial of lambdas.
+        Substitutes Adams variables for equivalent Lambda polynomials in the given polynomial.
+
+        This method is called during the `to_lambda` process to convert Adams variables 
+        that appear after converting the expression tree to an Adams polynomial.
+
+        Args:
+        -----
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for conversion between operators.
+        ph : sp.Expr
+            The polynomial in which to substitute the Adams variables.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with Adams variables substituted by equivalent Lambda polynomials.
         """
-        # Find the maximum adams degree of this variable in the polynomial
         max_adams = -1
         operands = ph.free_symbols
         for i, adams in reversed(list(enumerate(self._adams_vars))):
@@ -244,22 +343,15 @@ class Hodge(Motive):
         # Generate the lambda_to_adams polynomials up to the degree needed
         self._generate_lambda_vars(len(self._adams_vars) - 1)
 
-        for i in range(len(self.lambda_to_adams), max_adams + 1):
-            self.lambda_to_adams.append(expr_from_pol(self._lambda_to_adams_pol[i]))
+        for i in range(len(self._lambda_to_adams), max_adams + 1):
+            self._lambda_to_adams.append(expr_from_pol(self._lambda_to_adams_pol[i]))
 
-        # Substitute the adams variables into the polynomial
+        # Substitute the Adams variables into the polynomial
         ph = ph.xreplace(
             {
-                self.get_adams_var(i): self.lambda_to_adams[i]
+                self.get_adams_var(i): self._lambda_to_adams[i]
                 for i in range(1, max_adams + 1)
             }
         )
 
         return ph
-
-    @property
-    def sympy(self) -> sp.Symbol:
-        """
-        The sympy representation of the curve motive.
-        """
-        return sp.Symbol(f"h_{self.value}")

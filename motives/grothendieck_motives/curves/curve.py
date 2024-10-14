@@ -9,8 +9,7 @@ ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
 
 from ...utils import expr_from_pol
 
-from ...core.lambda_context import LambdaContext
-from ...core.node import Node
+from ...core import GrothendieckRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
@@ -19,89 +18,134 @@ from ..point import Point
 
 from .hodge import Hodge
 
-
-class Curve(Motive):
+class Curve(Motive, sp.AtomicExpr):
     """
-    An operand in an expression tree that represents a curve.
+    Represents a curve in an expression tree.
 
-    Parameters:
+    A `Curve` is a motive that represents the sum of a point, a Lefschetz motive,
+    and a Hodge motive. It supports Adams and Lambda operations, generating functions,
+    and Jacobian calculations.
+
+    Attributes:
     -----------
-    value : sympy.Symbol
-        The value of the curve, i.e. how it is represented.
+    name : str
+        The name of the curve.
     g : int
-        The genus of the curve.
-    parent : Node
-        The parent node of the curve.
-    id_ : hashable
-        The id of the curve, used to identify it (if two operands
-        have the same id, they are the same operand).
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current curve.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current curve.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current curve.
-    P(t: Variable) -> ET
-        Returns the generating function of the hodge curve.
-    Z(t: Variable) -> ET
-        Returns the generating function of the curve.
-
-    Properties:
-    -----------
-    sympy : sp.Symbol
-        The sympy representation of the curve.
-    Jac : ET
+        The genus of the curve, which influences the Hodge motive.
+    point : Point
+        The point motive of the curve.
+    curve_hodge : CurveHodge
+        The Hodge motive of the curve.
+    lefschetz : Lefschetz
+        The Lefschetz motive of the curve.
+    _ring : PolyRing
+        The polynomial ring of the curve's Hodge motive.
+    _jac : sp.Expr or None
         The Jacobian of the curve.
+    _lambda_vars : dict[int, sp.Expr]
+        A dictionary storing Lambda variables for different degrees.
+    _lambda_vars_pol : list[PolyElement]
+        A list storing the polynomial representations of Lambda variables.
+    _adams_vars : list[sp.AtomicExpr]
+        A list storing the Adams variables for the curve.
     """
 
-    def __init__(
-        self,
-        value: sp.Symbol | str,
-        g: int = 1,
-        parent: Optional[Node] = None,
-        id_: Hashable = None,
-    ) -> None:
+    def __new__(cls, name: sp.Symbol, g: int = 1, *args, **kwargs):
+        """
+        Creates a new instance of the `Curve` class.
+
+        Args:
+        -----
+        name : sp.Symbol
+            The name of the curve.
+        g : int, optional
+            The genus of the curve, default is 1.
+
+        Returns:
+        --------
+        Curve
+            A new instance of the `Curve` class.
+        """
+        new_curve = sp.AtomicExpr.__new__(cls)
+        new_curve._assumptions["commutative"] = True
+        return new_curve
+
+    def __init__(self, name: str, g: int = 1, *args, **kwargs) -> None:
+        """
+        Initializes a `Curve` instance.
+
+        Args:
+        -----
+        name : str
+            The name of the curve.
+        g : int, optional
+            The genus of the curve, default is 1.
+        """
         self.g: int = g
-        if isinstance(value, str):
-            value = sp.Symbol(value)
-        self.value: sp.Symbol = value
-        super().__init__(parent, id_)
+        self.name: str = name
 
         self.point: Point = Point()
-        self.curve_hodge: Hodge = Hodge(value, g, id_=self.id + "_hodge")
+        self.curve_hodge: Hodge = Hodge(name, g)
         self.lefschetz: Lefschetz = Lefschetz()
 
         self._ring: PolyRing = self.curve_hodge._domain.ring
 
-        self.jac: sp.Expr | None = None
+        self._jac: sp.Expr | None = None
         self._lambda_vars: dict[int, sp.Expr] = {}
         self._lambda_vars_pol: list[PolyElement] = []
-        self._adams_vars: list[sp.Symbol] = [1]
+        self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
 
     def __repr__(self) -> str:
-        return str(self.value)
+        """
+        Returns the string representation of the curve.
+
+        Returns:
+        --------
+        str
+            A string representation in the form of "C{g}_{name}".
+        """
+        return f"C{self.g}_{self.name}"
+
+    def _hashable_content(self) -> tuple:
+        """
+        Returns the hashable content of the curve.
+
+        Returns:
+        --------
+        tuple
+            A tuple containing the name and genus.
+        """
+        return (self.name, self.g)
 
     def _generate_adams_vars(self, n: int) -> None:
         """
-        Generates the adams variables needed up to degree n.
+        Generates the Adams variables needed for the curve up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Adams needed.
         """
         self.curve_hodge._generate_adams_vars(n)
         self._adams_vars += [
-            sp.Symbol(f"ψ_{i}(C_{self.value})")
-            for i in range(len(self._adams_vars), n + 1)
+            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
         ]
 
     def _generate_lambda_vars(self, n: int) -> None:
         """
-        Generates the lambda variables needed up to degree n.
+        Generates the Lambda variables needed for the curve up to degree `n`.
+
+        Computes the Lambda variables by applying the convolution formula for the Lambda of a sum.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Lambda needed.
         """
         self.curve_hodge._generate_lambda_vars(n)
 
         if len(self._lambda_vars_pol) == 0:
-            self._lambda_vars_pol = [1]
+            self._lambda_vars_pol = [self._ring.one]
 
         for i in range(len(self._lambda_vars_pol), n + 1):
             self._lambda_vars_pol.append(
@@ -110,41 +154,45 @@ class Curve(Motive):
                     *(
                         self._ring.mul(
                             self.curve_hodge._lambda_vars_pol[i - j],
-                            self.curve_hodge.lef_symbol**j,
+                            self.curve_hodge._lef_symbol**j,
                         )
                         for j in range(i + 1)
                     )
                 )
             )
 
-    def get_adams_var(self, i: int) -> sp.Symbol:
+    def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the adams variable of degree i.
+        Returns the curve with an Adams operation applied to it.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the adams variable.
+            The degree of the Adams operator.
 
-        Returns
-        -------
-        The adams variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The curve with the Adams operator applied.
         """
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
         """
-        Returns the lambda variable of degree i.
+        Returns the curve with a Lambda operation applied to it.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the lambda variable.
+            The degree of the Lambda operator.
+        context : GrothendieckRingContext, optional
+            The ring context used for the conversion between operators.
 
-        Returns
-        -------
-        The lambda variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The curve with the Lambda operator applied.
         """
         self._generate_lambda_vars(i)
 
@@ -154,86 +202,129 @@ class Curve(Motive):
         return self._lambda_vars[i]
 
     @typechecked
-    def P(self, t: Operand | int | ET) -> ET:
+    def P(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Returns the generating function of the hodge curve.
+        Computes the generating function of the Hodge motive of the curve.
 
-        Parameters
-        ----------
-        t : Operand or int or ET
+        Args:
+        -----
+        t : int or sp.Expr
             The variable to use in the generating function.
 
-        Returns
-        -------
-        The generating function of the hodge curve.
+        Returns:
+        --------
+        sp.Expr
+            The generating function of the Hodge motive.
         """
         return self.curve_hodge.Z(t)
 
     @property
-    def Jac(self) -> ET:
+    def Jac(self) -> sp.Expr:
         """
-        The Jacobian of the curve.
+        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the Hodge motive.
+
+        Returns:
+        --------
+        sp.Expr
+            The Jacobian of the curve.
         """
-        if self.jac is None:
-            self.jac = self.curve_hodge.Z(1)
-        return self.jac
+        self._jac = self._jac or self.curve_hodge.Z(1)
+        return self._jac
 
     @typechecked
-    def Z(self, t: Operand | int | ET) -> ET:
+    def Z(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Returns the generating function of the curve.
+        Computes the generating function of the curve.
 
-        Parameters
-        ----------
-        t : Operand or int or ET
+        Args:
+        -----
+        t : int or sp.Expr
             The variable to use in the generating function.
 
-        Returns
-        -------
-        The generating function of the curve.
+        Returns:
+        --------
+        sp.Expr
+            The generating function of the curve.
         """
         return self.P(t) / ((1 - t) * (1 - self.lefschetz * t))
-
-    @dispatch(int, int)
-    def _to_adams(self, degree: int, ph: int) -> int:
-        """
-        Catches the case where the polynomial is an integer.
-        """
-        return ph
 
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this curve
-        in the polynomial `ph`.
-        """
-        ph = self.curve_hodge._to_adams(degree, ph)
-        return ph
+        Applies the Adams operator to any instances of this curve in the polynomial.
 
-    @dispatch(set, LambdaContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+        Raises an exception, as curves should be decomposed into their components.
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which to apply the Adams operator.
+
+        Raises:
+        -------
+        Exception
+            Always raised as curves should not be directly used in the expression.
         """
-        Returns the adams of degree 1 of this curve.
-        """
-        return (
-            self.curve_hodge._to_adams(operands, group_context)
-            + self.lefschetz._to_adams(operands, group_context)
-            + self.point._to_adams(operands, group_context)
+        raise Exception(
+            f"There is a curve in the expression {ph}. "
+            "It should have been converted to its components."
         )
 
-    def _subs_adams(self, group_context: LambdaContext, ph: sp.Expr) -> sp.Expr:
+    @dispatch(set, GrothendieckRingContext)
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
         """
-        Substitutes any instances of an adams of this curve (ψ_d(curve)) into its
-        equivalent polynomial of lambdas.
+        Converts this curve into an equivalent Adams polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between operators.
+
+        Returns:
+        --------
+        sp.Expr
+            A polynomial of Adams operators equivalent to this curve.
         """
-        ph = self.curve_hodge._subs_adams(group_context, ph)
+        return (
+            self.curve_hodge._to_adams(operands, gc)
+            + self.lefschetz._to_adams(operands, gc)
+            + self.point._to_adams(operands, gc)
+        )
+
+    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+        """
+        Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
+
+        This method is called during the `to_lambda` process to replace Adams variables
+        that appear after converting the expression tree to an Adams polynomial.
+
+        Args:
+        -----
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between operators.
+        ph : sp.Expr
+            The polynomial in which to substitute the Adams variables.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with Adams variables substituted by Lambda polynomials.
+        """
+        ph = self.curve_hodge._subs_adams(gc, ph)
         return ph
 
     @property
-    def sympy(self) -> sp.Symbol:
+    def free_symbols(self) -> set[sp.Symbol]:
         """
-        The sympy representation of the curve.
+        Returns the set of free symbols in the curve, which includes the Hodge, Lefschetz, and Point motives.
+
+        Returns:
+        --------
+        set[sp.Symbol]
+            The set of free symbols in the curve.
         """
-        return sp.Symbol(f"C_{self.value}_{self.g}")
+        return {self.curve_hodge, self.lefschetz, self.point}

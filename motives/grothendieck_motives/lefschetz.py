@@ -1,41 +1,28 @@
+from __future__ import annotations
 import sympy as sp
 
 from .symbol import Symbol
 
-class Lefschetz(Symbol):
+from ..utils import SingletonMeta
+
+class Lefschetz(Symbol, metaclass=SingletonMeta):
     """
-    A symbol in an expression tree that represents a Lefschetz motive.
+    Represents a Lefschetz motive in an expression tree.
 
-    Parameters:
-    -----------
-    parent : Node
-        The parent node of the Lefschetz motive.
-    id_ : hashable
-        Because the Lefschetz motive is unique, the id is always "Lefschetz". It should
-        not be changed.
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current Lefschetz motive.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current Lefschetz motive.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current Lefschetz motive.
-
-    Properties:
-    -----------
-    sympy : sp.Symbol
-        The sympy representation of the Lefschetz motive.
-
-    Attributes:
-    -----------
-    L_VAR : sympy.Symbol
-        The value of the Lefschetz motive.
+    The Lefschetz motive is a specific type of symbol used in motive-based expressions. 
+    This class ensures that the Lefschetz motive is a singleton, meaning only one instance 
+    can exist throughout the program.
     """
 
-    L_VAR: sp.Symbol = sp.Symbol("L")
+    def __new__(cls) -> Lefschetz:
+        """
+        Creates a new instance of the Lefschetz motive, ensuring singleton behavior.
 
-    def __init__(self, parent=None, id_="Lefschetz"):
-        id_ = "Lefschetz"
-        super().__init__(self.L_VAR, parent, id_)
+        The Lefschetz motive is represented by the symbol 'L' in expressions.
+
+        Returns:
+        --------
+        Lefschetz
+            The singleton instance of the `Lefschetz` motive.
+        """
+        return sp.Symbol.__new__(cls, "L")
