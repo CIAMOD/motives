@@ -1,103 +1,148 @@
-from typing import Hashable, Optional
+from __future__ import annotations
 from multipledispatch import dispatch
 import sympy as sp
 
-from ..core.lambda_context import LambdaContext
+from ..utils import SingletonMeta
+
+from ..core import GrothendieckRingContext
 from ..core.operand import Operand
-from ..core.node import Node
 
 from .motive import Motive
 
-class Point(Motive):
+class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
     """
-    An operand node in an expression tree that represents a point motive.
+    Represents a point motive in an expression.
 
-    Parameters:
-    -----------
-    parent : Node
-        The parent node of the point motive.
-    id_ : hashable
-        Because the point motive is unique, the id is always "point". It should
-        not be changed.
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current point motive.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current point motive.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current point motive.
-
-    Properties:
-    sympy : sp.Symbol
-        The sympy representation of the point.
+    The point motive is a universal motive and acts as a singleton. It inherits from 
+    `Motive` and SymPy's `AtomicExpr`, meaning it is treated as an indivisible expression 
+    and supports Adams and Lambda operations, though they always return 1 for this motive.
     """
 
-    def __init__(self, parent: Optional[Node] = None, id_: Hashable = "point"):
-        id_ = "point"
-        super().__init__(parent, id_)
+    def __new__(cls) -> Point:
+        """
+        Creates a new instance of `Point`, enforcing singleton behavior.
+
+        Returns:
+        --------
+        Point
+            The singleton instance of the `Point` class.
+        """
+        instance = sp.AtomicExpr.__new__(cls)
+        instance._assumptions["commutative"] = True
+        return instance
 
     def __repr__(self) -> str:
+        """
+        Returns the string representation of the point motive.
+
+        Returns:
+        --------
+        str
+            The string "pt", representing the point motive.
+        """
         return "pt"
 
-    def get_adams_var(self, i: int) -> int:
+    def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the adams variable of degree i.
+        Returns the point motive with an Adams operation applied to it.
 
-        Parameters
-        ----------
+        Since the Adams operation on a point is always 1, this method always returns 1, 
+        regardless of the degree `i`.
+
+        Args:
+        -----
         i : int
-            The degree of the adams variable.
+            The degree of the Adams operator.
 
-        Returns
-        -------
-        The adams variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The result of applying the Adams operator to the point, which is always 1.
         """
-        return 1
+        return sp.Integer(1)
 
-    def get_lambda_var(self, i: int) -> int:
+    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
         """
-        Returns the lambda variable of degree i.
+        Returns the point motive with a Lambda operation applied to it.
 
-        Parameters
-        ----------
+        Since the Lambda operation on a point is always 1, this method always returns 1, 
+        regardless of the degree `i`.
+
+        Args:
+        -----
         i : int
-            The degree of the lambda variable.
+            The degree of the Lambda operator.
+        context : GrothendieckRingContext, optional
+            The ring context used for the conversion between operators (not used here).
 
-        Returns
-        -------
-        The lambda variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The result of applying the Lambda operator to the point, which is always 1.
         """
-        return 1
+        return sp.Integer(1)
 
     @dispatch(int, object)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this point
-        in the polynomial `ph`.
+        Applies the Adams operator to instances of the point in a polynomial.
+
+        Since the Adams operation on a point is always 1, this method returns the polynomial 
+        `ph` unchanged.
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which the Adams operator is applied.
+
+        Returns:
+        --------
+        sp.Expr
+            The original polynomial, unchanged.
         """
         return ph
 
-    @dispatch(set, LambdaContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    @dispatch(set, GrothendieckRingContext)
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
         """
-        Returns the adams of degree 1 of the point.
+        Converts this point into an equivalent Adams polynomial.
+
+        Since the Adams operation on a point is always 1, this method always returns 1.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial of the point, which is always 1.
         """
         return sp.Integer(1)
 
-    def _subs_adams(self, group_context: LambdaContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes any instances of an adams of this point into its equivalent
-        polynomial of lambdas.
+        Substitutes Adams variables in a polynomial with their equivalent Lambda polynomials.
+
+        Since no Adams variables are generated for a point, this method returns the polynomial 
+        `ph` unchanged. This method is called in `to_lambda` to substitute any Adams variables 
+        after converting the expression tree to an Adams polynomial.
+
+        Args:
+        -----
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        ph : sp.Expr
+            The polynomial in which to substitute the Adams variables.
+
+        Returns:
+        --------
+        sp.Expr
+            The original polynomial, unchanged.
         """
         return ph
-
-    @property
-    def sympy(self) -> sp.Symbol:
-        """
-        The sympy representation of the point motive.
-        """
-        return sp.Symbol("pt")

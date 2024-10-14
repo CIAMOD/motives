@@ -1,124 +1,165 @@
 # operand.py
 
 from __future__ import annotations  # For forward references
-from typing import Optional, Hashable, Set
 import sympy as sp
 from multipledispatch import dispatch
 
-from .node import Node
 from .operand import Operand
-from .lambda_context import LambdaContext
+from .groth_ring_context import GrothendieckRingContext
 
-class Variable(Operand):
+class Variable(Operand, sp.Symbol):
     """
-    An operand node in an expression tree that represents an abstract variable.
+    Represents an abstract variable node in an expression.
 
-    Parameters:
+    A `Variable` inherits from both `Operand` and SymPy's `Symbol`, and it is used to represent
+    a variable in an expression tree. This class cannot be named 'L' (reserved for the Lefschetz 
+    motive) or start with 's_' (reserved for special symbols), to prevent naming conflicts with 
+    SymPy symbols.
+
+    Attributes:
     -----------
-    value : sympy.Symbol
-        The value of the variable, i.e. how it is represented.
-    parent : Node
-        The parent node of the variable. If the variable is the root
-        of the tree, parent is None.
-    id_ : hashable
-        The id of the variable, used to identify it (if two operands
-        have the same id, they are the same operand).
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current variable.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current variable.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current variable.
-
-    Properties:
-    -----------
-    sympy : sp.Expr
-        The sympy representation of the node (and any children).
+    name : str
+        A string representing the name of the variable.
+    _adams_vars : list[sp.AtomicExpr]
+        A list of Adams variables generated for this variable, with degree-based indexing.
+    _lambda_vars : list[sp.AtomicExpr]
+        A list of Lambda variables generated for this variable, with degree-based indexing.
     """
 
-    def __init__(
-        self,
-        value: sp.Symbol | str,
-        parent: Optional[Node] = None,
-        id_: Hashable = None,
-    ):
-        if isinstance(value, str):
-            value = sp.Symbol(value)
-        self.value: sp.Symbol = value
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes a `Variable` with empty lists of Adams and Lambda variables.
 
-        super().__init__(parent, id_)
-        self._adams_vars: list[sp.Symbol] = [1, self.value]
-        self._lambda_vars: list[sp.Symbol] = [1, self.value]
-        self._generate_adams_vars(1)
+        Args:
+        -----
+        *args : tuple
+            Positional arguments passed to the superclass constructor.
+        **kwargs : dict
+            Keyword arguments passed to the superclass constructor.
+        """
+        self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
+        self._lambda_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
+
+    def __new__(cls, name: str, **assumptions):
+        """
+        Creates a new instance of `Variable` while enforcing naming restrictions.
+
+        Args:
+        -----
+        name : str
+            The name of the variable.
+        assumptions : dict
+            Assumptions passed to the SymPy `Symbol` constructor.
+
+        Raises:
+        -------
+        ValueError
+            If the name is 'L' (reserved for the Lefschetz motive) or starts with 's_'.
+
+        Returns:
+        --------
+        Variable
+            A new instance of `Variable`.
+        """
+        if name == "L":
+            raise ValueError("The name 'L' is reserved for the Lefschetz motive.")
+        if name[0] == "s" and name[1] == "_":
+            raise ValueError("The name 's_[name]' is reserved for the symbol.")
+
+        return sp.Symbol.__new__(cls, name, **assumptions)
 
     def __repr__(self) -> str:
-        return str(self.value)
+        """
+        Returns the string representation of the variable, which is its name.
+
+        Returns:
+        --------
+        str
+            The name of the variable.
+        """
+        return self.name
 
     def _generate_adams_vars(self, n: int) -> None:
         """
-        Generate the adams variables needed up to degree n.
+        Generates the Adams variables for this variable up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Adams needed.
         """
         self._adams_vars += [
-            sp.Symbol(f"ψ_{i}({self.value})")
-            for i in range(len(self._adams_vars), n + 1)
+            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
         ]
 
     def _generate_lambda_vars(self, n: int) -> None:
         """
-        Generate the lambda variables needed up to degree n.
+        Generates the Lambda variables for this variable up to degree `n`.
+
+        Args:
+        -----
+        n : int
+            The maximum degree of Lambda needed.
         """
         self._lambda_vars += [
-            sp.Symbol(f"λ_{i}({self.value})")
-            for i in range(len(self._lambda_vars), n + 1)
+            sp.Symbol(f"λ_{i}({self})") for i in range(len(self._lambda_vars), n + 1)
         ]
 
-    def get_adams_var(self, i: int) -> sp.Symbol:
+    def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the adams variable of degree i.
+        Returns the Adams variable of this variable for a given degree `i`.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the adams variable.
+            The degree of the Adams operator.
 
-        Returns
-        -------
-        The adams variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The Adams variable for degree `i`.
         """
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int) -> sp.Symbol:
+    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
         """
-        Returns the lambda variable of degree i.
+        Returns the Lambda variable of this variable for a given degree `i`.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the lambda variable.
+            The degree of the Lambda operator.
+        context : GrothendieckRingContext, optional
+            The ring context used for the conversion between operators.
 
-        Returns
-        -------
-        The lambda variable of degree i.
+        Returns:
+        --------
+        sp.Expr
+            The Lambda variable for degree `i`.
         """
         self._generate_lambda_vars(i)
         return self._lambda_vars[i]
 
-    @dispatch(int, int)
-    def _to_adams(self, degree: int, ph: int) -> int:
-        """
-        Catches the case where the polynomial is an integer.
-        """
-        return ph
-
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this variable
-        in the polynomial `ph`.
+        Applies the Adams operator to all instances of this variable in a polynomial.
+
+        It replaces all instances of an Adams variable (ψ_d(variable)) in the polynomial
+        for ψ_{degree*d}(variable).
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which to apply the Adams operator.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with the Adams operator applied.
         """
         max_adams = -1
         operands = ph.free_symbols
@@ -134,37 +175,53 @@ class Variable(Operand):
             }
         )
 
-    @dispatch(set, LambdaContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    @dispatch(set, GrothendieckRingContext)
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
         """
-        Returns the adams of degree 1 of the variable.
+        Converts this variable into an equivalent Adams polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial for this variable.
         """
         return self.get_adams_var(1)
 
-    def _subs_adams(self, group_context: LambdaContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes any instances of an adams of this variable (ψ_d(variable)) into its
-        equivalent polynomial of lambdas.
+        Substitutes Adams variables of this variable in a polynomial with Lambda polynomials.
+
+        This method is used to convert Adams polynomials into Lambda polynomials.
+
+        Args:
+        -----
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        ph : sp.Expr
+            The polynomial in which to substitute the Adams variables.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with Adams variables replaced by Lambda variables.
         """
         ph = ph.xreplace(
             {
-                self.get_adams_var(i): group_context.get_lambda_2_adams_pol(i)
+                self.get_adams_var(i): gc.get_lambda_2_adams_pol(i)
                 for i in range(2, len(self._adams_vars))
             }
         )
         ph = ph.xreplace(
             {
-                group_context.lambda_vars[i]: self.get_lambda_var(i)
-                for i in range(1, len(group_context.lambda_vars))
+                gc.lambda_vars[i]: self.get_lambda_var(i)
+                for i in range(1, len(gc.lambda_vars))
             }
         )
         return ph
-
-    @property
-    def sympy(self) -> sp.Symbol:
-        """
-        The sympy representation of the variable.
-        """
-        return self.value

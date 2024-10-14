@@ -1,241 +1,214 @@
 # operand.py
 
 from __future__ import annotations  # For forward references
-from typing import Optional, Hashable, Set, TypeVar
+from typing import TypeVar
 import sympy as sp
-import hashlib
+from sympy.printing.str import StrPrinter
 from multipledispatch import dispatch
 
-from .node import Node
-from .lambda_context import LambdaContext
+from .expr import Expr
+from .groth_ring_context import GrothendieckRingContext
 
 ET = TypeVar('ET')  # Define ET as a TypeVar for type hinting
 
-class Operand(Node):
+class Operand(Expr):
     """
-    An abstract node in an expression tree that represents an operand.
+    An abstract node in an expression that represents an operand.
 
-    Parameters:
-    -----------
-    parent : Node
-        The parent node of the operand. If the operand is the root
-        of the tree, parent is None.
-    id_ : Optional[hashable]
-        The id of the operand, used to identify it (if two operands
-        have the same id, they are the same operand).
-
-    Methods:
-    --------
-    sigma(degree: int) -> ET
-        Applies the sigma operation to the current operand.
-    lambda_(degree: int) -> ET
-        Applies the lambda operation to the current operand.
-    adams(degree: int) -> ET
-        Applies the adams operation to the current operand.
-
-    Properties:
-    -----------
-    sympy : sp.Expr
-        The sympy representation of the node (and any children).
+    This class serves as a base class for any new operand in the expression tree.
+    All operands in an expression must be subclasses of this class and implement
+    specific behavior for conversion to Adams and Lambda polynomials, as well as other operations.
     """
 
-    def __init__(self, parent: Optional[Node] = None, id_: Optional[Hashable] = None):
-        if id_ is None:
-            self.id = self._generate_id()
-        else:
-            self.id = id_
-        super().__init__(parent)
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Operand):
-            return False
-        return self.id == other.id
-
-    def _generate_id(self) -> str:
+    def _sympystr(self, printer: StrPrinter) -> str:
         """
-        Generates the id of the operand from its attributes.
+        Provides a string representation of the operand for SymPy printing.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The SymPy printer used for formatting the string representation.
+
+        Returns:
+        --------
+        str
+            The string representation of the operand.
         """
-        block_string = str(tuple(sorted(self.__dict__.items()))) + str(self.__class__)
-        return hashlib.sha256(block_string.encode()).hexdigest()
+        return self.__repr__()
 
-    # All the overloads are sent to the correct ET overloads
-    def _add(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self) + other
-
-    def __add__(self, other: object) -> ET:
-        return self._add(other)
-
-    def __radd__(self, other: object) -> ET:
-        return self._add(other)
-
-    def __sub__(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self) - other
-
-    def __rsub__(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return -ET(self) + other
-
-    def __neg__(self) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return -ET(self)
-
-    def _mul(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self) * other
-
-    def __mul__(self, other: object) -> ET:
-        return self._mul(other)
-
-    def __rmul__(self, other: object) -> ET:
-        return self._mul(other)
-
-    def __truediv__(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self) / other
-
-    def __rtruediv__(self, other: object) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return other / ET(self)
-
-    def __pow__(self, other: int) -> ET:
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self) ** other
-
-    def sigma(self, degree: int) -> ET:
+    def get_max_adams_degree(self) -> int:
         """
-        Applies the sigma operation to the current operand.
+        Computes the maximum Adams degree of this operand.
 
-        Parameters
-        ----------
-        degree : int
-            The degree of the sigma operator.
+        This method multiplies the Adams, Lambda, and Sigma degrees across every branch
+        of the tree and returns the maximum value. For an individual operand, this value
+        is typically `1`.
 
-        Returns
-        -------
-        An expression tree with the sigma operator applied.
-        """
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self).sigma(degree)
-
-    def lambda_(self, degree: int) -> ET:
-        """
-        Applies the lambda operation to the current operand.
-
-        Parameters
-        ----------
-        degree : int
-            The degree of the lambda operator.
-
-        Returns
-        -------
-        An expression tree with the lambda operator applied.
-        """
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self).lambda_(degree)
-
-    def adams(self, degree: int) -> ET:
-        """
-        Applies the adams operation to the current operand.
-
-        Parameters
-        ----------
-        degree : int
-            The degree of the adams operator.
-
-        Returns
-        -------
-        An expression tree with the adams operator applied.
-        """
-        from .expression_tree import ET  # Local import to avoid circular dependency
-        return ET(self).adams(degree)
-
-    def _get_max_adams_degree(self) -> int:
-        """
-        The maximum adams degree of this subtree once converted to an adams polynomial.
+        Returns:
+        --------
+        int
+            The maximum Adams degree of this operand when converted to an Adams polynomial.
         """
         return 1
 
-    def _get_max_groth_degree(self) -> int:
+    def get_max_groth_degree(self) -> int:
         """
-        Returns the degree of the highest degree sigma or lambda operator in the tree.
+        Computes the maximum Grothendieck degree needed to create a context for this operand.
+
+        Returns:
+        --------
+        int
+            The maximum sigma or lambda degree required for this operand in the expression tree.
         """
         return 0
 
-    def get_adams_var(self, i: int) -> sp.Symbol | int:
+    def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the adams variable of degree i.
+        Returns the operand with an Adams operation applied to it.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the adams variable.
+            The degree of the Adams operator to apply.
 
-        Returns
+        Returns:
+        --------
+        sp.Expr
+            The operand with the Adams operator applied.
+
+        Raises:
         -------
-        The adams variable of degree i.
+        NotImplementedError
+            If this method is not implemented in the subclass.
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def get_lambda_var(self, i: int) -> sp.Symbol | int:
+    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
         """
-        Returns the lambda variable of degree i.
+        Returns the operand with a Lambda operation applied to it.
 
-        Parameters
-        ----------
+        Args:
+        -----
         i : int
-            The degree of the lambda variable.
+            The degree of the Lambda operator to apply.
+        context : GrothendieckRingContext, optional
+            The ring context used for the conversion between operators. If not provided,
+            a new context is created.
 
-        Returns
+        Returns:
+        --------
+        sp.Expr
+            The operand with the Lambda operator applied.
+
+        Raises:
         -------
-        The lambda variable of degree i.
+        NotImplementedError
+            If this method is not implemented in the subclass.
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this operand
-        in the polynomial `ph`.
+        Applies the Adams operation to instances of this operand in a given polynomial.
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which the Adams operator will be applied.
+
+        Returns:
+        --------
+        sp.Expr
+            The polynomial with the Adams operator applied.
+
+        Raises:
+        -------
+        NotImplementedError
+            If this method is not implemented in the subclass.
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    @dispatch(set, LambdaContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaContext
-    ) -> sp.Expr:
+    @dispatch(set, GrothendieckRingContext)
+    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
         """
-        Converts this subtree into an equivalent adams polynomial.
+        Converts this operand into an equivalent Adams polynomial.
+
+        For an operand, this simply returns the Adams polynomial of degree 1 for itself.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial of degree 1 for this operand.
+
+        Raises:
+        -------
+        NotImplementedError
+            If this method is not implemented in the subclass.
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def _to_adams_lambda(
-        self,
-        operands: set[Operand],
-        group_context: LambdaContext,
-        adams_degree: int = 1,
-    ) -> sp.Expr:
+    def _to_adams_lambda(self, operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
         """
-        Converts this subtree into an equivalent adams polynomial.
-        """
-        return self._to_adams(operands, group_context)
+        Converts this operand into an equivalent Adams polynomial, with optimizations for Lambda conversion.
 
-    def _subs_adams(self, group_context: LambdaContext, ph: sp.Expr) -> sp.Expr:
+        This method is called when `optimize=True` in the `to_lambda` method. For an operand, 
+        this simply returns the Adams polynomial of degree 1 for itself.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        adams_degree : int, optional
+            The sum of the degrees of all Adams operators higher than this node in its branch.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial of degree 1 for this operand.
         """
-        Substitutes any instances of an adams of this operand (ψ_d(operand)) into its
-        equivalent polynomial of lambdas.
+        return self._to_adams(operands, gc)
+
+    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+        """
+        Substitutes any Adams operations on this operand in the given polynomial with their equivalent Lambda polynomial.
+
+        This method is used in `to_lambda` to convert any Adams operations in the polynomial 
+        into Lambda operations.
+
+        Args:
+        -----
+        gc : GrothendieckRingContext
+            The Grothendieck ring context used for the conversion between ring operators.
+        ph : sp.Expr
+            The polynomial in which to substitute the Adams operations.
+
+        Raises:
+        -------
+        NotImplementedError
+            If this method is not implemented in the subclass.
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
     @property
-    def sympy(self) -> sp.Symbol:
+    def free_symbols(self) -> set[Operand]:
         """
-        The sympy representation of the operand.
+        Returns the set of all operands (free symbols) in the expression tree.
+
+        Returns:
+        --------
+        set[Operand]
+            A set containing the operands in this expression.
         """
-        raise NotImplementedError(
-            "This property must be implemented in all subclasses."
-        )
+        return {self}

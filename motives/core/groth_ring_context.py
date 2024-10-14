@@ -1,11 +1,11 @@
 import sympy as sp
-from motives.utils import generate_partitions, multinomial_coeff
+from ..utils import all_partitions, multinomial_coeff, SingletonMeta
 from functools import reduce
 
 
-class LambdaContext:
+class GrothendieckRingContext(metaclass=SingletonMeta):
     """
-    A class representing a Grothendieck group context.
+    A class representing a Grothendieck ring context.
 
     Attributes:
     -----------
@@ -27,9 +27,9 @@ class LambdaContext:
         A list of SymPy polynomials mapping lambda variables to Adams variables.
     """
 
-    def __init__(self, mode: str = "partitions"):
+    def __init__(self, *args, **kwargs):
         """
-        Initializes a Grothendieck group context.
+        Initializes a Grothendieck ring context.
 
         Parameters:
         -----------
@@ -37,17 +37,16 @@ class LambdaContext:
             The mode to use to compute the Adams to lambda polynomials.
             It can be "recurrent", "partitions", or "old".
         """
-        self.lambda_vars = [1]
-        self.sigma_vars = [1]
-        self.adams_vars = [1]
+        self.lambda_vars: list[sp.Expr] = [sp.Integer(1)]
+        self.sigma_vars: list[sp.Expr] = [sp.Integer(1)]
+        self.adams_vars: list[sp.Expr] = [sp.Integer(1)]
+        self._lambda_2_sigma_pols: list[sp.Expr] = []
+        self._adams_2_lambda_pols: list[sp.Expr] = []
+        self._adams_2_sigma_pols: list[sp.Expr] = []
+        self._sigma_2_adams_pols: list[sp.Expr] = []
+        self._lambda_2_adams_pols: list[sp.Expr] = []
 
-        self._lambda_2_sigma_pols = []
-        self._adams_2_lambda_pols = []
-        self._adams_2_sigma_pols = []
-        self._sigma_2_adams_pols = []
-        self._lambda_2_adams_pols = []
-
-        self.mode = mode
+        self.mode = "partitions"
 
     def _generate_variables(self, n: int):
         """
@@ -295,7 +294,7 @@ class LambdaContext:
                         ),
                         (-1) ** (len(partition) + k),
                     )
-                    for partition in generate_partitions(k)
+                    for partition in all_partitions(k)
                 )
             )
 
@@ -333,7 +332,7 @@ class LambdaContext:
                         * (k - l),
                     )
                     for l in range(k)
-                    for partition in generate_partitions(l)
+                    for partition in all_partitions(l)
                 )
             )
 
@@ -470,7 +469,7 @@ class LambdaContext:
                             -1,
                         ),
                     )
-                    for partition in generate_partitions(k)
+                    for partition in all_partitions(k)
                 )
             )
 
@@ -541,7 +540,7 @@ class LambdaContext:
                         * (k - l),
                     )
                     for l in range(k)
-                    for partition in generate_partitions(l)
+                    for partition in all_partitions(l)
                 )
             )
 
@@ -549,29 +548,21 @@ class LambdaContext:
 if __name__ == "__main__":
     from time import perf_counter
 
-    groth_old = LambdaContext(mode="old")
-    groth_rec = LambdaContext(mode="recurrent")
-    groth_part = LambdaContext(mode="partitions")
+    groth = GrothendieckRingContext()
 
     n = 15
 
     print("sigma to lambda polynomials: ")
 
     s_rec = perf_counter()
-    res_rec = groth_rec.get_lambda_2_sigma_pol(n)
+    res_rec = groth.get_lambda_2_sigma_pol(n)
     e_rec = perf_counter()
-
-    s_part = perf_counter()
-    res_part = groth_part.get_lambda_2_sigma_pol(n)
-    e_part = perf_counter()
 
     # s_old = perf_counter()
     # res_old = groth_old.get_adams_2_sigma_pol(n)
     # e_old = perf_counter()
 
     # print(f"-----result rec-----\n{res_rec}")
-    print(f"-----result part-----\n{res_part}")
-    print(f"It is the same as the partitions method: {res_rec - res_part == 0}")
+    print(f"-----result-----\n{res_rec}")
 
     print(f"-----time rec----- {e_rec-s_rec}")
-    print(f"-----time partitions----- {e_part-s_part}")
