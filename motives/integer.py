@@ -6,9 +6,9 @@ import sympy as sp
 from math import comb
 from multipledispatch import dispatch
 
-from .lambda_ring_expr import LambdaRingExpr
-from .operand import Operand
-from .lambda_ring_context import LambdaRingContext
+from .core.lambda_ring_expr import LambdaRingExpr
+from .core.operand import Operand
+from .core.lambda_ring_context import LambdaRingContext
 
 class Integer(Operand):
     """

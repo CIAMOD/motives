@@ -4,8 +4,8 @@ from __future__ import annotations  # For forward references
 import sympy as sp
 from multipledispatch import dispatch
 
-from .operand import Operand
-from .lambda_ring_context import LambdaRingContext
+from .core.operand import Operand
+from .core.lambda_ring_context import LambdaRingContext
 
 class Variable(Operand, sp.Symbol):
     """
