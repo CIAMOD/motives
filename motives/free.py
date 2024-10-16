@@ -7,11 +7,11 @@ from multipledispatch import dispatch
 from .core.operand import Operand
 from .core.lambda_ring_context import LambdaRingContext
 
-class Variable(Operand, sp.Symbol):
+class Free(Operand, sp.Symbol):
     """
     Represents an abstract variable node in an expression.
 
-    A `Variable` inherits from both `Operand` and SymPy's `Symbol`, and it is used to represent
+    A `Free` inherits from both `Operand` and SymPy's `Symbol`, and it is used to represent
     a variable in an expression tree. This class cannot be named 'L' (reserved for the Lefschetz 
     motive) or start with 's_' (reserved for special symbols), to prevent naming conflicts with 
     SymPy symbols.
@@ -28,7 +28,7 @@ class Variable(Operand, sp.Symbol):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes a `Variable` with empty lists of Adams and Lambda variables.
+        Initializes a `Free` with empty lists of Adams and Lambda variables.
 
         Args:
         -----
@@ -42,7 +42,7 @@ class Variable(Operand, sp.Symbol):
 
     def __new__(cls, name: str, **assumptions):
         """
-        Creates a new instance of `Variable` while enforcing naming restrictions.
+        Creates a new instance of `Free` while enforcing naming restrictions.
 
         Args:
         -----
@@ -58,8 +58,8 @@ class Variable(Operand, sp.Symbol):
 
         Returns:
         --------
-        Variable
-            A new instance of `Variable`.
+        Free
+            A new instance of `Free`.
         """
         if name == "L":
             raise ValueError("The name 'L' is reserved for the Lefschetz motive.")
