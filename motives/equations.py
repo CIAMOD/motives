@@ -3,7 +3,7 @@ from time import perf_counter
 from .utils import save_pol
 from .core import LambdaRingContext
 from .grothendieck_motives.curves.curve import Curve
-from .grothendieck_motives.curves.moduli_motives import TwistedHiggsModuli
+from .grothendieck_motives.moduli_motives.scheme import TwistedHiggsModuli
 
 def compare_equation(
     g: int, p: int, r: int, filename: str, time: bool = True, *, verbose: int = 0
