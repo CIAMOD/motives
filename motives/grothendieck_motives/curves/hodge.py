@@ -1,4 +1,3 @@
-from typing import TypeVar
 from typeguard import typechecked
 from multipledispatch import dispatch
 import sympy as sp
@@ -12,8 +11,6 @@ from ...core.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
-
-ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
 
 class Hodge(Motive, sp.AtomicExpr):
     """

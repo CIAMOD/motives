@@ -1,11 +1,8 @@
-from typing import Optional, Hashable, TypeVar
 from typeguard import typechecked
 from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
-
-ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
 
 from ...utils import expr_from_pol
 

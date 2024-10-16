@@ -9,8 +9,6 @@ from multipledispatch import dispatch
 from .expr import Expr
 from .groth_ring_context import GrothendieckRingContext
 
-ET = TypeVar('ET')  # Define ET as a TypeVar for type hinting
-
 class Operand(Expr):
     """
     An abstract node in an expression that represents an operand.

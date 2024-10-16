@@ -8,8 +8,6 @@ from typeguard import typechecked
 from .groth_ring_context import GrothendieckRingContext
 
 Operand = TypeVar('Operand')  # Define Operand as a TypeVar for type hinting
-ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
-
 
 class Expr(sp.Expr):
     """
