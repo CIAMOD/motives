@@ -13,14 +13,14 @@ from ..motive import Motive
 from ..lefschetz import Lefschetz
 from ..point import Point
 
-from .hodge import Hodge
+from .curvehodge import CurveHodge
 
 class Curve(Motive, sp.AtomicExpr):
     """
     Represents a curve in an expression tree.
 
     A `Curve` is a motive that represents the sum of a point, a Lefschetz motive,
-    and a Hodge motive. It supports Adams and Lambda operations, generating functions,
+    and a CurveHodge motive. It supports Adams and Lambda operations, generating functions,
     and Jacobian calculations.
 
     Attributes:
@@ -28,15 +28,15 @@ class Curve(Motive, sp.AtomicExpr):
     name : str
         The name of the curve.
     g : int
-        The genus of the curve, which influences the Hodge motive.
+        The genus of the curve, which influences the CurveHodge motive.
     point : Point
         The point motive of the curve.
     curve_hodge : CurveHodge
-        The Hodge motive of the curve.
+        The CurveHodge motive of the curve.
     lefschetz : Lefschetz
         The Lefschetz motive of the curve.
     _ring : PolyRing
-        The polynomial ring of the curve's Hodge motive.
+        The polynomial ring of the curve's CurveHodge motive.
     _jac : sp.Expr or None
         The Jacobian of the curve.
     _lambda_vars : dict[int, sp.Expr]
@@ -82,7 +82,7 @@ class Curve(Motive, sp.AtomicExpr):
         self.name: str = name
 
         self.point: Point = Point()
-        self.curve_hodge: Hodge = Hodge(name, g)
+        self.curve_hodge: CurveHodge = CurveHodge(name, g)
         self.lefschetz: Lefschetz = Lefschetz()
 
         self._ring: PolyRing = self.curve_hodge._domain.ring
@@ -201,7 +201,7 @@ class Curve(Motive, sp.AtomicExpr):
     @typechecked
     def P(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Computes the generating function of the Hodge motive of the curve.
+        Computes the generating function of the CurveHodge motive of the curve.
 
         Args:
         -----
@@ -211,14 +211,14 @@ class Curve(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The generating function of the Hodge motive.
+            The generating function of the CurveHodge motive.
         """
         return self.curve_hodge.Z(t)
 
     @property
     def Jac(self) -> sp.Expr:
         """
-        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the Hodge motive.
+        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the CurveHodge motive.
 
         Returns:
         --------
@@ -317,7 +317,7 @@ class Curve(Motive, sp.AtomicExpr):
     @property
     def free_symbols(self) -> set[sp.Symbol]:
         """
-        Returns the set of free symbols in the curve, which includes the Hodge, Lefschetz, and Point motives.
+        Returns the set of free symbols in the curve, which includes the CurveHodge, Lefschetz, and Point motives.
 
         Returns:
         --------
