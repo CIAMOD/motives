@@ -3,7 +3,7 @@ from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
-from ..core import GrothendieckRingContext
+from ..core import LambdaRingContext
 from ..core.operand import Operand
 
 from .motive import Motive
@@ -78,7 +78,7 @@ class Symbol(Motive, sp.Symbol):
         """
         return self**i
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the symbol with a Lambda operation applied to it.
 
@@ -88,7 +88,7 @@ class Symbol(Motive, sp.Symbol):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for the conversion between operators.
 
         Returns:
@@ -120,8 +120,8 @@ class Symbol(Motive, sp.Symbol):
         """
         return ph.xreplace({self: self.get_adams_var(degree)})
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this symbol into an equivalent Adams polynomial.
 
@@ -131,7 +131,7 @@ class Symbol(Motive, sp.Symbol):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -141,7 +141,7 @@ class Symbol(Motive, sp.Symbol):
         """
         return self
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this symbol in a polynomial with their equivalent Lambda polynomials.
 
@@ -151,7 +151,7 @@ class Symbol(Motive, sp.Symbol):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.

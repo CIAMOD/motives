@@ -6,9 +6,9 @@ import sympy as sp
 from math import comb
 from multipledispatch import dispatch
 
-from .expr import Expr
+from .lambda_ring_expr import LambdaRingExpr
 from .operand import Operand
-from .groth_ring_context import GrothendieckRingContext
+from .lambda_ring_context import LambdaRingContext
 
 class Integer(Operand):
     """
@@ -18,7 +18,7 @@ class Integer(Operand):
     -----------
     value : int
         The value of the integer.
-    parent : Expr
+    parent : LambdaRingExpr
         The parent node of the integer.
     id_ : hashable
         The id of the integer, used to identify it (if two operands
@@ -40,7 +40,7 @@ class Integer(Operand):
     """
 
     def __init__(
-        self, value: int = 1, parent: Optional[Expr] = None, id_: Hashable = None
+        self, value: int = 1, parent: Optional[LambdaRingExpr] = None, id_: Hashable = None
     ):
         self.value: int = value
         super().__init__(parent, id_)
@@ -86,16 +86,16 @@ class Integer(Operand):
         """
         return ph
 
-    @dispatch(set, GrothendieckRingContext)
+    @dispatch(set, LambdaRingContext)
     def _to_adams(
-        self, operands: set[Operand], group_context: GrothendieckRingContext
+        self, operands: set[Operand], group_context: LambdaRingContext
     ) -> sp.Expr:
         """
         Returns the integer.
         """
         return sp.Integer(self.value)
 
-    def _subs_adams(self, group_context: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, group_context: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes any instances of an adams of this integer into its equivalent
         polynomial of lambdas.

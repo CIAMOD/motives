@@ -6,7 +6,7 @@ from sympy.polys.rings import PolyElement
 
 from ...utils import expr_from_pol
 
-from ...core import GrothendieckRingContext
+from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
@@ -192,7 +192,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the CurveHodge motive with a Lambda operation applied to it.
 
@@ -202,7 +202,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for conversion between operators.
 
         Returns:
@@ -275,8 +275,8 @@ class CurveHodge(Motive, sp.AtomicExpr):
             }
         )
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this subtree into an equivalent Adams polynomial.
 
@@ -284,7 +284,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for conversion between operators.
 
         Returns:
@@ -311,7 +311,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
                 )
             )
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables for equivalent Lambda polynomials in the given polynomial.
 
@@ -320,7 +320,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.

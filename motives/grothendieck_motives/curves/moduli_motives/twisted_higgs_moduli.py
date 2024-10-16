@@ -7,8 +7,8 @@ from ..curve import Curve
 from ...lefschetz import Lefschetz
 from ...symbol import Symbol
 
-from ....core import GrothendieckRingContext
-from ....core.expr import Expr
+from ....core import LambdaRingContext
+from ....core.lambda_ring_expr import LambdaRingExpr
 from ....utils import all_partitions, expand_variable, expand_variable_1mtk, expand_variable_1mt, subs_variable, Partitions
 
 class TwistedHiggsModuliBB:
@@ -33,7 +33,7 @@ class TwistedHiggsModuliBB:
         Degree of the line bundle, calculated as 2g - 2 + p.
     lef : Lefschetz
         The Lefschetz operator.
-    vhs : dict[tuple, Expr]
+    vhs : dict[tuple, LambdaRingExpr]
         A dictionary storing the different vhs components of the formula.
     """
 
@@ -56,7 +56,7 @@ class TwistedHiggsModuliBB:
         self.r = r
         self.dl = 2 * self.g - 2 + p
         self.lef = Lefschetz()
-        self.vhs: dict[tuple, Expr] = {}
+        self.vhs: dict[tuple, LambdaRingExpr] = {}
 
         if self.r == 2:
             self.M2()
@@ -170,7 +170,7 @@ class TwistedHiggsModuliBB:
         )
 
     def simplify(
-        self, gc: GrothendieckRingContext = None, *, verbose: int = 0
+        self, lrc: LambdaRingContext = None, *, verbose: int = 0
     ) -> PolyElement:
         """
         Transforms the equation into a polynomial of lambdas and simplifies it.
@@ -181,7 +181,7 @@ class TwistedHiggsModuliBB:
 
         Args:
         -----
-        gc : GrothendieckRingContext, optional
+        lrc : LambdaRingContext, optional
             The Grothendieck ring context to use for the simplification.
         verbose : int, optional
             How much information to print (0 for none, 1 for progress, 2 for intermediate formulas).
@@ -201,12 +201,12 @@ class TwistedHiggsModuliBB:
         domain_zz = sp.ZZ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
 
         # Initialize a Grothendieck ring context if not provided
-        gc = gc or GrothendieckRingContext()
+        lrc = lrc or LambdaRingContext()
 
         # Process each VHS component and simplify
         for vhs, expr in self.vhs.items():
             # Convert to lambda variables
-            lambda_pol = expr.to_lambda(gc=gc)
+            lambda_pol = expr.to_lambda(lrc=lrc)
 
             if verbose > 0:
                 print(f"Computed lambda of VHS {vhs}")
@@ -259,7 +259,7 @@ class TwistedHiggsModuliADHM:
         The symbol t that will be substituted for 1 during calculations.
     T : Symbol
         The symbol T used in the generating function.
-    gen_f : Expr
+    gen_f : LambdaRingExpr
         The generating function used to compute the Mozgovoy formula.
     coeff : dict[sp.Expr, sp.Expr]
         A dictionary storing the coefficients of the generating function.
@@ -285,10 +285,10 @@ class TwistedHiggsModuliADHM:
         self._mobius = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0]
         self.lef = Lefschetz()
         self.t, self.T = Symbol("t"), Symbol("T")
-        self.gen_f: Expr = 0
+        self.gen_f: LambdaRingExpr = 0
         self.coeff: dict[sp.Expr, sp.Expr] = {}
 
-    def gen_func(self) -> Expr:
+    def gen_func(self) -> LambdaRingExpr:
         """
         Generates the function used to compute the Mozgovoy formula.
 
@@ -296,12 +296,12 @@ class TwistedHiggsModuliADHM:
 
         Returns:
         --------
-        Expr
+        LambdaRingExpr
             The generating function up to rank r.
         """
-        H_sum: list[Expr] = [0] * (self.r + 1)
+        H_sum: list[LambdaRingExpr] = [0] * (self.r + 1)
         for j in range(1, self.r + 1):
-            Hn: Expr = 0
+            Hn: LambdaRingExpr = 0
             for partition in all_partitions(j):
                 part = Partitions(partition)
                 Hp = 1
@@ -336,7 +336,7 @@ class TwistedHiggsModuliADHM:
 
     def moz_lambdas(
         self,
-        gc: GrothendieckRingContext = None,
+        lrc: LambdaRingContext = None,
         *,
         verbose: int = 0,
     ) -> PolyElement:
@@ -348,7 +348,7 @@ class TwistedHiggsModuliADHM:
 
         Args:
         -----
-        gc : GrothendieckRingContext, optional
+        lrc : LambdaRingContext, optional
             The Grothendieck ring context to use for the conversion.
         verbose : int, optional
             How much information to print during the computation (0 for none, 1 for progress, 2 for formulas).
@@ -371,8 +371,8 @@ class TwistedHiggsModuliADHM:
         lef = Lefschetz()
 
         if self.coeff == {}:
-            gc = gc or GrothendieckRingContext()
-            sp_M_sum = self.gen_f.to_lambda(gc=gc)
+            lrc = lrc or LambdaRingContext()
+            sp_M_sum = self.gen_f.to_lambda(lrc=lrc)
 
             if verbose > 0:
                 print("Formula converted to lambdas.")
@@ -490,7 +490,7 @@ class TwistedHiggsModuli:
             raise ValueError("The method should be either 'BB', 'ADHM', or 'auto'")
 
     def compute(
-        self, gc: GrothendieckRingContext = None, *, verbose: int = 0
+        self, lrc: LambdaRingContext = None, *, verbose: int = 0
     ) -> PolyElement:
         """
         Computes the motive of the moduli space of L-twisted Higgs bundles.
@@ -500,7 +500,7 @@ class TwistedHiggsModuli:
 
         Args:
         -----
-        gc : GrothendieckRingContext, optional
+        lrc : LambdaRingContext, optional
             The Grothendieck ring context to use for the computation.
         verbose : int, optional
             How much information to print during the computation (0 for none, 1 for progress, 2 for formulas).
@@ -511,6 +511,6 @@ class TwistedHiggsModuli:
             The motive of the moduli space of L-twisted Higgs bundles, represented as a polynomial.
         """
         if self.method == "BB":
-            return self.motive.simplify(gc=gc, verbose=verbose)
+            return self.motive.simplify(lrc=lrc, verbose=verbose)
         else:
-            return self.motive.moz_lambdas(gc=gc, verbose=verbose)
+            return self.motive.moz_lambdas(lrc=lrc, verbose=verbose)

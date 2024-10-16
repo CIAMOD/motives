@@ -5,7 +5,7 @@ import sympy as sp
 from multipledispatch import dispatch
 
 from .operand import Operand
-from .groth_ring_context import GrothendieckRingContext
+from .lambda_ring_context import LambdaRingContext
 
 class Variable(Operand, sp.Symbol):
     """
@@ -122,7 +122,7 @@ class Variable(Operand, sp.Symbol):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the Lambda variable of this variable for a given degree `i`.
 
@@ -130,7 +130,7 @@ class Variable(Operand, sp.Symbol):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for the conversion between operators.
 
         Returns:
@@ -175,8 +175,8 @@ class Variable(Operand, sp.Symbol):
             }
         )
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this variable into an equivalent Adams polynomial.
 
@@ -184,7 +184,7 @@ class Variable(Operand, sp.Symbol):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -194,7 +194,7 @@ class Variable(Operand, sp.Symbol):
         """
         return self.get_adams_var(1)
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this variable in a polynomial with Lambda polynomials.
 
@@ -202,7 +202,7 @@ class Variable(Operand, sp.Symbol):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
@@ -214,14 +214,14 @@ class Variable(Operand, sp.Symbol):
         """
         ph = ph.xreplace(
             {
-                self.get_adams_var(i): gc.get_lambda_2_adams_pol(i)
+                self.get_adams_var(i): lrc.get_lambda_2_adams_pol(i)
                 for i in range(2, len(self._adams_vars))
             }
         )
         ph = ph.xreplace(
             {
-                gc.lambda_vars[i]: self.get_lambda_var(i)
-                for i in range(1, len(gc.lambda_vars))
+                lrc.lambda_vars[i]: self.get_lambda_var(i)
+                for i in range(1, len(lrc.lambda_vars))
             }
         )
         return ph

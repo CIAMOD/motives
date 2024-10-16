@@ -3,9 +3,9 @@ from ..utils import all_partitions, multinomial_coeff, SingletonMeta
 from functools import reduce
 
 
-class GrothendieckRingContext(metaclass=SingletonMeta):
+class LambdaRingContext(metaclass=SingletonMeta):
     """
-    A class representing a Grothendieck ring context.
+    A class representing a Lambda-Ring context.
 
     Attributes:
     -----------
@@ -29,7 +29,7 @@ class GrothendieckRingContext(metaclass=SingletonMeta):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes a Grothendieck ring context.
+        Initializes a Lambda-Ring context.
 
         Parameters:
         -----------
@@ -548,7 +548,7 @@ class GrothendieckRingContext(metaclass=SingletonMeta):
 if __name__ == "__main__":
     from time import perf_counter
 
-    groth = GrothendieckRingContext()
+    groth = LambdaRingContext()
 
     n = 15
 

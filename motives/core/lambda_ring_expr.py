@@ -5,11 +5,11 @@ from typing import TypeVar
 import sympy as sp
 from typeguard import typechecked
 
-from .groth_ring_context import GrothendieckRingContext
+from .lambda_ring_context import LambdaRingContext
 
 Operand = TypeVar('Operand')  # Define Operand as a TypeVar for type hinting
 
-class Expr(sp.Expr):
+class LambdaRingExpr(sp.Expr):
     """
     Represents a mathematical expression that can be converted to different
     polynomial forms such as Adams and Lambda polynomials, or manipulated using
@@ -54,13 +54,13 @@ class Expr(sp.Expr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def to_adams(self, gc: GrothendieckRingContext = None) -> sp.Expr:
+    def to_adams(self, lrc: LambdaRingContext = None) -> sp.Expr:
         """
         Converts this expression into an equivalent Adams polynomial.
 
         Args:
         -----
-        gc : GrothendieckRingContext, optional
+        lrc : LambdaRingContext, optional
             The Grothendieck ring context used for converting between ring operators.
             If None, a new context is created.
 
@@ -69,17 +69,17 @@ class Expr(sp.Expr):
         sp.Expr
             A polynomial of Adams operators equivalent to this expression.
         """
-        gc = gc or GrothendieckRingContext()
+        lrc = lrc or LambdaRingContext()
         operands: set[Operand] = self.free_symbols
-        return self._to_adams(operands, gc)
+        return self._to_adams(operands, lrc)
 
-    def to_lambda(self, gc: GrothendieckRingContext = None, *, optimize: bool = True) -> sp.Expr:
+    def to_lambda(self, lrc: LambdaRingContext = None, *, optimize: bool = True) -> sp.Expr:
         """
         Converts this expression into an equivalent Lambda polynomial.
 
         Args:
         -----
-        gc : GrothendieckRingContext, optional
+        lrc : LambdaRingContext, optional
             The Grothendieck ring context used for the conversion between ring operators.
             If None, a new context is created.
         optimize : bool, optional
@@ -90,16 +90,16 @@ class Expr(sp.Expr):
         sp.Expr
             A polynomial of Lambda operators equivalent to this expression.
         """
-        gc = gc or GrothendieckRingContext()
+        lrc = lrc or LambdaRingContext()
         operands: set[Operand] = self.free_symbols
 
         if optimize:
-            adams_pol = self._to_adams_lambda(operands, gc, 1)
+            adams_pol = self._to_adams_lambda(operands, lrc, 1)
         else:
-            adams_pol = self._to_adams(operands, gc)
+            adams_pol = self._to_adams(operands, lrc)
 
         for operand in operands:
-            adams_pol = operand._subs_adams(gc, adams_pol)
+            adams_pol = operand._subs_adams(lrc, adams_pol)
 
         return adams_pol
 
@@ -157,7 +157,7 @@ class Expr(sp.Expr):
         from .operator.ring_operator import Adams
         return Adams(degree, self)
 
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this expression subtree into an equivalent Adams polynomial.
 
@@ -165,7 +165,7 @@ class Expr(sp.Expr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -180,7 +180,7 @@ class Expr(sp.Expr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def _to_adams_lambda(self, operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+    def _to_adams_lambda(self, operands: set[Operand], lrc: LambdaRingContext, adams_degree: int = 1) -> sp.Expr:
         """
         Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion.
 
@@ -190,7 +190,7 @@ class Expr(sp.Expr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         adams_degree : int, optional
             Sum of the degree of all Adams operators higher than this node in its branch.

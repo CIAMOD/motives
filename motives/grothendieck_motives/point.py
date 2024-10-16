@@ -4,7 +4,7 @@ import sympy as sp
 
 from ..utils import SingletonMeta
 
-from ..core import GrothendieckRingContext
+from ..core import LambdaRingContext
 from ..core.operand import Operand
 
 from .motive import Motive
@@ -61,7 +61,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the point motive with a Lambda operation applied to it.
 
@@ -72,7 +72,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for the conversion between operators (not used here).
 
         Returns:
@@ -104,8 +104,8 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return ph
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this point into an equivalent Adams polynomial.
 
@@ -115,7 +115,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -125,7 +125,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in a polynomial with their equivalent Lambda polynomials.
 
@@ -135,7 +135,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.

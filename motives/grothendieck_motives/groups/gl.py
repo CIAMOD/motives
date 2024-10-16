@@ -1,7 +1,7 @@
 import sympy as sp
 from multipledispatch import dispatch
 
-from ...core import GrothendieckRingContext
+from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
@@ -95,7 +95,7 @@ class GL(Motive, sp.AtomicExpr):
             *[self.lef ** (i * k) - 1 for k in range(1, self.n + 1)]
         )
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the GL_n bundle with a Lambda operation applied to it.
 
@@ -106,7 +106,7 @@ class GL(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for converting between Adams and Lambda operators.
 
         Returns:
@@ -114,7 +114,7 @@ class GL(Motive, sp.AtomicExpr):
         sp.Expr
             The GL_n bundle with the Lambda operator applied.
         """
-        gc = context or GrothendieckRingContext()
+        lrc = context or LambdaRingContext()
 
         gl = self.lef ** (((self.n - 1) * (self.n - 2)) // 2) * sp.Mul(
             *[self.lef**k - 1 for k in range(1, self.n + 1)]
@@ -122,8 +122,8 @@ class GL(Motive, sp.AtomicExpr):
 
         ph_list = [self.lef._to_adams(j, gl) for j in range(i + 1)]
 
-        return gc.get_adams_2_lambda_pol(i).xreplace(
-            {gc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
+        return lrc.get_adams_2_lambda_pol(i).xreplace(
+            {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
         )
 
     @dispatch(int, sp.Expr)
@@ -151,8 +151,8 @@ class GL(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this GL_n bundle into an equivalent Adams polynomial.
 
@@ -160,7 +160,7 @@ class GL(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The ring context used for converting between Adams operators.
 
         Returns:
@@ -172,7 +172,7 @@ class GL(Motive, sp.AtomicExpr):
             *[self.lef**k - 1 for k in range(1, self.n + 1)]
         )
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this GL_n bundle in the expression
         with their equivalent Lambda polynomials.
@@ -182,7 +182,7 @@ class GL(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The ring context used for the conversion between Adams and Lambda operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
