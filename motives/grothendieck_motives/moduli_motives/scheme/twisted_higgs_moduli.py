@@ -4,8 +4,8 @@ from ...curves.curve import Curve
 
 from ....core import LambdaRingContext
 
-from .TwistedHiggsModuliBB import TwistedHiggsModuliBB
-from .TwistedHiggsModuliADHM import TwistedHiggsModuliADHM
+from .twisted_higgs_moduli_bb import TwistedHiggsModuliBB
+from .twisted_higgs_moduli_adhm import TwistedHiggsModuliADHM
 
 class TwistedHiggsModuli:
     """

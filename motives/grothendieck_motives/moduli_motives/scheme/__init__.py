@@ -1,3 +1,3 @@
 from .twisted_higgs_moduli import TwistedHiggsModuli
-from .TwistedHiggsModuliADHM import TwistedHiggsModuliADHM
-from .TwistedHiggsModuliBB import TwistedHiggsModuliBB
+from .twisted_higgs_moduli_adhm import TwistedHiggsModuliADHM
+from .twisted_higgs_moduli_bb import TwistedHiggsModuliBB
