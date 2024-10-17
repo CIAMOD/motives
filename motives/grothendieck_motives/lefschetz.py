@@ -1,11 +1,11 @@
 from __future__ import annotations
 import sympy as sp
 
-from .symbol import Symbol
+from .polynomial_1_var import Polynomial1Var
 
 from ..utils import SingletonMeta
 
-class Lefschetz(Symbol, metaclass=SingletonMeta):
+class Lefschetz(Polynomial1Var, metaclass=SingletonMeta):
     """
     Represents a Lefschetz motive in an expression tree.
 

@@ -1,4 +1,4 @@
 from .motive import Motive
 from .point import Point
-from .symbol import Symbol
+from .polynomial_1_var import Polynomial1Var
 from .proj import Proj

@@ -4,7 +4,7 @@ from sympy.polys.rings import PolyElement
 from ...curves.curve import Curve
 
 from ...lefschetz import Lefschetz
-from ...symbol import Symbol
+from ...polynomial_1_var import Polynomial1Var
 
 from ....core import LambdaRingContext
 from ....core.lambda_ring_expr import LambdaRingExpr
@@ -30,10 +30,10 @@ class TwistedHiggsModuliADHM:
         The rank of the underlying vector bundles.
     lef : Lefschetz
         The Lefschetz operator.
-    t : Symbol
-        The symbol t that will be substituted for 1 during calculations.
-    T : Symbol
-        The symbol T used in the generating function.
+    t : Polynomial1Var
+        The Polynomial1Var t that will be substituted for 1 during calculations.
+    T : Polynomial1Var
+        The Polynomial1Var T used in the generating function.
     gen_f : LambdaRingExpr
         The generating function used to compute the Mozgovoy formula.
     coeff : dict[sp.Expr, sp.Expr]
@@ -59,7 +59,7 @@ class TwistedHiggsModuliADHM:
         self.r = r
         self._mobius = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0]
         self.lef = Lefschetz()
-        self.t, self.T = Symbol("t"), Symbol("T")
+        self.t, self.T = Polynomial1Var("t"), Polynomial1Var("T")
         self.gen_f: LambdaRingExpr = 0
         self.coeff: dict[sp.Expr, sp.Expr] = {}
 
@@ -142,7 +142,7 @@ class TwistedHiggsModuliADHM:
         if verbose > 0:
             print("Formula computed.")
 
-        t, T = Symbol("t"), Symbol("T")
+        t, T = Polynomial1Var("t"), Polynomial1Var("T")
         lef = Lefschetz()
 
         if self.coeff == {}:
