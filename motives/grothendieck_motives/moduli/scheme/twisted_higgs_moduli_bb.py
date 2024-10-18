@@ -2,14 +2,13 @@ import sympy as sp
 from sympy.polys.rings import PolyElement
 import math
 
+from .vhs import VHS
+
 from ...curves.curve import Curve
 
-from ...lefschetz import Lefschetz
-
 from ....core import LambdaRingContext
-from ....core.lambda_ring_expr import LambdaRingExpr
 
-class TwistedHiggsModuliBB:
+class TwistedHiggsModuliBB(VHS):
     """
     The motive of the moduli space of L-twisted Higgs bundles over the curve X.
 
@@ -48,124 +47,12 @@ class TwistedHiggsModuliBB:
         r : int
             The rank of the underlying vector bundles (must be 2 or 3).
         """
-        self.cur = x
-        self.g = self.cur.g
-        self.p = p
-        self.r = r
-        self.dl = 2 * self.g - 2 + p
-        self.lef = Lefschetz()
-        self.vhs: dict[tuple, LambdaRingExpr] = {}
-
-        if self.r == 2:
-            self.M2()
-        elif self.r == 3:
-            self.M3()
-        else:
+        if r not in [2, 3]:
             raise ValueError("The rank should be either 2 or 3")
+        
+        super().__init__(x, p, r)
 
-    def M2(self) -> None:
-        """
-        Computes the formula of rank 2 and fills the vhs dictionary with the components.
-
-        This method calculates and stores the formula for rank 2 Higgs bundles in the vhs dictionary.
-        """
-        self.vhs[(2,)] = (
-            self.lef ** (4 * self.dl + 4 - 4 * self.g)
-            * (self.cur.Jac * self.cur.P(self.lef) - self.lef**self.g * self.cur.Jac**2)
-            / ((self.lef - 1) * (self.lef**2 - 1))
-        )
-        self.vhs[(1, 1)] = (
-            self.lef ** (3 * self.dl + 2 - 2 * self.g)
-            * self.cur.Jac
-            * sp.Add(
-                *[
-                    self.cur.lambda_(1 - 2 * i + self.dl)
-                    for i in range(1, (self.dl + 1) // 2 + 1)
-                ]
-            )
-        )
-
-    def M3(self) -> None:
-        """
-        Computes the formula of rank 3 and fills the vhs dictionary with the components.
-
-        This method calculates and stores the formula for rank 3 Higgs bundles in the vhs dictionary.
-        """
-        self.vhs[(3,)] = (
-            self.lef ** (9 * self.dl + 9 - 9 * self.g)
-            * self.cur.Jac
-            * (
-                self.lef ** (3 * self.g - 1)
-                * (1 + self.lef + self.lef**2)
-                * self.cur.Jac**2
-                - self.lef ** (2 * self.g - 1)
-                * (1 + self.lef) ** 2
-                * self.cur.Jac
-                * self.cur.P(self.lef)
-                + self.cur.P(self.lef) * self.cur.P(self.lef**2)
-            )
-            / ((self.lef - 1) * (self.lef**2 - 1) ** 2 * (self.lef**3 - 1))
-        )
-        self.vhs[(1, 2)] = (
-            (self.lef ** (7 * self.dl + 5 - 5 * self.g) * self.cur.Jac**2)
-            * sp.Add(
-                *[
-                    self.lef ** (i + self.g)
-                    * sp.Add(
-                        *[
-                            self.cur.lambda_(j)
-                            * self.lef ** (2 * (-2 * i + self.dl - j))
-                            for j in range(-2 * i + self.dl + 1)
-                        ]
-                    )
-                    - sp.Add(
-                        *[
-                            self.cur.lambda_(j) * self.lef**j
-                            for j in range(-2 * i + self.dl + 1)
-                        ]
-                    )
-                    for i in range(1, math.floor(self.dl / 2 + 1 / 3) + 1)
-                ]
-            )
-            / (self.lef - 1)
-        )
-        self.vhs[(2, 1)] = (
-            (self.lef ** (7 * self.dl + 5 - 5 * self.g) * self.cur.Jac**2)
-            * sp.Add(
-                *[
-                    self.lef ** (i + self.g - 1)
-                    * sp.Add(
-                        *[
-                            self.cur.lambda_(j)
-                            * self.lef ** (2 * (-2 * i + self.dl + 1 - j))
-                            for j in range(-2 * i + self.dl + 1 + 1)
-                        ]
-                    )
-                    - sp.Add(
-                        *[
-                            self.cur.lambda_(j) * self.lef**j
-                            for j in range(-2 * i + self.dl + 1 + 1)
-                        ]
-                    )
-                    for i in range(1, math.floor(self.dl / 2 + 2 / 3) + 1)
-                ]
-            )
-            / (self.lef - 1)
-        )
-        self.vhs[(1, 1, 1)] = (
-            self.lef ** (6 * self.dl + 3 - 3 * self.g)
-            * self.cur.Jac
-            * sp.Add(
-                *[
-                    self.cur.lambda_(-i + j + self.dl)
-                    * self.cur.lambda_(1 - i - 2 * j + self.dl)
-                    for i in range(1, self.dl + 1)
-                    for j in range(
-                        max(-self.dl + i, 1 - i), math.floor((self.dl - i + 1) / 2) + 1
-                    )
-                ]
-            )
-        )
+        print("TwistedHiggsModuliBB initialized")
 
     def simplify(
         self, lrc: LambdaRingContext = None, *, verbose: int = 0
@@ -201,20 +88,30 @@ class TwistedHiggsModuliBB:
         # Initialize a Grothendieck ring context if not provided
         lrc = lrc or LambdaRingContext()
 
+        # Choose VHS components base on rank
+        if self.r == 2:
+            vhs_keys = [(2,), (1, 1)]
+        elif self.r == 3:
+            vhs_keys = [(3,), (1, 2), (2, 1), (1, 1, 1)]  
+        else:
+            raise NotImplementedError("The rank should be either 2 or 3")
+
         # Process each VHS component and simplify
-        for vhs, expr in self.vhs.items():
+        for vhs_key in vhs_keys:
+            # Access the expression associated with the current key
+            expr = self.vhs.get(vhs_key)
             # Convert to lambda variables
             lambda_pol = expr.to_lambda(lrc=lrc)
 
             if verbose > 0:
-                print(f"Computed lambda of VHS {vhs}")
+                print(f"Computed lambda of VHS {vhs_key}")
                 if verbose > 1:
-                    print(f"Lambda of VHS {vhs}: {lambda_pol}")
+                    print(f"Lambda of VHS {vhs_key}: {lambda_pol}")
 
-            if all(el == 1 for el in vhs):
+            if all(el == 1 for el in vhs_key):
                 result += domain_qq.from_sympy(lambda_pol)
                 if verbose > 0:
-                    print(f"Cancelled VHS {vhs}")
+                    print(f"Cancelled VHS {vhs_key}")
                 continue
 
             # Cancel the denominator
@@ -226,8 +123,8 @@ class TwistedHiggsModuliBB:
             result += numerator_pol
 
             if verbose > 0:
-                print(f"Cancelled VHS {vhs}")
+                print(f"Cancelled VHS {vhs_key}")
                 if verbose > 1:
-                    print(f"Cancelled VHS {vhs}: {numerator_pol}")
+                    print(f"Cancelled VHS {vhs_key}: {numerator_pol}")
 
         return domain_zz.convert_from(result, domain_qq)
