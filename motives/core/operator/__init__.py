@@ -1,7 +1,7 @@
 from .nary_operator import _to_adams_lambda_nary, _to_adams_nary, get_max_adams_degree_nary, get_max_groth_degree_nary
 from .pow_operator import _to_adams_lambda_pow, _to_adams_pow, get_max_adams_degree_pow, get_max_groth_degree_pow
 from .rational_operator import get_max_adams_degree_num, get_max_groth_degree_num, get_adams_var_num, get_lambda_var_num, _to_adams_num, _to_adams_lambda_num, _subs_adams_num
-from .ring_operator import sigma, lambda_, adams, to_adams, to_lambda
+from .ring_operator import sigma, lambda_, adams, to_adams, to_lambda, Lambda_, Sigma, Adams
 
 import sympy
 
