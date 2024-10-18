@@ -1,12 +1,14 @@
 import sympy as sp
+from typeguard import typechecked
+
+from ..lambda_ring_context import LambdaRingContext
+from ..operand import Operand
+from ..lambda_ring_expr import LambdaRingExpr
+
+import sympy as sp
 from sympy.printing.str import StrPrinter
 
-from ..expr import Expr
-from ..operand import Operand
-from ..groth_ring_context import GrothendieckRingContext
-
-
-class RingOperator(Expr, sp.Function):
+class RingOperator(LambdaRingExpr, sp.Function):
     """
     Represents an abstract ring operator in an expression tree.
 
@@ -17,7 +19,7 @@ class RingOperator(Expr, sp.Function):
 
     Attributes:
     -----------
-    args : tuple[sp.Integer, Expr]
+    args : tuple[sp.Integer, LambdaRingExpr]
         The arguments of the ring operator, where the first element is the degree 
         (an integer) and the second element is the child expression.
 
@@ -25,11 +27,11 @@ class RingOperator(Expr, sp.Function):
     -----------
     degree : int
         The degree of the ring operator.
-    child : Expr
+    child : LambdaRingExpr
         The child node (expression) to which the ring operator is applied.
     """
 
-    args: tuple[sp.Integer, Expr]
+    args: tuple[sp.Integer, LambdaRingExpr]
 
     @property
     def degree(self) -> int:
@@ -47,7 +49,7 @@ class RingOperator(Expr, sp.Function):
         return self.args[0].p
 
     @property
-    def child(self) -> Expr:
+    def child(self) -> LambdaRingExpr:
         """
         The child node of the ring operator.
 
@@ -56,7 +58,7 @@ class RingOperator(Expr, sp.Function):
 
         Returns:
         --------
-        Expr
+        LambdaRingExpr
             The child expression of the ring operator.
         """
         return self.args[1]
@@ -98,10 +100,10 @@ class Sigma(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    _to_adams(operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         Converts the sigma subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], lrc: LambdaRingContext, adams_degree: int = 1) -> sp.Expr:
         Converts the sigma subtree into an equivalent Adams polynomial, optimized when called 
         from `to_lambda`.
     """
@@ -147,7 +149,7 @@ class Sigma(RingOperator):
         """
         return max(self.degree, self.child.get_max_groth_degree())
 
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts the sigma subtree into an equivalent Adams polynomial.
 
@@ -160,7 +162,7 @@ class Sigma(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -172,7 +174,7 @@ class Sigma(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands, gc)
+        ph = self.child._to_adams(operands, lrc)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
@@ -181,17 +183,17 @@ class Sigma(RingOperator):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_sigma = gc.get_adams_2_sigma_pol(self.degree)
+        adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
         # Substitute the jth polynomial for the Adams of degree j in the adams_to_sigma polynomial
         return adams_to_sigma.xreplace(
-            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {lrc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        gc: GrothendieckRingContext,
+        lrc: LambdaRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -205,7 +207,7 @@ class Sigma(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         adams_degree : int, optional
             The sum of the degree of all Adams operators higher than this node in the expression tree,
@@ -222,16 +224,16 @@ class Sigma(RingOperator):
         # Optimization: If the child is an operand and there are no Adams operators on top,
         # convert sigma directly to lambda
         if isinstance(self.child, Operand) and adams_degree == 1:
-            lambda_to_sigma = gc.get_lambda_2_sigma_pol(self.degree)
+            lambda_to_sigma = lrc.get_lambda_2_sigma_pol(self.degree)
             return lambda_to_sigma.xreplace(
                 {
-                    gc.lambda_vars[i]: self.child.get_lambda_var(i, gc)
+                    lrc.lambda_vars[i]: self.child.get_lambda_var(i, lrc)
                     for i in range(self.degree + 1)
                 }
             )
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(operands, lrc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
@@ -244,11 +246,11 @@ class Sigma(RingOperator):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_sigma = gc.get_adams_2_sigma_pol(self.degree)
+        adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
         # Substitute the jth polynomial for the Adams of degree j in the adams_to_sigma polynomial
         return adams_to_sigma.xreplace(
-            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {lrc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
 class Lambda_(RingOperator):
@@ -272,10 +274,10 @@ class Lambda_(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    _to_adams(operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         Converts the lambda subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], lrc: LambdaRingContext, adams_degree: int = 1) -> sp.Expr:
         Converts the lambda subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
@@ -321,7 +323,7 @@ class Lambda_(RingOperator):
         """
         return max(self.degree, self.child.get_max_groth_degree())
 
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts the lambda subtree into an equivalent Adams polynomial.
 
@@ -334,7 +336,7 @@ class Lambda_(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -346,7 +348,7 @@ class Lambda_(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands, gc)
+        ph = self.child._to_adams(operands, lrc)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
@@ -355,17 +357,17 @@ class Lambda_(RingOperator):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_lambda = gc.get_adams_2_lambda_pol(self.degree)
+        adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
         # Substitute the jth polynomial for the Adams of degree j in the adams_to_lambda polynomial
         return adams_to_lambda.xreplace(
-            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {lrc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        gc: GrothendieckRingContext,
+        lrc: LambdaRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -379,7 +381,7 @@ class Lambda_(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         adams_degree : int, optional
             The sum of the degree of all Adams operators higher than this node in the expression tree,
@@ -396,10 +398,10 @@ class Lambda_(RingOperator):
         # Optimization: If the child is an operand and there are no Adams operators on top,
         # return the lambda variable directly
         if isinstance(self.child, Operand) and adams_degree == 1:
-            return self.child.get_lambda_var(self.degree, gc)
+            return self.child.get_lambda_var(self.degree, lrc)
 
         # Get the polynomial by calling _to_adams_lambda on the child
-        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(operands, lrc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
@@ -412,11 +414,11 @@ class Lambda_(RingOperator):
             for operand in operands:
                 ph_list[j] = operand._to_adams(j, ph_list[j])
 
-        adams_to_lambda = gc.get_adams_2_lambda_pol(self.degree)
+        adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
         # Substitute the jth polynomial for the Adams of degree j in the adams_to_lambda polynomial
         return adams_to_lambda.xreplace(
-            {gc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
+            {lrc.adams_vars[i]: ph_list[i] for i in range(self.degree + 1)}
         )
 
 class Adams(RingOperator):
@@ -440,10 +442,10 @@ class Adams(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    _to_adams(operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         Converts the Adams subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], gc: GrothendieckRingContext, adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], lrc: LambdaRingContext, adams_degree: int = 1) -> sp.Expr:
         Converts the Adams subtree into an equivalent Adams polynomial, optimized when called 
         from `to_lambda`.
     """
@@ -489,7 +491,7 @@ class Adams(RingOperator):
         """
         return self.child.get_max_groth_degree()
 
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts the Adams subtree into an equivalent Adams polynomial.
 
@@ -501,7 +503,7 @@ class Adams(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
@@ -513,7 +515,7 @@ class Adams(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands, gc)
+        ph = self.child._to_adams(operands, lrc)
 
         if self.degree == 1:
             return ph
@@ -527,7 +529,7 @@ class Adams(RingOperator):
     def _to_adams_lambda(
         self,
         operands: set[Operand],
-        gc: GrothendieckRingContext,
+        lrc: LambdaRingContext,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -542,7 +544,7 @@ class Adams(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         adams_degree : int, optional
             The sum of the degree of all Adams operators higher than this node in the expression tree,
@@ -557,7 +559,7 @@ class Adams(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams_lambda on the child
-        ph = self.child._to_adams_lambda(operands, gc, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(operands, lrc, adams_degree + self.degree)
 
         if self.degree == 1:
             return ph
@@ -567,3 +569,135 @@ class Adams(RingOperator):
             ph = operand._to_adams(self.degree, ph)
 
         return ph
+
+def to_adams(self: sp.Expr, lrc: LambdaRingContext = None) -> sp.Expr:
+    """
+    Converts the current expression into a polynomial of Adams operators.
+
+    This function transforms the expression into its equivalent form using Adams operators. 
+    It is intended to be used as a method for `Pow`, `Add`, `Mul`, and `Rational` expressions. 
+    The Adams polynomial represents the structure of the current expression in the context of 
+    Grothendieck rings.
+
+    Args:
+    -----
+    lrc : LambdaRingContext, optional
+        The Grothendieck ring context to use for the conversion. If not provided, a new context is created.
+
+    Returns:
+    --------
+    sp.Expr
+        The polynomial of Adams operators equivalent to the current expression.
+    """
+    lrc = lrc or LambdaRingContext()
+
+    operands: set[Operand] = self.free_symbols
+
+    return self._to_adams(operands, lrc)
+
+def to_lambda(self: sp.Expr, lrc: LambdaRingContext = None, *, optimize=True) -> sp.Expr:
+    """
+    Converts the current expression into a polynomial of lambda operators.
+
+    This function transforms the expression into its equivalent form using lambda operators.
+    It is intended to be used as a method for `Pow`, `Add`, `Mul`, and `Rational` expressions. 
+    The conversion is done via Adams operators, which are then substituted by their lambda equivalents.
+    
+    Args:
+    -----
+    lrc : LambdaRingContext, optional
+        The Grothendieck ring context of the tree. If not provided, a new context is created.
+    optimize : bool, optional, default=True
+        Whether to optimize the conversion to lambda. If True, the conversion uses an optimized 
+        pathway by converting Adams operators directly to lambda operators.
+
+    Returns:
+    --------
+    sp.Expr
+        The polynomial of lambda operators equivalent to the current expression.
+    """
+    # Initialize a Grothendieck ring context if not provided
+    lrc = lrc or LambdaRingContext()
+
+    operands: set[Operand] = self.free_symbols
+
+    # Get the Adams polynomial of the tree, with optimization if requested
+    if optimize:
+        adams_pol = self._to_adams_lambda(operands, lrc, 1)
+    else:
+        adams_pol = self._to_adams(operands, lrc)
+
+    # If the result is an integer, return it directly
+    if isinstance(adams_pol, (sp.Integer, int)):
+        return adams_pol
+
+    # Substitute Adams variables for lambda variables
+    for operand in operands:
+        adams_pol = operand._subs_adams(lrc, adams_pol)
+
+    return adams_pol
+
+@typechecked
+def sigma(self: sp.Expr, degree: int) -> sp.Expr:
+    """
+    Applies the sigma operation to the current expression.
+
+    This function adds the sigma ring operator to the expression, creating a new expression
+    with the specified sigma operator applied. It is intended to be used as a method for 
+    `Pow`, `Add`, `Mul`, and `Rational` expressions.
+
+    Args:
+    -----
+    degree : int
+        The degree of the sigma operator to be applied.
+
+    Returns:
+    --------
+    sp.Expr
+        An expression with the sigma operator applied.
+    """
+    return Sigma(degree, self)
+
+
+@typechecked
+def lambda_(self: sp.Expr, degree: int) -> sp.Expr:
+    """
+    Applies the lambda operation to the current expression.
+
+    This function adds the lambda ring operator to the expression, creating a new expression
+    with the specified lambda operator applied. It is intended to be used as a method for 
+    `Pow`, `Add`, `Mul`, and `Rational` expressions.
+
+    Args:
+    -----
+    degree : int
+        The degree of the lambda operator to be applied.
+
+    Returns:
+    --------
+    sp.Expr
+        An expression with the lambda operator applied.
+    """
+    return Lambda_(degree, self)
+
+
+@typechecked
+def adams(self: sp.Expr, degree: int) -> sp.Expr:
+    """
+    Applies the Adams operation to the current expression.
+
+    This function adds the Adams ring operator to the expression, creating a new expression
+    with the specified Adams operator applied. It is intended to be used as a method for 
+    `Pow`, `Add`, `Mul`, and `Rational` expressions.
+
+    Args:
+    -----
+    degree : int
+        The degree of the Adams operator to be applied.
+
+    Returns:
+    --------
+    sp.Expr
+        An expression with the Adams operator applied.
+    """
+    return Adams(degree, self)

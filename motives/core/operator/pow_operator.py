@@ -1,7 +1,7 @@
 import sympy as sp
 
 from ..operand import Operand
-from ..groth_ring_context import GrothendieckRingContext
+from ..lambda_ring_context import LambdaRingContext
 
 def get_max_adams_degree_pow(self: sp.Pow) -> int:
     """
@@ -39,7 +39,7 @@ def get_max_groth_degree_pow(self: sp.Pow) -> int:
 
 
 def _to_adams_pow(
-    self: sp.Pow, operands: set[Operand], gc: GrothendieckRingContext
+    self: sp.Pow, operands: set[Operand], lrc: LambdaRingContext
 ) -> sp.Expr:
     """
     Converts the `Pow` subtree into an equivalent Adams polynomial.
@@ -53,7 +53,7 @@ def _to_adams_pow(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
-    gc : GrothendieckRingContext
+    lrc : LambdaRingContext
         The Grothendieck ring context used for the conversion between ring operators.
 
     Returns:
@@ -61,13 +61,13 @@ def _to_adams_pow(
     sp.Expr
         A polynomial of Adams operators equivalent to this subtree.
     """
-    return self.base._to_adams(operands, gc) ** self.exp
+    return self.base._to_adams(operands, lrc) ** self.exp
 
 
 def _to_adams_lambda_pow(
     self: sp.Pow,
     operands: set[Operand],
-    gc: GrothendieckRingContext,
+    lrc: LambdaRingContext,
     adams_degree: int = 1,
 ) -> sp.Expr:
     """
@@ -83,7 +83,7 @@ def _to_adams_lambda_pow(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
-    gc : GrothendieckRingContext
+    lrc : LambdaRingContext
         The Grothendieck ring context used for the conversion between ring operators.
     adams_degree : int, optional
         The cumulative Adams degree higher than this node in the expression tree.
@@ -93,4 +93,4 @@ def _to_adams_lambda_pow(
     sp.Expr
         A polynomial of Adams operators equivalent to this subtree.
     """
-    return self.base._to_adams_lambda(operands, gc, adams_degree) ** self.exp
+    return self.base._to_adams_lambda(operands, lrc, adams_degree) ** self.exp

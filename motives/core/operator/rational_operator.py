@@ -2,7 +2,7 @@ import sympy as sp
 import math
 from functools import reduce
 
-from ..groth_ring_context import GrothendieckRingContext
+from ..lambda_ring_context import LambdaRingContext
 from ..operand import Operand
 
 def get_max_adams_degree_num(self: sp.Rational) -> int:
@@ -62,7 +62,7 @@ def get_adams_var_num(self: sp.Rational, i: int) -> sp.Expr:
 
 
 def get_lambda_var_num(
-    self: sp.Rational, i: int, context: GrothendieckRingContext = None
+    self: sp.Rational, i: int, context: LambdaRingContext = None
 ) -> sp.Expr:
     """
     Returns the `Rational` operand with a lambda operation applied to it.
@@ -76,7 +76,7 @@ def get_lambda_var_num(
     -----
     i : int
         The degree of the lambda operator.
-    context : GrothendieckRingContext, optional
+    context : LambdaRingContext, optional
         The ring context used for the conversion between operators.
 
     Returns:
@@ -91,7 +91,7 @@ def get_lambda_var_num(
 
 
 def _to_adams_num(
-    self: sp.Rational, operands: set[Operand], gc: GrothendieckRingContext
+    self: sp.Rational, operands: set[Operand], lrc: LambdaRingContext
 ) -> sp.Expr:
     """
     Converts this `Rational` subtree into an equivalent Adams polynomial.
@@ -105,7 +105,7 @@ def _to_adams_num(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
-    gc : GrothendieckRingContext
+    lrc : LambdaRingContext
         The Grothendieck ring context used for the conversion between ring operators.
 
     Returns:
@@ -119,7 +119,7 @@ def _to_adams_num(
 def _to_adams_lambda_num(
     self: sp.Rational,
     operands: set[Operand],
-    gc: GrothendieckRingContext,
+    lrc: LambdaRingContext,
     adams_degree: int = 1,
 ) -> sp.Expr:
     """
@@ -134,7 +134,7 @@ def _to_adams_lambda_num(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
-    gc : GrothendieckRingContext
+    lrc : LambdaRingContext
         The Grothendieck ring context used for the conversion between ring operators.
     adams_degree : int, optional
         The cumulative Adams degree higher than this node in the expression tree.
@@ -144,11 +144,11 @@ def _to_adams_lambda_num(
     sp.Expr
         The `Rational` operand itself.
     """
-    return self._to_adams(operands, gc)
+    return self._to_adams(operands, lrc)
 
 
 def _subs_adams_num(
-    self: sp.Rational, gc: GrothendieckRingContext, ph: sp.Expr
+    self: sp.Rational, lrc: LambdaRingContext, ph: sp.Expr
 ) -> sp.Expr:
     """
     Substitutes any Adams of the `Rational` operand in `ph` for its equivalent polynomial of lambdas.
@@ -161,7 +161,7 @@ def _subs_adams_num(
 
     Args:
     -----
-    gc : GrothendieckRingContext
+    lrc : LambdaRingContext
         The Grothendieck ring context used for the conversion between ring operators.
     ph : sp.Expr
         The polynomial to substitute the Adams variables into.

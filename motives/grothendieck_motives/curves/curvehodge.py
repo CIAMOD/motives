@@ -1,4 +1,3 @@
-from typing import TypeVar
 from typeguard import typechecked
 from multipledispatch import dispatch
 import sympy as sp
@@ -7,19 +6,17 @@ from sympy.polys.rings import PolyElement
 
 from ...utils import expr_from_pol
 
-from ...core import GrothendieckRingContext
+from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
 
-ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
-
-class Hodge(Motive, sp.AtomicExpr):
+class CurveHodge(Motive, sp.AtomicExpr):
     """
     Represents a Hodge motive for a curve in an expression tree.
 
-    A `Hodge` object is initialized with a name and genus (g), and it allows the generation
+    A `CurveHodge` object is initialized with a name and genus (g), and it allows the generation
     of Adams and Lambda variables based on the genus. It supports operations such as applying
     Adams or Lambda operators, generating Adams and Lambda variables, and computing generating functions.
 
@@ -28,13 +25,13 @@ class Hodge(Motive, sp.AtomicExpr):
     g : int
         The genus of the curve, which defines the degree limits of the Adams and Lambda operators.
     name : str
-        The name of the Hodge motive.
+        The name of the CurveHodge motive.
     lambda_symbols : list[sp.AtomicExpr]
-        A list of Lambda symbols generated for the Hodge motive.
+        A list of Lambda symbols generated for the CurveHodge motive.
     _domain : sp.Domain
         The domain used for the polynomial ring of Lambda operators.
     _ring : PolyRing
-        The polynomial ring for the Hodge motive.
+        The polynomial ring for the CurveHodge motive.
     _domain_symbols : list[PolyElement]
         The list of domain symbols used in the polynomial ring.
     _lef_symbol : PolyElement
@@ -50,24 +47,24 @@ class Hodge(Motive, sp.AtomicExpr):
     _lambda_to_adams : list[sp.Expr]
         The list of expressions for converting Lambda to Adams variables.
     _adams_vars : list[sp.Expr]
-        The list of Adams variables generated for the Hodge motive.
+        The list of Adams variables generated for the CurveHodge motive.
     """
 
     def __new__(cls, name: str, g: int = 1, *args, **kwargs):
         """
-        Creates a new instance of `Hodge`.
+        Creates a new instance of `CurveHodge`.
 
         Args:
         -----
         name : str
-            The name of the Hodge motive.
+            The name of the CurveHodge motive.
         g : int, optional
             The genus of the curve, default is 1.
 
         Returns:
         --------
-        Hodge
-            A new instance of `Hodge`.
+        CurveHodge
+            A new instance of `CurveHodge`.
         """
         new_hodge = sp.AtomicExpr.__new__(cls)
         new_hodge._assumptions["commutative"] = True
@@ -75,12 +72,12 @@ class Hodge(Motive, sp.AtomicExpr):
 
     def __init__(self, name: str, g: int = 1, *args, **kwargs):
         """
-        Initializes a `Hodge` instance.
+        Initializes a `CurveHodge` instance.
 
         Args:
         -----
         name : str
-            The name of the Hodge motive.
+            The name of the CurveHodge motive.
         g : int, optional
             The genus of the curve, default is 1.
         """
@@ -121,7 +118,7 @@ class Hodge(Motive, sp.AtomicExpr):
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the Hodge motive.
+        Returns the string representation of the CurveHodge motive.
 
         Returns:
         --------
@@ -132,7 +129,7 @@ class Hodge(Motive, sp.AtomicExpr):
 
     def _hashable_content(self) -> tuple:
         """
-        Returns the hashable content of the Hodge motive.
+        Returns the hashable content of the CurveHodge motive.
 
         Returns:
         --------
@@ -180,7 +177,7 @@ class Hodge(Motive, sp.AtomicExpr):
 
     def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the Hodge motive with an Adams operation applied to it.
+        Returns the CurveHodge motive with an Adams operation applied to it.
 
         Args:
         -----
@@ -190,14 +187,14 @@ class Hodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The Hodge motive with the Adams operator applied.
+            The CurveHodge motive with the Adams operator applied.
         """
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
-        Returns the Hodge motive with a Lambda operation applied to it.
+        Returns the CurveHodge motive with a Lambda operation applied to it.
 
         For Lambda operations with degree greater than 2g, the result is 0.
 
@@ -205,20 +202,20 @@ class Hodge(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for conversion between operators.
 
         Returns:
         --------
         sp.Expr
-            The Hodge motive with the Lambda operator applied, or 0 if the degree exceeds 2g.
+            The CurveHodge motive with the Lambda operator applied, or 0 if the degree exceeds 2g.
         """
         return sp.Integer(0) if i >= len(self._lambda_vars) else self._lambda_vars[i]
 
     @typechecked
     def Z(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Computes the generating function of the Hodge curve.
+        Computes the generating function of the CurveHodge curve.
 
         The generating function is Σ_{i=0}^{2g} λ_i * t^i.
 
@@ -230,7 +227,7 @@ class Hodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The generating function of the Hodge curve.
+            The generating function of the CurveHodge curve.
         """
         l = Lefschetz()
 
@@ -250,7 +247,7 @@ class Hodge(Motive, sp.AtomicExpr):
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies Adams operations to any instances of this Hodge motive in a polynomial.
+        Applies Adams operations to any instances of this CurveHodge motive in a polynomial.
 
         Args:
         -----
@@ -262,7 +259,7 @@ class Hodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The polynomial with Adams operators applied to the Hodge motive.
+            The polynomial with Adams operators applied to the CurveHodge motive.
         """
         max_adams = -1
         operands = ph.free_symbols
@@ -278,8 +275,8 @@ class Hodge(Motive, sp.AtomicExpr):
             }
         )
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this subtree into an equivalent Adams polynomial.
 
@@ -287,7 +284,7 @@ class Hodge(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for conversion between operators.
 
         Returns:
@@ -314,7 +311,7 @@ class Hodge(Motive, sp.AtomicExpr):
                 )
             )
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables for equivalent Lambda polynomials in the given polynomial.
 
@@ -323,7 +320,7 @@ class Hodge(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.

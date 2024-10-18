@@ -1,29 +1,26 @@
-from typing import Optional, Hashable, TypeVar
 from typeguard import typechecked
 from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
 
-ET = TypeVar('ET')  # Define Operand as a TypeVar for type hinting
-
 from ...utils import expr_from_pol
 
-from ...core import GrothendieckRingContext
+from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
 from ..point import Point
 
-from .hodge import Hodge
+from .curvehodge import CurveHodge
 
 class Curve(Motive, sp.AtomicExpr):
     """
     Represents a curve in an expression tree.
 
     A `Curve` is a motive that represents the sum of a point, a Lefschetz motive,
-    and a Hodge motive. It supports Adams and Lambda operations, generating functions,
+    and a CurveHodge motive. It supports Adams and Lambda operations, generating functions,
     and Jacobian calculations.
 
     Attributes:
@@ -31,15 +28,15 @@ class Curve(Motive, sp.AtomicExpr):
     name : str
         The name of the curve.
     g : int
-        The genus of the curve, which influences the Hodge motive.
+        The genus of the curve, which influences the CurveHodge motive.
     point : Point
         The point motive of the curve.
     curve_hodge : CurveHodge
-        The Hodge motive of the curve.
+        The CurveHodge motive of the curve.
     lefschetz : Lefschetz
         The Lefschetz motive of the curve.
     _ring : PolyRing
-        The polynomial ring of the curve's Hodge motive.
+        The polynomial ring of the curve's CurveHodge motive.
     _jac : sp.Expr or None
         The Jacobian of the curve.
     _lambda_vars : dict[int, sp.Expr]
@@ -85,7 +82,7 @@ class Curve(Motive, sp.AtomicExpr):
         self.name: str = name
 
         self.point: Point = Point()
-        self.curve_hodge: Hodge = Hodge(name, g)
+        self.curve_hodge: CurveHodge = CurveHodge(name, g)
         self.lefschetz: Lefschetz = Lefschetz()
 
         self._ring: PolyRing = self.curve_hodge._domain.ring
@@ -178,7 +175,7 @@ class Curve(Motive, sp.AtomicExpr):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
         Returns the curve with a Lambda operation applied to it.
 
@@ -186,7 +183,7 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for the conversion between operators.
 
         Returns:
@@ -204,7 +201,7 @@ class Curve(Motive, sp.AtomicExpr):
     @typechecked
     def P(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Computes the generating function of the Hodge motive of the curve.
+        Computes the generating function of the CurveHodge motive of the curve.
 
         Args:
         -----
@@ -214,14 +211,14 @@ class Curve(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The generating function of the Hodge motive.
+            The generating function of the CurveHodge motive.
         """
         return self.curve_hodge.Z(t)
 
     @property
     def Jac(self) -> sp.Expr:
         """
-        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the Hodge motive.
+        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the CurveHodge motive.
 
         Returns:
         --------
@@ -272,8 +269,8 @@ class Curve(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
         Converts this curve into an equivalent Adams polynomial.
 
@@ -281,7 +278,7 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between operators.
 
         Returns:
@@ -290,12 +287,12 @@ class Curve(Motive, sp.AtomicExpr):
             A polynomial of Adams operators equivalent to this curve.
         """
         return (
-            self.curve_hodge._to_adams(operands, gc)
-            + self.lefschetz._to_adams(operands, gc)
-            + self.point._to_adams(operands, gc)
+            self.curve_hodge._to_adams(operands, lrc)
+            + self.lefschetz._to_adams(operands, lrc)
+            + self.point._to_adams(operands, lrc)
         )
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 
@@ -304,7 +301,7 @@ class Curve(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
@@ -314,13 +311,13 @@ class Curve(Motive, sp.AtomicExpr):
         sp.Expr
             The polynomial with Adams variables substituted by Lambda polynomials.
         """
-        ph = self.curve_hodge._subs_adams(gc, ph)
+        ph = self.curve_hodge._subs_adams(lrc, ph)
         return ph
 
     @property
     def free_symbols(self) -> set[sp.Symbol]:
         """
-        Returns the set of free symbols in the curve, which includes the Hodge, Lefschetz, and Point motives.
+        Returns the set of free symbols in the curve, which includes the CurveHodge, Lefschetz, and Point motives.
 
         Returns:
         --------

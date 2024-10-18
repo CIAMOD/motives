@@ -3,43 +3,43 @@ from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
-from ..core import GrothendieckRingContext
+from ..core import LambdaRingContext
 from ..core.operand import Operand
-
+from ..core.object_1_dim import Object1Dim
 from .motive import Motive
 
-class Symbol(Motive, sp.Symbol):
+class Polynomial1Var(Object1Dim, sp.Symbol):
     """
     Represents an abstract one-dimensional motive in an expression tree.
 
-    A `Symbol` is an operand that can be used in expressions and supports Adams and Lambda operations, 
-    which are equivalent to raising the symbol to the specified power.
+    A `Polynomial1Var` is an operand that can be used in expressions and supports Adams and Lambda operations, 
+    which are equivalent to raising the Polynomial1Var to the specified power.
 
     Attributes:
     -----------
     name : str
-        The name of the symbol.
+        The name of the Polynomial1Var.
     """
 
-    def __new__(cls, name: str, **assumptions) -> Symbol:
+    def __new__(cls, name: str, **assumptions) -> Polynomial1Var:
         """
-        Creates a new instance of `Symbol`, with special handling for the name 'L', 
+        Creates a new instance of `Polynomial1Var`, with special handling for the name 'L', 
         which is reserved for the Lefschetz motive.
 
-        If the name 'L' is used, a warning is issued, and the symbol is replaced by 
+        If the name 'L' is used, a warning is issued, and the Polynomial1Var is replaced by 
         the Lefschetz motive.
 
         Args:
         -----
         name : str
-            The name of the symbol.
+            The name of the Polynomial1Var.
         assumptions : dict
-            Additional assumptions passed to the `Symbol` constructor.
+            Additional assumptions passed to the `Polynomial1Var` constructor.
 
         Returns:
         --------
-        Symbol or Lefschetz
-            A new instance of `Symbol` or the `Lefschetz` motive if the name is 'L'.
+        Polynomial1Var or Lefschetz
+            A new instance of `Polynomial1Var` or the `Lefschetz` motive if the name is 'L'.
         """
         if name == "L":
             warnings.warn(
@@ -51,20 +51,20 @@ class Symbol(Motive, sp.Symbol):
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the symbol, which is its name.
+        Returns the string representation of the Polynomial1Var, which is its name.
 
         Returns:
         --------
         str
-            The string representation of the symbol.
+            The string representation of the Polynomial1Var.
         """
         return self.name
 
     def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the symbol with an Adams operation applied to it.
+        Returns the Polynomial1Var with an Adams operation applied to it.
 
-        The Adams operation on a symbol is equivalent to raising the symbol to the i-th power.
+        The Adams operation on a Polynomial1Var is equivalent to raising the Polynomial1Var to the i-th power.
 
         Args:
         -----
@@ -74,36 +74,36 @@ class Symbol(Motive, sp.Symbol):
         Returns:
         --------
         sp.Expr
-            The symbol raised to the i-th power.
+            The Polynomial1Var raised to the i-th power.
         """
         return self**i
 
-    def get_lambda_var(self, i: int, context: GrothendieckRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
         """
-        Returns the symbol with a Lambda operation applied to it.
+        Returns the Polynomial1Var with a Lambda operation applied to it.
 
-        The Lambda operation on a symbol is equivalent to raising the symbol to the i-th power.
+        The Lambda operation on a Polynomial1Var is equivalent to raising the Polynomial1Var to the i-th power.
 
         Args:
         -----
         i : int
             The degree of the Lambda operator.
-        context : GrothendieckRingContext, optional
+        context : LambdaRingContext, optional
             The ring context used for the conversion between operators.
 
         Returns:
         --------
         sp.Expr
-            The symbol raised to the i-th power.
+            The Polynomial1Var raised to the i-th power.
         """
         return self**i
 
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies the Adams operator to any instances of this symbol in a polynomial.
+        Applies the Adams operator to any instances of this Polynomial1Var in a polynomial.
 
-        It replaces all instances of the symbol in the polynomial with the symbol raised 
+        It replaces all instances of the Polynomial1Var in the polynomial with the Polynomial1Var raised 
         to the specified power.
 
         Args:
@@ -116,42 +116,42 @@ class Symbol(Motive, sp.Symbol):
         Returns:
         --------
         sp.Expr
-            The polynomial with the Adams operator applied to the symbol.
+            The polynomial with the Adams operator applied to the Polynomial1Var.
         """
         return ph.xreplace({self: self.get_adams_var(degree)})
 
-    @dispatch(set, GrothendieckRingContext)
-    def _to_adams(self, operands: set[Operand], gc: GrothendieckRingContext) -> sp.Expr:
+    @dispatch(set, LambdaRingContext)
+    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
         """
-        Converts this symbol into an equivalent Adams polynomial.
+        Converts this Polynomial1Var into an equivalent Adams polynomial.
 
-        For a symbol, this simply returns the symbol itself.
+        For a Polynomial1Var, this simply returns the Polynomial1Var itself.
 
         Args:
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
         --------
         sp.Expr
-            The symbol itself.
+            The Polynomial1Var itself.
         """
         return self
 
-    def _subs_adams(self, gc: GrothendieckRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes Adams variables of this symbol in a polynomial with their equivalent Lambda polynomials.
+        Substitutes Adams variables of this Polynomial1Var in a polynomial with their equivalent Lambda polynomials.
 
-        Since no specific Adams variables are generated for a symbol, this method returns the polynomial 
+        Since no specific Adams variables are generated for a Polynomial1Var, this method returns the polynomial 
         unchanged. It is called during the `to_lambda` process to substitute any Adams variables in 
         the polynomial after converting the expression tree to an Adams polynomial.
 
         Args:
         -----
-        gc : GrothendieckRingContext
+        lrc : LambdaRingContext
             The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
