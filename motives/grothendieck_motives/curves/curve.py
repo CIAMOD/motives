@@ -1,4 +1,8 @@
 from typeguard import typechecked
+from typing import TypeVar
+
+Jacobian = TypeVar('Jacobian')
+
 from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
@@ -215,17 +219,21 @@ class Curve(Motive, sp.AtomicExpr):
         """
         return self.curve_hodge.Z(t)
 
+    # TODO: Review this jacobian method based on the new Jacobian class
     @property
-    def Jac(self) -> sp.Expr:
+    def Jac(self) -> Jacobian:
         """
-        Returns the Jacobian of the curve, which is the sum of the Lambda variables of the CurveHodge motive.
+        Returns the Jacobian object associated with the curve.
 
         Returns:
         --------
-        sp.Expr
+        Jacobian
             The Jacobian of the curve.
         """
-        self._jac = self._jac or self.curve_hodge.Z(1)
+        from .jacobian import Jacobian
+
+        if self._jac is None:
+            self._jac = Jacobian(self)
         return self._jac
 
     @typechecked

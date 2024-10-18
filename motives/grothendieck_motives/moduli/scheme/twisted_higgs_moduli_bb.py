@@ -47,6 +47,7 @@ class TwistedHiggsModuliBB(VHS):
         r : int
             The rank of the underlying vector bundles (must be 2 or 3).
         """
+        # TODO: Implement r = 1, it should be the jacobian of the curve
         if r not in [2, 3]:
             raise ValueError("The rank should be either 2 or 3")
         
