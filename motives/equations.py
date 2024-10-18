@@ -28,8 +28,6 @@ def compare_equation(
     """
     start = perf_counter()
 
-    gc = GrothendieckRingContext()
-    cur = Curve("X", g=g)
     lrc = LambdaRingContext()
     cur = Curve("x", g=g)
 
