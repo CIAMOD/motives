@@ -1,4 +1,4 @@
-class SP:
+class Sp:
     def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes a `SP` instance.
