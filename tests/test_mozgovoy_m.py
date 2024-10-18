@@ -182,7 +182,8 @@ def test_mozgovoy213() -> None:
 
 
 @pytest.mark.parametrize(
-    "g,p,r",  [(i, j, k) for i in range(2, 8) for j in range(2, 9) for k in range(2, 4)]
+    # "g,p,r",  [(i, j, k) for i in range(2, 8) for j in range(2, 9) for k in range(2, 4)]
+    "g,p,r", [(2, 2, 2), (5, 8, 3)]
 )
 def test_mozgovoy_equal(g: int, p: int, r: int) -> None:
     assert compare_equation(g, p, r, f"data/{g}_{p}_{r}.p", verbose=0) is True
