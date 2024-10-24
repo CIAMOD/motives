@@ -1,21 +1,14 @@
-from typeguard import typechecked
+from multipledispatch import dispatch
 import sympy as sp
-from sympy.polys.rings import PolyRing
-from sympy.polys.rings import PolyElement
-
-from ...utils import expr_from_pol
-
-from ...core import LambdaRingContext
-from ...core.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
-from ..point import Point
+from ...core.operand import Operand
 
 from .curvehodge import CurveHodge
 from .curve import Curve
 
-# TODO: Review this class and its methods
+
 class Jacobian(Motive, sp.AtomicExpr):
     """
     Represents the Jacobian of a curve in an expression tree.
@@ -27,16 +20,10 @@ class Jacobian(Motive, sp.AtomicExpr):
     -----------
     curve : Curve
         The curve for which this Jacobian is defined.
+    hodge : CurveHodge
+        The Hodge of the curve.
     g : int
         The genus of the curve.
-    _ring : PolyRing
-        The polynomial ring associated with the curve's CurveHodge motive.
-    _lambda_vars : dict[int, sp.Expr]
-        A dictionary storing Lambda variables for different degrees.
-    _lambda_vars_pol : list[PolyElement]
-        A list storing the polynomial representations of Lambda variables.
-    _adams_vars : list[sp.AtomicExpr]
-        A list storing the Adams variables for the Jacobian.
     """
 
     def __new__(cls, curve: Curve, *args, **kwargs):
@@ -67,13 +54,23 @@ class Jacobian(Motive, sp.AtomicExpr):
             The curve for which this Jacobian is defined.
         """
         self.curve: Curve = curve
+        self.hodge: CurveHodge = curve.curve_hodge
         self.g: int = curve.g
 
-        self._ring: PolyRing = self.curve.curve_hodge._domain.ring
-
+        self._adams_vars: dict[int, sp.Expr] = {}
         self._lambda_vars: dict[int, sp.Expr] = {}
-        self._lambda_vars_pol: list[PolyElement] = []
-        self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
+
+        l = Lefschetz()
+        self._et_repr: sp.Expr = sp.Add(
+            *[
+                (
+                    self.hodge.lambda_(i)
+                    if i <= self.g
+                    else self.hodge.lambda_(2 * self.g - i) * l ** (i - self.g)
+                )
+                for i in range(2 * self.g + 1)
+            ]
+        )
 
     def __repr__(self) -> str:
         """
@@ -97,40 +94,6 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         return (self.curve,)
 
-    def _generate_adams_vars(self, n: int) -> None:
-        """
-        Generates the Adams variables needed for the Jacobian up to degree `n`.
-
-        Args:
-        -----
-        n : int
-            The maximum degree of Adams needed.
-        """
-        self.curve.curve_hodge._generate_adams_vars(n)
-        self._adams_vars += [
-            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
-        ]
-
-    def _generate_lambda_vars(self, n: int) -> None:
-        """
-        Generates the Lambda variables needed for the Jacobian up to degree `n`.
-
-        Args:
-        -----
-        n : int
-            The maximum degree of Lambda needed.
-        """
-        self.curve.curve_hodge._generate_lambda_vars(n)
-
-        if len(self._lambda_vars_pol) == 0:
-            self._lambda_vars_pol = [self._ring.one]
-
-        # The Jacobian is the sum over all degrees of the symmetric powers of the CurveHodge
-        for i in range(1, n + 1):
-            self._lambda_vars_pol.append(
-                self._lambda_vars_pol[i - 1] + self.curve.curve_hodge._lambda_vars_pol[i]
-            )
-
     def get_adams_var(self, i: int) -> sp.Expr:
         """
         Returns the Jacobian with an Adams operation applied to it.
@@ -145,10 +108,12 @@ class Jacobian(Motive, sp.AtomicExpr):
         sp.Expr
             The Jacobian with the Adams operator applied.
         """
-        self._generate_adams_vars(i)
+        if i not in self._adams_vars:
+            self._adams_vars[i] = self._et_repr.adams(i).to_adams()
+
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the Jacobian with a Lambda operation applied to it.
 
@@ -156,37 +121,16 @@ class Jacobian(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators.
 
         Returns:
         --------
         sp.Expr
             The Jacobian with the Lambda operator applied.
         """
-        self._generate_lambda_vars(i)
-
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = expr_from_pol(self._lambda_vars_pol[i])
+            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda()
 
         return self._lambda_vars[i]
-
-    @typechecked
-    def Z(self, t: int | sp.Expr) -> sp.Expr:
-        """
-        Computes the generating function of the Jacobian.
-
-        Args:
-        -----
-        t : int or sp.Expr
-            The variable to use in the generating function.
-
-        Returns:
-        --------
-        sp.Expr
-            The generating function of the Jacobian.
-        """
-        return self.curve.curve_hodge.Z(1) / (1 - t)
 
     @property
     def free_symbols(self) -> set[sp.Symbol]:
@@ -198,16 +142,56 @@ class Jacobian(Motive, sp.AtomicExpr):
         set[sp.Symbol]
             The set of free symbols in the Jacobian.
         """
-        return {self}
+        return {self.hodge, Lefschetz()}
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    @dispatch(int, sp.Expr)
+    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+        """
+        Applies the Adams operator to any instances of this Jacobian in the expression.
+
+        This method raises an exception because Jacobians should not appear directly
+        in the expression. Instead, they should be decomposed into their components.
+
+        Args:
+        -----
+        degree : int
+            The degree of the Adams operator to apply.
+        ph : sp.Expr
+            The polynomial in which to apply the Adams operator.
+
+        Raises:
+        -------
+        Exception
+            Always raised as Jacobians should be decomposed into their components.
+        """
+        raise Exception(
+            f"There is a motive in the expression {ph}. "
+            "It should have been converted to its components."
+        )
+
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+        """
+        Converts this Jacobian into an equivalent Adams polynomial.
+
+        Args:
+        -----
+        operands : set[Operand]
+            The set of all operands in the expression tree.
+
+        Returns:
+        --------
+        sp.Expr
+            The Adams polynomial equivalent to this Jacobian.
+        """
+        return self._et_repr.to_adams()
+
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 
@@ -215,6 +199,13 @@ class Jacobian(Motive, sp.AtomicExpr):
         --------
         sp.Expr
             The polynomial with Adams variables substituted by Lambda polynomials.
+
+        Raises:
+        -------
+        Exception
+            Always raised as Jacobians should be decomposed into their components.
         """
-        ph = self.curve.curve_hodge._subs_adams(lrc, ph)
-        return ph
+        raise Exception(
+            f"There is a Jacobian in the expression {ph}. "
+            "It should have been converted to its components."
+        )
