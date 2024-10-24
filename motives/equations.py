@@ -1,9 +1,9 @@
 from time import perf_counter
 
 from .utils import save_pol
-from .core import LambdaRingContext
 from .grothendieck_motives.curves.curve import Curve
 from .grothendieck_motives.moduli.scheme import TwistedHiggsModuli
+
 
 def compare_equation(
     g: int, p: int, r: int, filename: str, time: bool = True, *, verbose: int = 0
@@ -28,16 +28,15 @@ def compare_equation(
     """
     start = perf_counter()
 
-    lrc = LambdaRingContext()
     cur = Curve("x", g=g)
 
     # Compute the motive of rank r using ADHM derivation
     moz = TwistedHiggsModuli(x=cur, p=p, r=r, method="ADHM")
-    eq_m = moz.compute(lrc=lrc, verbose=verbose)
+    eq_m = moz.compute(verbose=verbose)
 
     # Compute the motive of rank r using BB derivation
     dav = TwistedHiggsModuli(x=cur, p=p, r=r, method="BB")
-    eq_d = dav.compute(lrc=lrc, verbose=verbose)
+    eq_d = dav.compute(verbose=verbose)
 
     if time is True:
         print("Polynomials computed")

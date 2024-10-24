@@ -8,7 +8,7 @@ from multipledispatch import dispatch
 
 from .core.lambda_ring_expr import LambdaRingExpr
 from .core.operand import Operand
-from .core.lambda_ring_context import LambdaRingContext
+
 
 class Integer(Operand):
     """
@@ -40,7 +40,10 @@ class Integer(Operand):
     """
 
     def __init__(
-        self, value: int = 1, parent: Optional[LambdaRingExpr] = None, id_: Hashable = None
+        self,
+        value: int = 1,
+        parent: Optional[LambdaRingExpr] = None,
+        id_: Hashable = None,
     ):
         self.value: int = value
         super().__init__(parent, id_)
@@ -86,16 +89,14 @@ class Integer(Operand):
         """
         return ph
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(
-        self, operands: set[Operand], group_context: LambdaRingContext
-    ) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Returns the integer.
         """
         return sp.Integer(self.value)
 
-    def _subs_adams(self, group_context: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes any instances of an adams of this integer into its equivalent
         polynomial of lambdas.

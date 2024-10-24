@@ -1,7 +1,7 @@
 import sympy as sp
 
 from .operand import Operand
-from .lambda_ring_context import LambdaRingContext
+
 
 class Object1Dim(Operand):
     """
@@ -49,7 +49,7 @@ class Object1Dim(Operand):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the one-dimensional object with a Lambda operation applied to it.
 
@@ -57,9 +57,6 @@ class Object1Dim(Operand):
         -----
         i : int
             The degree of the Lambda operator to apply.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators. If not provided,
-            a new context is created.
 
         Returns:
         --------

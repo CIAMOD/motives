@@ -1,7 +1,7 @@
 from typeguard import typechecked
 from typing import TypeVar
 
-Jacobian = TypeVar('Jacobian')
+Jacobian = TypeVar("Jacobian")
 
 from multipledispatch import dispatch
 import sympy as sp
@@ -10,7 +10,6 @@ from sympy.polys.rings import PolyElement
 
 from ...utils import expr_from_pol
 
-from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
@@ -18,6 +17,7 @@ from ..lefschetz import Lefschetz
 from ..point import Point
 
 from .curvehodge import CurveHodge
+
 
 class Curve(Motive, sp.AtomicExpr):
     """
@@ -41,8 +41,6 @@ class Curve(Motive, sp.AtomicExpr):
         The Lefschetz motive of the curve.
     _ring : PolyRing
         The polynomial ring of the curve's CurveHodge motive.
-    _jac : sp.Expr or None
-        The Jacobian of the curve.
     _lambda_vars : dict[int, sp.Expr]
         A dictionary storing Lambda variables for different degrees.
     _lambda_vars_pol : list[PolyElement]
@@ -91,7 +89,6 @@ class Curve(Motive, sp.AtomicExpr):
 
         self._ring: PolyRing = self.curve_hodge._domain.ring
 
-        self._jac: sp.Expr | None = None
         self._lambda_vars: dict[int, sp.Expr] = {}
         self._lambda_vars_pol: list[PolyElement] = []
         self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
@@ -179,7 +176,7 @@ class Curve(Motive, sp.AtomicExpr):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the curve with a Lambda operation applied to it.
 
@@ -187,8 +184,6 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators.
 
         Returns:
         --------
@@ -219,7 +214,6 @@ class Curve(Motive, sp.AtomicExpr):
         """
         return self.curve_hodge.Z(t)
 
-    # TODO: Review this jacobian method based on the new Jacobian class
     @property
     def Jac(self) -> Jacobian:
         """
@@ -232,9 +226,7 @@ class Curve(Motive, sp.AtomicExpr):
         """
         from .jacobian import Jacobian
 
-        if self._jac is None:
-            self._jac = Jacobian(self)
-        return self._jac
+        return Jacobian(self)
 
     @typechecked
     def Z(self, t: int | sp.Expr) -> sp.Expr:
@@ -277,8 +269,8 @@ class Curve(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this curve into an equivalent Adams polynomial.
 
@@ -286,8 +278,6 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between operators.
 
         Returns:
         --------
@@ -295,12 +285,12 @@ class Curve(Motive, sp.AtomicExpr):
             A polynomial of Adams operators equivalent to this curve.
         """
         return (
-            self.curve_hodge._to_adams(operands, lrc)
-            + self.lefschetz._to_adams(operands, lrc)
-            + self.point._to_adams(operands, lrc)
+            self.curve_hodge._to_adams(operands)
+            + self.lefschetz._to_adams(operands)
+            + self.point._to_adams(operands)
         )
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 
@@ -309,8 +299,6 @@ class Curve(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 
@@ -319,7 +307,7 @@ class Curve(Motive, sp.AtomicExpr):
         sp.Expr
             The polynomial with Adams variables substituted by Lambda polynomials.
         """
-        ph = self.curve_hodge._subs_adams(lrc, ph)
+        ph = self.curve_hodge._subs_adams(ph)
         return ph
 
     @property

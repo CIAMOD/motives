@@ -7,13 +7,14 @@ from multipledispatch import dispatch
 from .core.operand import Operand
 from .core.lambda_ring_context import LambdaRingContext
 
+
 class Free(Operand, sp.Symbol):
     """
     Represents an abstract variable node in an expression.
 
     A `Free` inherits from both `Operand` and SymPy's `Symbol`, and it is used to represent
-    a variable in an expression tree. This class cannot be named 'L' (reserved for the Lefschetz 
-    motive) or start with 's_' (reserved for special symbols), to prevent naming conflicts with 
+    a variable in an expression tree. This class cannot be named 'L' (reserved for the Lefschetz
+    motive) or start with 's_' (reserved for special symbols), to prevent naming conflicts with
     SymPy symbols.
 
     Attributes:
@@ -122,7 +123,7 @@ class Free(Operand, sp.Symbol):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the Lambda variable of this variable for a given degree `i`.
 
@@ -130,8 +131,6 @@ class Free(Operand, sp.Symbol):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators.
 
         Returns:
         --------
@@ -175,8 +174,8 @@ class Free(Operand, sp.Symbol):
             }
         )
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this variable into an equivalent Adams polynomial.
 
@@ -184,8 +183,6 @@ class Free(Operand, sp.Symbol):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
         --------
@@ -194,7 +191,7 @@ class Free(Operand, sp.Symbol):
         """
         return self.get_adams_var(1)
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this variable in a polynomial with Lambda polynomials.
 
@@ -202,8 +199,6 @@ class Free(Operand, sp.Symbol):
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 
@@ -212,6 +207,8 @@ class Free(Operand, sp.Symbol):
         sp.Expr
             The polynomial with Adams variables replaced by Lambda variables.
         """
+        lrc = LambdaRingContext()
+
         ph = ph.xreplace(
             {
                 self.get_adams_var(i): lrc.get_lambda_2_adams_pol(i)

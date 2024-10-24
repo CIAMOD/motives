@@ -6,9 +6,16 @@ from ...curves.curve import Curve
 from ...lefschetz import Lefschetz
 from ...polynomial_1_var import Polynomial1Var
 
-from ....core import LambdaRingContext
 from ....core.lambda_ring_expr import LambdaRingExpr
-from ....utils import all_partitions, expand_variable, expand_variable_1mtk, expand_variable_1mt, subs_variable, Partitions
+from ....utils import (
+    all_partitions,
+    expand_variable,
+    expand_variable_1mtk,
+    expand_variable_1mt,
+    subs_variable,
+    Partitions,
+)
+
 
 class TwistedHiggsModuliADHM:
     """
@@ -111,7 +118,6 @@ class TwistedHiggsModuliADHM:
 
     def moz_lambdas(
         self,
-        lrc: LambdaRingContext = None,
         *,
         verbose: int = 0,
     ) -> PolyElement:
@@ -123,8 +129,6 @@ class TwistedHiggsModuliADHM:
 
         Args:
         -----
-        lrc : LambdaRingContext, optional
-            The Grothendieck ring context to use for the conversion.
         verbose : int, optional
             How much information to print during the computation (0 for none, 1 for progress, 2 for formulas).
 
@@ -134,7 +138,9 @@ class TwistedHiggsModuliADHM:
             The motive of rank r, turned into a polynomial of lambdas.
         """
         if verbose > 0:
-            print(f"Computing the formula of g={self.g}, p={self.p}, r={self.r} with ADHM")
+            print(
+                f"Computing the formula of g={self.g}, p={self.p}, r={self.r} with ADHM"
+            )
 
         if self.gen_f == 0:
             self.gen_func()
@@ -146,8 +152,7 @@ class TwistedHiggsModuliADHM:
         lef = Lefschetz()
 
         if self.coeff == {}:
-            lrc = lrc or LambdaRingContext()
-            sp_M_sum = self.gen_f.to_lambda(lrc=lrc)
+            sp_M_sum = self.gen_f.to_lambda()
 
             if verbose > 0:
                 print("Formula converted to lambdas.")

@@ -22,8 +22,10 @@ class Proj(Motive, sp.AtomicExpr):
         The dimension of the projective space.
     lef : Lefschetz
         The Lefschetz motive associated with the projective space.
-    _lambda_vars : list[sp.Expr]
-        A list storing the Lambda variables for the projective space.
+    _et_repr : sp.Expr
+        The projective space as a sympy expression.
+    _lambda_vars : dict[int, sp.Expr]
+        A dictionary of the lambda variables generated for this projective space.
     """
 
     def __new__(cls, n: int, *args, **kwargs):
@@ -55,8 +57,8 @@ class Proj(Motive, sp.AtomicExpr):
         """
         self.lef: Lefschetz = Lefschetz()
         self.n: int = n
-
-        self._lambda_vars: list[sp.Expr] = [sp.Integer(1), self]
+        self._et_repr: sp.Expr = sp.Add(*[self.lef**j for j in range(self.n + 1)])
+        self._lambda_vars: dict[int, sp.Expr] = {}
 
     def __repr__(self) -> str:
         """
@@ -99,7 +101,7 @@ class Proj(Motive, sp.AtomicExpr):
         """
         return sp.Add(*[self.lef ** (j * i) for j in range(self.n + 1)])
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the projective space with a Lambda operation applied to it.
 
@@ -110,23 +112,22 @@ class Proj(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for converting between Adams and Lambda operators.
 
         Returns:
         --------
         sp.Expr
             The projective space with the Lambda operator applied.
         """
-        lrc = context or LambdaRingContext()
+        if i not in self._lambda_vars:
+            lrc = LambdaRingContext()
 
-        proj = sp.Add(*[self.lef**j for j in range(self.n + 1)])
+            ph_list = [self.lef._to_adams(j, self._et_repr) for j in range(i + 1)]
 
-        ph_list = [self.lef._to_adams(j, proj) for j in range(i + 1)]
+            self._lambda_vars[i] = lrc.get_adams_2_lambda_pol(i).xreplace(
+                {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
+            )
 
-        return lrc.get_adams_2_lambda_pol(i).xreplace(
-            {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
-        )
+        return self._lambda_vars[i]
 
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
@@ -153,8 +154,8 @@ class Proj(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this projective space into an equivalent Adams polynomial.
 
@@ -162,17 +163,15 @@ class Proj(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The ring context used for converting between Adams operators.
 
         Returns:
         --------
         sp.Expr
             The Adams polynomial equivalent to this projective space.
         """
-        return sp.Add(*[self.lef**i for i in range(self.n + 1)])
+        return self._et_repr
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this projective space in the expression
         with their equivalent Lambda polynomials.
@@ -182,8 +181,6 @@ class Proj(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The ring context used for the conversion between Adams and Lambda operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 

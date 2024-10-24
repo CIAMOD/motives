@@ -3,16 +3,15 @@ from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
-from ..core import LambdaRingContext
 from ..core.operand import Operand
 from ..core.object_1_dim import Object1Dim
-from .motive import Motive
+
 
 class Polynomial1Var(Object1Dim, sp.Symbol):
     """
     Represents an abstract one-dimensional motive in an expression tree.
 
-    A `Polynomial1Var` is an operand that can be used in expressions and supports Adams and Lambda operations, 
+    A `Polynomial1Var` is an operand that can be used in expressions and supports Adams and Lambda operations,
     which are equivalent to raising the Polynomial1Var to the specified power.
 
     Attributes:
@@ -23,10 +22,10 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
 
     def __new__(cls, name: str, **assumptions) -> Polynomial1Var:
         """
-        Creates a new instance of `Polynomial1Var`, with special handling for the name 'L', 
+        Creates a new instance of `Polynomial1Var`, with special handling for the name 'L',
         which is reserved for the Lefschetz motive.
 
-        If the name 'L' is used, a warning is issued, and the Polynomial1Var is replaced by 
+        If the name 'L' is used, a warning is issued, and the Polynomial1Var is replaced by
         the Lefschetz motive.
 
         Args:
@@ -46,6 +45,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
                 "The name 'L' is reserved for the Lefschetz motive. Using 'Lefschetz' instead."
             )
             from .lefschetz import Lefschetz
+
             return Lefschetz()
         return sp.Symbol.__new__(cls, f"s_{name}", **assumptions)
 
@@ -78,7 +78,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self**i
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the Polynomial1Var with a Lambda operation applied to it.
 
@@ -88,8 +88,6 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators.
 
         Returns:
         --------
@@ -103,7 +101,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         Applies the Adams operator to any instances of this Polynomial1Var in a polynomial.
 
-        It replaces all instances of the Polynomial1Var in the polynomial with the Polynomial1Var raised 
+        It replaces all instances of the Polynomial1Var in the polynomial with the Polynomial1Var raised
         to the specified power.
 
         Args:
@@ -120,8 +118,8 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return ph.xreplace({self: self.get_adams_var(degree)})
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this Polynomial1Var into an equivalent Adams polynomial.
 
@@ -131,8 +129,6 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
         --------
@@ -141,18 +137,16 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this Polynomial1Var in a polynomial with their equivalent Lambda polynomials.
 
-        Since no specific Adams variables are generated for a Polynomial1Var, this method returns the polynomial 
-        unchanged. It is called during the `to_lambda` process to substitute any Adams variables in 
+        Since no specific Adams variables are generated for a Polynomial1Var, this method returns the polynomial
+        unchanged. It is called during the `to_lambda` process to substitute any Adams variables in
         the polynomial after converting the expression tree to an Adams polynomial.
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 

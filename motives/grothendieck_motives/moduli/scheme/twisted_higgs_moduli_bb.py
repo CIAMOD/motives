@@ -6,7 +6,6 @@ from .vhs import VHS
 
 from ...curves.curve import Curve
 
-from ....core import LambdaRingContext
 
 class TwistedHiggsModuliBB(VHS):
     """
@@ -50,14 +49,12 @@ class TwistedHiggsModuliBB(VHS):
         # TODO: Implement r = 1, it should be the jacobian of the curve
         if r not in [2, 3]:
             raise ValueError("The rank should be either 2 or 3")
-        
+
         super().__init__(x, p, r)
 
         print("TwistedHiggsModuliBB initialized")
 
-    def simplify(
-        self, lrc: LambdaRingContext = None, *, verbose: int = 0
-    ) -> PolyElement:
+    def simplify(self, *, verbose: int = 0) -> PolyElement:
         """
         Transforms the equation into a polynomial of lambdas and simplifies it.
 
@@ -67,8 +64,6 @@ class TwistedHiggsModuliBB(VHS):
 
         Args:
         -----
-        lrc : LambdaRingContext, optional
-            The Grothendieck ring context to use for the simplification.
         verbose : int, optional
             How much information to print (0 for none, 1 for progress, 2 for intermediate formulas).
 
@@ -86,14 +81,11 @@ class TwistedHiggsModuliBB(VHS):
         domain_qq = sp.QQ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
         domain_zz = sp.ZZ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
 
-        # Initialize a Grothendieck ring context if not provided
-        lrc = lrc or LambdaRingContext()
-
         # Choose VHS components base on rank
         if self.r == 2:
             vhs_keys = [(2,), (1, 1)]
         elif self.r == 3:
-            vhs_keys = [(3,), (1, 2), (2, 1), (1, 1, 1)]  
+            vhs_keys = [(3,), (1, 2), (2, 1), (1, 1, 1)]
         else:
             raise NotImplementedError("The rank should be either 2 or 3")
 
@@ -102,7 +94,7 @@ class TwistedHiggsModuliBB(VHS):
             # Access the expression associated with the current key
             expr = self.vhs.get(vhs_key)
             # Convert to lambda variables
-            lambda_pol = expr.to_lambda(lrc=lrc)
+            lambda_pol = expr.to_lambda()
 
             if verbose > 0:
                 print(f"Computed lambda of VHS {vhs_key}")

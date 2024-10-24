@@ -2,10 +2,9 @@ from sympy.polys.rings import PolyElement
 
 from ...curves.curve import Curve
 
-from ....core import LambdaRingContext
-
 from .twisted_higgs_moduli_bb import TwistedHiggsModuliBB
 from .twisted_higgs_moduli_adhm import TwistedHiggsModuliADHM
+
 
 class TwistedHiggsModuli:
     """
@@ -69,9 +68,7 @@ class TwistedHiggsModuli:
         else:
             raise ValueError("The method should be either 'BB', 'ADHM', or 'auto'")
 
-    def compute(
-        self, lrc: LambdaRingContext = None, *, verbose: int = 0
-    ) -> PolyElement:
+    def compute(self, *, verbose: int = 0) -> PolyElement:
         """
         Computes the motive of the moduli space of L-twisted Higgs bundles.
 
@@ -80,8 +77,6 @@ class TwistedHiggsModuli:
 
         Args:
         -----
-        lrc : LambdaRingContext, optional
-            The Grothendieck ring context to use for the computation.
         verbose : int, optional
             How much information to print during the computation (0 for none, 1 for progress, 2 for formulas).
 
@@ -91,6 +86,6 @@ class TwistedHiggsModuli:
             The motive of the moduli space of L-twisted Higgs bundles, represented as a polynomial.
         """
         if self.method == "BB":
-            return self.motive.simplify(lrc=lrc, verbose=verbose)
+            return self.motive.simplify(verbose=verbose)
         else:
-            return self.motive.moz_lambdas(lrc=lrc, verbose=verbose)
+            return self.motive.moz_lambdas(verbose=verbose)

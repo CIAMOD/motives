@@ -4,17 +4,17 @@ import sympy as sp
 
 from ..utils import SingletonMeta
 
-from ..core import LambdaRingContext
 from ..core.operand import Operand
 
 from .motive import Motive
+
 
 class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
     """
     Represents a point motive in an expression.
 
-    The point motive is a universal motive and acts as a singleton. It inherits from 
-    `Motive` and SymPy's `AtomicExpr`, meaning it is treated as an indivisible expression 
+    The point motive is a universal motive and acts as a singleton. It inherits from
+    `Motive` and SymPy's `AtomicExpr`, meaning it is treated as an indivisible expression
     and supports Adams and Lambda operations, though they always return 1 for this motive.
     """
 
@@ -46,7 +46,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         Returns the point motive with an Adams operation applied to it.
 
-        Since the Adams operation on a point is always 1, this method always returns 1, 
+        Since the Adams operation on a point is always 1, this method always returns 1,
         regardless of the degree `i`.
 
         Args:
@@ -61,19 +61,17 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the point motive with a Lambda operation applied to it.
 
-        Since the Lambda operation on a point is always 1, this method always returns 1, 
+        Since the Lambda operation on a point is always 1, this method always returns 1,
         regardless of the degree `i`.
 
         Args:
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators (not used here).
 
         Returns:
         --------
@@ -87,7 +85,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         Applies the Adams operator to instances of the point in a polynomial.
 
-        Since the Adams operation on a point is always 1, this method returns the polynomial 
+        Since the Adams operation on a point is always 1, this method returns the polynomial
         `ph` unchanged.
 
         Args:
@@ -104,8 +102,8 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return ph
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this point into an equivalent Adams polynomial.
 
@@ -115,8 +113,6 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
         --------
@@ -125,18 +121,16 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in a polynomial with their equivalent Lambda polynomials.
 
-        Since no Adams variables are generated for a point, this method returns the polynomial 
-        `ph` unchanged. This method is called in `to_lambda` to substitute any Adams variables 
+        Since no Adams variables are generated for a point, this method returns the polynomial
+        `ph` unchanged. This method is called in `to_lambda` to substitute any Adams variables
         after converting the expression tree to an Adams polynomial.
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 

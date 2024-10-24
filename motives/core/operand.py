@@ -7,7 +7,7 @@ from sympy.printing.str import StrPrinter
 from multipledispatch import dispatch
 
 from .lambda_ring_expr import LambdaRingExpr
-from .lambda_ring_context import LambdaRingContext
+
 
 class Operand(LambdaRingExpr):
     """
@@ -81,7 +81,7 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the operand with a Lambda operation applied to it.
 
@@ -89,9 +89,6 @@ class Operand(LambdaRingExpr):
         -----
         i : int
             The degree of the Lambda operator to apply.
-        context : LambdaRingContext, optional
-            The ring context used for the conversion between operators. If not provided,
-            a new context is created.
 
         Returns:
         --------
@@ -129,8 +126,8 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this operand into an equivalent Adams polynomial.
 
@@ -140,8 +137,6 @@ class Operand(LambdaRingExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
 
         Returns:
         --------
@@ -155,19 +150,19 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def _to_adams_lambda(self, operands: set[Operand], lrc: LambdaRingContext, adams_degree: int = 1) -> sp.Expr:
+    def _to_adams_lambda(
+        self, operands: set[Operand], adams_degree: int = 1
+    ) -> sp.Expr:
         """
         Converts this operand into an equivalent Adams polynomial, with optimizations for Lambda conversion.
 
-        This method is called when `optimize=True` in the `to_lambda` method. For an operand, 
+        This method is called when `optimize=True` in the `to_lambda` method. For an operand,
         this simply returns the Adams polynomial of degree 1 for itself.
 
         Args:
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
         adams_degree : int, optional
             The sum of the degrees of all Adams operators higher than this node in its branch.
 
@@ -176,19 +171,17 @@ class Operand(LambdaRingExpr):
         sp.Expr
             The Adams polynomial of degree 1 for this operand.
         """
-        return self._to_adams(operands, lrc)
+        return self._to_adams(operands)
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes any Adams operations on this operand in the given polynomial with their equivalent Lambda polynomial.
 
-        This method is used in `to_lambda` to convert any Adams operations in the polynomial 
+        This method is used in `to_lambda` to convert any Adams operations in the polynomial
         into Lambda operations.
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for the conversion between ring operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams operations.
 

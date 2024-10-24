@@ -3,14 +3,15 @@ from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
+import re
 
 from ...utils import expr_from_pol
 
-from ...core import LambdaRingContext
 from ...core.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
+
 
 class CurveHodge(Motive, sp.AtomicExpr):
     """
@@ -28,6 +29,8 @@ class CurveHodge(Motive, sp.AtomicExpr):
         The name of the CurveHodge motive.
     lambda_symbols : list[sp.AtomicExpr]
         A list of Lambda symbols generated for the CurveHodge motive.
+    _adams_pattern : re.Pattern
+        The regular expression pattern for Adams variables.
     _domain : sp.Domain
         The domain used for the polynomial ring of Lambda operators.
     _ring : PolyRing
@@ -83,6 +86,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         """
         self.g: int = g
         self.name: str = name
+        self._adams_pattern = re.compile(rf"ψ_(\d+)\({self}\)")
 
         # Lambda symbols and domain setup
         self.lambda_symbols: list[sp.AtomicExpr] = [
@@ -192,7 +196,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the CurveHodge motive with a Lambda operation applied to it.
 
@@ -202,8 +206,6 @@ class CurveHodge(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for conversion between operators.
 
         Returns:
         --------
@@ -261,12 +263,11 @@ class CurveHodge(Motive, sp.AtomicExpr):
         sp.Expr
             The polynomial with Adams operators applied to the CurveHodge motive.
         """
-        max_adams = -1
+        max_adams = 1
         operands = ph.free_symbols
-        for i, adams in reversed(list(enumerate(self._adams_vars))):
-            if adams in operands:
-                max_adams = i
-                break
+        for operand in operands:
+            if match := self._adams_pattern.match(str(operand)):
+                max_adams = max(max_adams, int(match.group(1)))
 
         return ph.xreplace(
             {
@@ -275,8 +276,8 @@ class CurveHodge(Motive, sp.AtomicExpr):
             }
         )
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this subtree into an equivalent Adams polynomial.
 
@@ -284,8 +285,6 @@ class CurveHodge(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for conversion between operators.
 
         Returns:
         --------
@@ -311,17 +310,15 @@ class CurveHodge(Motive, sp.AtomicExpr):
                 )
             )
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables for equivalent Lambda polynomials in the given polynomial.
 
-        This method is called during the `to_lambda` process to convert Adams variables 
+        This method is called during the `to_lambda` process to convert Adams variables
         that appear after converting the expression tree to an Adams polynomial.
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The Grothendieck ring context used for conversion between operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 
@@ -330,12 +327,11 @@ class CurveHodge(Motive, sp.AtomicExpr):
         sp.Expr
             The polynomial with Adams variables substituted by equivalent Lambda polynomials.
         """
-        max_adams = -1
+        max_adams = 1
         operands = ph.free_symbols
-        for i, adams in reversed(list(enumerate(self._adams_vars))):
-            if adams in operands:
-                max_adams = i
-                break
+        for operand in operands:
+            if match := self._adams_pattern.match(str(operand)):
+                max_adams = max(max_adams, int(match.group(1)))
 
         # Generate the lambda_to_adams polynomials up to the degree needed
         self._generate_lambda_vars(len(self._adams_vars) - 1)

@@ -7,6 +7,7 @@ from ...core.operand import Operand
 from ..motive import Motive
 from ..lefschetz import Lefschetz
 
+
 class GL(Motive, sp.AtomicExpr):
     """
     Represents a GL_n bundle in an expression tree.
@@ -20,6 +21,10 @@ class GL(Motive, sp.AtomicExpr):
         The dimension of the GL_n bundle.
     lef : Lefschetz
         The Lefschetz motive associated with the bundle.
+    _et_repr : sp.Expr
+        The GL_n bundle as a sympy expression.
+    _lambda_vars : dict[int, sp.Expr]
+        A dictionary of the lambda variables generated for this GL_n bundle.
     """
 
     def __new__(cls, n: int, *args, **kwargs):
@@ -51,6 +56,10 @@ class GL(Motive, sp.AtomicExpr):
         """
         self.n: int = n
         self.lef: Lefschetz = Lefschetz()
+        self._et_repr: sp.Expr = self.lef ** (
+            ((self.n - 1) * (self.n - 2)) // 2
+        ) * sp.Mul(*[self.lef**k - 1 for k in range(1, self.n + 1)])
+        self._lambda_vars: dict[int, sp.Expr] = {}
 
     def __repr__(self) -> str:
         """
@@ -95,7 +104,7 @@ class GL(Motive, sp.AtomicExpr):
             *[self.lef ** (i * k) - 1 for k in range(1, self.n + 1)]
         )
 
-    def get_lambda_var(self, i: int, context: LambdaRingContext = None) -> sp.Expr:
+    def get_lambda_var(self, i: int) -> sp.Expr:
         """
         Returns the GL_n bundle with a Lambda operation applied to it.
 
@@ -106,25 +115,22 @@ class GL(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
-        context : LambdaRingContext, optional
-            The ring context used for converting between Adams and Lambda operators.
 
         Returns:
         --------
         sp.Expr
             The GL_n bundle with the Lambda operator applied.
         """
-        lrc = context or LambdaRingContext()
+        if i not in self._lambda_vars:
+            lrc = LambdaRingContext()
 
-        gl = self.lef ** (((self.n - 1) * (self.n - 2)) // 2) * sp.Mul(
-            *[self.lef**k - 1 for k in range(1, self.n + 1)]
-        )
+            ph_list = [self.lef._to_adams(j, self._et_repr) for j in range(i + 1)]
 
-        ph_list = [self.lef._to_adams(j, gl) for j in range(i + 1)]
+            self._lambda_vars[i] = lrc.get_adams_2_lambda_pol(i).xreplace(
+                {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
+            )
 
-        return lrc.get_adams_2_lambda_pol(i).xreplace(
-            {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
-        )
+        return self._lambda_vars[i]
 
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
@@ -151,8 +157,8 @@ class GL(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set, LambdaRingContext)
-    def _to_adams(self, operands: set[Operand], lrc: LambdaRingContext) -> sp.Expr:
+    @dispatch(set)
+    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this GL_n bundle into an equivalent Adams polynomial.
 
@@ -160,8 +166,6 @@ class GL(Motive, sp.AtomicExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
-        lrc : LambdaRingContext
-            The ring context used for converting between Adams operators.
 
         Returns:
         --------
@@ -172,7 +176,7 @@ class GL(Motive, sp.AtomicExpr):
             *[self.lef**k - 1 for k in range(1, self.n + 1)]
         )
 
-    def _subs_adams(self, lrc: LambdaRingContext, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this GL_n bundle in the expression
         with their equivalent Lambda polynomials.
@@ -182,8 +186,6 @@ class GL(Motive, sp.AtomicExpr):
 
         Args:
         -----
-        lrc : LambdaRingContext
-            The ring context used for the conversion between Adams and Lambda operators.
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
 
