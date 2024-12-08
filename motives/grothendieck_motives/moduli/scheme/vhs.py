@@ -5,6 +5,7 @@ from ...curves.curve import Curve
 
 from .vector_bundle_moduli import VectorBundleModuli
 
+
 # TODO: Documentacion de clase VHS
 class VHS(VectorBundleModuli):
     def __init__(self, x: Curve, p: int, r: int):
@@ -20,9 +21,9 @@ class VHS(VectorBundleModuli):
         r : int
             The rank of the underlying vector bundles (must be 2 or 3).
         """
-        if r not in [2, 3]:
+        if r not in [1, 2, 3]:
             raise ValueError("The rank should be either 2 or 3")
-        
+
         super().__init__(x, p, r)
         self._initiate_vhs()
 
@@ -102,12 +103,15 @@ class VHS(VectorBundleModuli):
                 ]
             )
         )
+
     def _calculate_vhs(self, n: tuple) -> sp.Expr:
         """
         Calculates the VHS for the given tuple `n`. Private method.
-        """	
-        raise NotImplementedError(f"The calculation of the VHS with dimension {n} is not yet implemented.")
-    
+        """
+        raise NotImplementedError(
+            f"The calculation of the VHS with dimension {n} is not yet implemented."
+        )
+
     def calculate_vhs(self, n: tuple) -> sp.Expr:
         """
         Calculates the VHS for the given tuple `n`. Public method.
@@ -118,7 +122,7 @@ class VHS(VectorBundleModuli):
             else:
                 self._calculate_vhs(n)
         return self.vhs[n]
-    
+
     def get_vhs(self, n: tuple) -> sp.Expr:
         """
         Returns the VHS for the given tuple `n`.
