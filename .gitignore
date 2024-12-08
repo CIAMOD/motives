@@ -1,7 +1,7 @@
 # Own
 main.py
 data/
-settings.json
+settings.json 
 
 # Packages
 dist/
