@@ -1,4 +1,5 @@
 # Motivic Decompositions of Vector Bundle and L-Higgs Bundle Moduli Spaces
+
 ![lambda image](https://github.com/CIAMOD/motivic_decomposition/assets/94676306/8c7f232a-6fe7-44df-9300-761e9003186c)
 
 Grothendieck's motive of a variety is an invariant that provides extensive information about its geometry. Manipulating motivic formulas and understanding when two distinct expressions can represent the same variety is complex but mathematically interesting. The goal is to develop a software package that allows efficient manipulation and comparison of these motives, and apply it to low-rank proofs of the Mozgovoy Conjecture on the motive of the L-Higgs moduli.
@@ -11,9 +12,13 @@ In the first phase, classical techniques of symbolic computing and parallelizati
 
 ### Prerequisites
 
-- Python >= 3.7
-- PyTorch >= 1.9.0
-- NumPy
+- Python >= 3.11
+- NumPy == 1.26.2
+- SymPy == 1.12
+- multipledispatch == 1.0.0
+- gmpy2 == 2.2.1
+- tqdm == 4.66.5
+- typeguard == 4.3.0
 
 ### Installation
 
@@ -25,6 +30,7 @@ In the first phase, classical techniques of symbolic computing and parallelizati
    ```sh
    pip install -r requirements.txt
    ```
+
 ## Usage
 
 Instructions on how to run the software or code will be updated soon.
