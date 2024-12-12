@@ -1,12 +1,17 @@
-class SO:
-    def __init__(self, n: int, *args, **kwargs) -> None:
-        """
-        Initializes a `SO` instance.
+from g import G
+from itertools import chain
 
-        Args:
-        -----
-        n : int
-            The dimension of the SO_n bundle.
-        """
-        # TODO: Implement this class
-        raise NotImplementedError("This class is not implemented yet.")
+
+class SO(G):
+    n: int
+
+    def __new__(cls, n: int, *args, **kwargs):
+        new_sl = G.__new__(cls, chain(range(2, 2 * n - 1, 2), (n,)), n * (2 * n - 1))
+        new_sl.n = n
+        return new_sl
+
+    def __repr__(self) -> str:
+        return f"SO_{self.n}"
+
+    def _hashable_content(self) -> tuple:
+        return (self.n,)

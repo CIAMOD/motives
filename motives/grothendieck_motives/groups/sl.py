@@ -1,12 +1,16 @@
-class SL:
-    def __init__(self, n: int, *args, **kwargs) -> None:
-        """
-        Initializes a `SL` instance.
+from g import G
 
-        Args:
-        -----
-        n : int
-            The dimension of the SL_n bundle.
-        """
-        # TODO: Implement this class
-        raise NotImplementedError("This class is not implemented yet.")
+
+class SL(G):
+    n: int
+
+    def __new__(cls, n: int, *args, **kwargs):
+        new_sl = G.__new__(cls, range(2, n + 1), n**2 - 1)
+        new_sl.n = n
+        return new_sl
+
+    def __repr__(self) -> str:
+        return f"SL_{self.n}"
+
+    def _hashable_content(self) -> tuple:
+        return (self.n,)
