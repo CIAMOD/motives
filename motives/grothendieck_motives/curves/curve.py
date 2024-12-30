@@ -21,10 +21,13 @@ from .curvehodge import CurveHodge
 
 class Curve(Motive, sp.AtomicExpr):
     """
-    Represents a curve in an expression tree.
+    Represents the motivic class of an abstract smooth complex algebraic curve 
+    of genus g in the an expression tree in the Grothendieck ring of varieties or Chow motives
+    (or any extension of completion of them).
 
-    A `Curve` is a motive that represents the sum of a point, a Lefschetz motive,
-    and a CurveHodge motive. It supports Adams and Lambda operations, generating functions,
+    The motive of a `Curve` X is represented through its Chow decomposition, as the  sum of a point,
+    the Lefschetz motive and, h^1(X), the `CurveChow` componente of the curve.
+    It supports Adams and lambda operations, generating functions,
     and Jacobian calculations.
 
     Attributes:

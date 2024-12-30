@@ -36,7 +36,7 @@ class TwistedHiggsModuliADHM:
     r : int
         The rank of the underlying vector bundles.
     lef : Lefschetz
-        The Lefschetz operator.
+        The Lefschetz motive.
     t : Polynomial1Var
         The Polynomial1Var t that will be substituted for 1 during calculations.
     T : Polynomial1Var
