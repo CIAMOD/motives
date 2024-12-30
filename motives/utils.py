@@ -35,6 +35,11 @@ class SingletonMeta(type):
         Overrides the default behavior of the `__call__` method to control how 
         instances are created. It ensures only one instance of the class is created,
         even in a multithreaded environment.
+
+    References:
+    -----------
+    The code of this class is based on the Singleton design pattern example provided in
+    [1] https://refactoring.guru/design-patterns/singleton/python/example
     """
 
     _instances = {}
