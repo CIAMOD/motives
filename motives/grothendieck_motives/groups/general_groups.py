@@ -43,8 +43,23 @@ class A(G):
             A new instance of the A class.
         """
         new_sl = G.__new__(cls, range(2, n + 2), n * (n + 1))
-        new_sl.n = n
         return new_sl
+
+    def __init__(self, n: int, *args, **kwargs):
+        """
+        Initializes the A class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the group A(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        super().__init__(range(2, n + 2), n * (n + 1))
+        self.n = n
 
 
 class B(G):
@@ -88,6 +103,22 @@ class B(G):
         new_sl.n = n
         return new_sl
 
+    def __init__(self, n: int, *args, **kwargs):
+        """
+        Initializes the B class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the group B(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        super().__init__(range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        self.n = n
+
 
 class C(G):
     """
@@ -130,6 +161,22 @@ class C(G):
         new_sl.n = n
         return new_sl
 
+    def __init__(self, n: int, *args, **kwargs):
+        """
+        Initializes the C class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the group C(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        super().__init__(range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        self.n = n
+
 
 class D(G):
     """
@@ -171,6 +218,22 @@ class D(G):
         new_sl = G.__new__(cls, chain(range(2, 2 * n - 1, 2), (n,)), n * (2 * n - 1))
         new_sl.n = n
         return new_sl
+
+    def __init__(self, n: int, *args, **kwargs):
+        """
+        Initializes the D class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the group D(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        super().__init__(chain(range(2, 2 * n - 1, 2), (n,)), n * (2 * n - 1))
+        self.n = n
 
 
 class E(G):
@@ -222,6 +285,27 @@ class E(G):
         new_sl.n = n
         return new_sl
 
+    def __init__(self, n: int, *args, **kwargs):
+        """
+        Initializes the E class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the group E(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        if n == 6:
+            super().__init__([2, 5, 6, 8, 9, 12], 78)
+        elif n == 7:
+            super().__init__([2, 6, 8, 10, 12, 14, 18], 133)
+        elif n == 8:
+            super().__init__([2, 8, 12, 14, 18, 20, 24, 30], 248)
+        self.n = n
+
 
 class F4(G):
     """
@@ -261,3 +345,17 @@ class F4(G):
         new_sl = G.__new__(cls, [2, 6, 8, 12], 52)
         new_sl.n = 4
         return new_sl
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the F4 class.
+
+        Parameters:
+        -----------
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
+        super().__init__([2, 6, 8, 12], 52)
+        self.n = 4
