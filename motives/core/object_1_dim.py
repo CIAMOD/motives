@@ -5,10 +5,13 @@ from .operand import Operand
 
 class Object1Dim(Operand):
     """
-    An abstract class representing a one-dimensional object in the expression tree.
+    An abstract class representing a 1-dimensional object in a lambda-ring for the
+    special lambda-ring structure sigma. All instances of this class satisfy that σ^n(x)=0
+    for each n>1 and, therefore,
+         λ^n(x)=ψ^n(x)=x^n
 
-    This class inherits from Operand and is meant to be extended by any specific one-dimensional
-    objects. It defines the abstract methods for Adams and Lambda operations that must be implemented
+    This class inherits from Operand and is meant to be extended by any specific 1-dimensional
+    objects. It defines the abstract methods for Adams and lambda operations that must be implemented
     by subclasses.
 
     Attributes:

@@ -15,7 +15,7 @@ class Operand(LambdaRingExpr):
 
     This class serves as a base class for any new operand in the expression tree.
     All operands in an expression must be subclasses of this class and implement
-    specific behavior for conversion to Adams and Lambda polynomials, as well as other operations.
+    specific behavior for conversion to Adams and lambda polynomials, as well as other operations.
     """
 
     def _sympystr(self, printer: StrPrinter) -> str:
@@ -39,8 +39,8 @@ class Operand(LambdaRingExpr):
         Computes the maximum Adams degree of this operand.
 
         This method multiplies the Adams, Lambda, and Sigma degrees across every branch
-        of the tree and returns the maximum value. For an individual operand, this value
-        is typically `1`.
+        of the tree and returns the maximum value. For an individual operand in a leaf of the tree,
+        this value is typically `1`.
 
         Returns:
         --------
@@ -51,7 +51,7 @@ class Operand(LambdaRingExpr):
 
     def get_max_groth_degree(self) -> int:
         """
-        Computes the maximum Grothendieck degree needed to create a context for this operand.
+        Computes the maximum operator degree needed to create a Grothendieck context for this operand.
 
         Returns:
         --------
@@ -62,7 +62,7 @@ class Operand(LambdaRingExpr):
 
     def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the operand with an Adams operation applied to it.
+        Returns the operand with an Adams operation of order i applied to it.
 
         Args:
         -----
@@ -83,7 +83,7 @@ class Operand(LambdaRingExpr):
 
     def get_lambda_var(self, i: int) -> sp.Expr:
         """
-        Returns the operand with a Lambda operation applied to it.
+        Returns the operand with a lambda operation of order i applied to it.
 
         Args:
         -----
@@ -105,7 +105,14 @@ class Operand(LambdaRingExpr):
     @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies the Adams operation to instances of this operand in a given polynomial.
+        Applies the Adams operation of the requesed degree to instances of this operand and any of
+        its Adams operations which appear in the polynomial ph.
+
+        If ph=x._to_adams(i,ph) is called iteratively for each operand x such that either x or some of
+        its Adams operations appear in the polynomial expression P, then the resulting polynomial
+        will represent ψ^i(ph).
+
+        If neither x nor any of its Adams operations appear in ph, then ph is returned unaffected.
 
         Args:
         -----
@@ -175,10 +182,10 @@ class Operand(LambdaRingExpr):
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes any Adams operations on this operand in the given polynomial with their equivalent Lambda polynomial.
+        Substitutes any Adams operations on this operand in the given polynomial with their equivalent lambda polynomial.
 
         This method is used in `to_lambda` to convert any Adams operations in the polynomial
-        into Lambda operations.
+        into lambda operations.
 
         Args:
         -----

@@ -11,9 +11,13 @@ Operand = TypeVar("Operand")  # Define Operand as a TypeVar for type hinting
 
 class LambdaRingExpr(sp.Expr):
     """
-    Represents a mathematical expression that can be converted to different
-    polynomial forms such as Adams and Lambda polynomials, or manipulated using
-    various operations like sigma, lambda, and adams.
+    Represents a mathematical symbolic expression in some lambda-ring R. The folloing is assumed.
+        - R is a unital abelian ring.
+        - The ring R has two opposite lambda-ring structures λ and σ.
+        - The lambda-structure σ is special.
+        - σ has associated Adams operations, denoted by ψ.
+    It can be converted to different polynomial forms such as Adams and Lambda polynomials,
+    or manipulated using various operations like sigma, lambda, and Adams.
 
     Subclasses must implement methods to handle specific types of expressions.
     """
@@ -56,7 +60,8 @@ class LambdaRingExpr(sp.Expr):
 
     def to_adams(self) -> sp.Expr:
         """
-        Converts this expression into an equivalent Adams polynomial.
+        Converts this expression into an equivalent Adams polynomial, a polynomial
+        depending only on Adams operations of the leaves of the given expression Tree.
 
         Returns:
         --------
@@ -68,7 +73,8 @@ class LambdaRingExpr(sp.Expr):
 
     def to_lambda(self, *, optimize: bool = True) -> sp.Expr:
         """
-        Converts this expression into an equivalent Lambda polynomial.
+        Converts this expression into an equivalent lambda polynomial, a polynomial
+        depending only on lambda operations of the leaves of the given expression Tree.
 
         Args:
         -----
@@ -95,7 +101,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def sigma(self, degree: int) -> sp.Expr:
         """
-        Applies the sigma operation to this expression.
+        Applies the sigma operation of order n to this expression.
 
         Args:
         -----
@@ -114,7 +120,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def lambda_(self, degree: int) -> sp.Expr:
         """
-        Applies the lambda operation to this expression.
+        Applies the lambda operation of order n to this expression.
 
         Args:
         -----
@@ -133,7 +139,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def adams(self, degree: int) -> sp.Expr:
         """
-        Applies the Adams operation to this expression.
+        Applies the Adams operation of order n to this expression.
 
         Args:
         -----
@@ -174,7 +180,9 @@ class LambdaRingExpr(sp.Expr):
         self, operands: set[Operand], adams_degree: int = 1
     ) -> sp.Expr:
         """
-        Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion.
+        Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion, 
+        converting only lambda operations into Adams polynomials if needed and letting subexpressions which are already
+        lambda polynomials unnafected if no adams, lambda or sigma operation acts on them.
 
         This method is used when the `optimize` flag is set to True in the `to_lambda` method.
 
