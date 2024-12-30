@@ -11,11 +11,13 @@ from .motive import Motive
 
 class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
     """
-    Represents a point motive in an expression.
+    Represents the motive of a (closed) point in an expression in the Grothendieck lambda-ring of
+    varieties, the Grothendieck rin of Chow motives or in any extension or completion of such rings
+    begin considered.
 
     The point motive is a universal motive and acts as a singleton. It inherits from
     `Motive` and SymPy's `AtomicExpr`, meaning it is treated as an indivisible expression
-    and supports Adams and Lambda operations, though they always return 1 for this motive.
+    and supports Adams and lambda or sigma operations, though they always return 1 for this motive.
     """
 
     def __new__(cls) -> Point:

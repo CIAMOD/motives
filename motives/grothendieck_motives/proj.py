@@ -10,18 +10,21 @@ from .lefschetz import Lefschetz
 
 class Proj(Motive, sp.AtomicExpr):
     """
-    Represents a projective space P^n in an expression tree.
+    Represents the motivic class of a complex projective space P^n in the Grothendieck lambda-ring of
+    varieties, the Grothendieck rin of Chow motives or in any extension or completion of such rings
+    begin considered.
 
-    A projective space is a motive that represents the sum 1 + L + ... + L^n,
+    It is equal to the sum
+        1 + L + ... + L^n,
     where L is the Lefschetz motive. This class supports operations related to
-    Adams and Lambda transformations.
+    Adams and lambda operations.
 
     Attributes:
     -----------
     n : int
         The dimension of the projective space.
     lef : Lefschetz
-        The Lefschetz motive associated with the projective space.
+        The Lefschetz motive used for the equation of the motive of the projective space.
     _et_repr : sp.Expr
         The projective space as a sympy expression.
     _lambda_vars : dict[int, sp.Expr]
@@ -135,7 +138,7 @@ class Proj(Motive, sp.AtomicExpr):
         Applies the Adams operator to any instances of this projective space in the expression.
 
         This method raises an exception because projective spaces should not appear directly
-        in the expression. Instead, they should be decomposed into their components.
+        as leaves of the expression. Instead, they should be decomposed into their components.
 
         Args:
         -----
