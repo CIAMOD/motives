@@ -5,7 +5,7 @@ from sympy.ntheory import mobius
 from ...curves.curve import Curve
 
 from ...lefschetz import Lefschetz
-from ...polynomial_1_var import Polynomial1Var
+from ....polynomial_1_var import Polynomial1Var
 
 from ....core.lambda_ring_expr import LambdaRingExpr
 from ....utils import (
@@ -210,8 +210,8 @@ class TwistedHiggsModuliADHM:
         if verbose > 0:
             print("Formula prepared for collection in 1 / (1 - t).")
 
-        poly_domain = sp.ZZ[self.cur.curve_hodge.lambda_symbols[1:]]
-        domain = sp.ZZ[[lef] + self.cur.curve_hodge.lambda_symbols[1:]]
+        poly_domain = sp.ZZ[self.cur.curve_chow.lambda_symbols[1:]]
+        domain = sp.ZZ[[lef] + self.cur.curve_chow.lambda_symbols[1:]]
 
         # Cancel the necessary terms and substitute
         Hr = subs_variable(Hr, t, 1, lef, domain=poly_domain, verbose=verbose)

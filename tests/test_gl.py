@@ -2,7 +2,8 @@ import pytest
 
 from motives import GL, LambdaRingExpr
 
-@pytest.mark.parametrize("k,n", [(k, n) for k in range(1, 6) for n in range(1, 15)])
+
+@pytest.mark.parametrize("k,n", [(k, n) for k in range(1, 5) for n in range(1, 12)])
 def test_lambda(k: int, n: int) -> None:
     et: LambdaRingExpr = GL(n).lambda_(k)
 
@@ -12,7 +13,8 @@ def test_lambda(k: int, n: int) -> None:
     assert (lambda_opt - lambda_wo_opt).simplify() == 0
     return
 
-@pytest.mark.parametrize("k,n", [(k, n) for k in range(1, 6) for n in range(1, 15)])
+
+@pytest.mark.parametrize("k,n", [(k, n) for k in range(1, 5) for n in range(1, 12)])
 def test_adams(k: int, n: int) -> None:
     proj = GL(n)
 

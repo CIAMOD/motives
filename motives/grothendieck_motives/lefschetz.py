@@ -1,9 +1,10 @@
 from __future__ import annotations
 import sympy as sp
 
-from .polynomial_1_var import Polynomial1Var
+from ..polynomial_1_var import Polynomial1Var
 
 from ..utils import SingletonMeta
+
 
 class Lefschetz(Polynomial1Var, metaclass=SingletonMeta):
     """

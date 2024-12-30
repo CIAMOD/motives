@@ -2,7 +2,7 @@ import sympy as sp
 from typeguard import typechecked
 
 from ..lambda_ring_context import LambdaRingContext
-from ..operand import Operand
+from ..operand.operand import Operand
 from ..lambda_ring_expr import LambdaRingExpr
 
 import sympy as sp

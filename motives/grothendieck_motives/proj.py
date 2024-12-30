@@ -2,7 +2,7 @@ import sympy as sp
 from multipledispatch import dispatch
 
 from ..core import LambdaRingContext
-from ..core.operand import Operand
+from ..core.operand.operand import Operand
 
 from .motive import Motive
 from .lefschetz import Lefschetz

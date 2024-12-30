@@ -1,6 +1,6 @@
 import sympy as sp
 
-from ..operand import Operand
+from ..operand.operand import Operand
 
 
 def get_max_adams_degree_pow(self: sp.Pow) -> int:

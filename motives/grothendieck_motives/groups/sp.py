@@ -1,12 +1,76 @@
-class Sp:
-    def __init__(self, n: int, *args, **kwargs) -> None:
-        """
-        Initializes a `SP` instance.
+from .general_groups import C
 
-        Args:
-        -----
-        n : int
-            The dimension of the SP_n bundle.
+
+# TODO docs
+
+
+class SP(C):
+    """
+    Represents the symplectic group SP(n) as a Grothendieck motive.
+    This class inherits from the G class and represents the symplectic group SP(n),
+    which consists of 2n x 2n matrices preserving a symplectic form. The motive is constructed
+    using a combination of even integers from 2 to 2n and the integer n, with the dimension n * (2n + 1).
+
+    Attributes:
+    -----------
+    n : int
+        The dimension of the symplectic group SP(n).
+
+    Methods:
+    --------
+    __new__(cls, n: int, *args, **kwargs)
+        Creates a new instance of the SP class with the specified dimension n.
+    __repr__() -> str
+        Returns a string representation of the SP group.
+    _hashable_content() -> tuple
+        Returns a tuple containing the dimension n, used for hashing.
+    """
+
+    def __new__(cls, n: int, *args, **kwargs):
         """
-        # TODO: Implement this class
-        raise NotImplementedError("This class is not implemented yet.")
+        Creates a new instance of the SP class with the specified dimension n.
+
+        Parameters:
+        -----------
+        n : int
+            The dimension of the symplectic group SP(n).
+        *args : tuple
+            Additional arguments.
+        **kwargs : dict
+            Additional keyword arguments.
+
+        Returns:
+        --------
+        SP
+            A new instance of the SP class.
+        """
+        if n % 2 != 0:
+            raise ValueError(
+                "The dimension of the symplectic group SP(n) must be even."
+            )
+
+        new_sl = C.__new__(cls, n // 2)
+        new_sl.n = n
+        return new_sl
+
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the SP group.
+
+        Returns:
+        --------
+        str
+            A string representation of the SP group in the format 'SP_n'.
+        """
+        return f"SP_{self.n}"
+
+    def _hashable_content(self) -> tuple:
+        """
+        Returns a tuple containing the dimension n, used for hashing.
+
+        Returns:
+        --------
+        tuple
+            A tuple containing the dimension n.
+        """
+        return (self.n,)
