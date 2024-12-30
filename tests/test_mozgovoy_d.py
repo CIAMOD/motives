@@ -3,11 +3,12 @@ import sympy as sp
 
 from motives import TwistedHiggsModuliBB, Curve, Lefschetz
 
+
 def test_mozgovoy222() -> None:
     x = Curve("C", 2)
     eq = TwistedHiggsModuliBB(x, 2, 2)
     lef = Lefschetz()
-    a = eq.cur.curve_hodge.lambda_symbols
+    a = eq.cur.curve_chow.lambda_symbols
     domain = sp.ZZ[[lef] + a[1:]]
 
     eq_lambda = eq.simplify()
@@ -39,7 +40,7 @@ def test_mozgovoy232() -> None:
     x = Curve("C", 2)
     eq = TwistedHiggsModuliBB(x, 3, 2)
     lef = Lefschetz()
-    a = eq.cur.curve_hodge.lambda_symbols
+    a = eq.cur.curve_chow.lambda_symbols
     domain = sp.ZZ[[lef] + a[1:]]
 
     eq_lambda = eq.simplify()
@@ -74,7 +75,7 @@ def test_mozgovoy242() -> None:
     x = Curve("C", 2)
     eq = TwistedHiggsModuliBB(x, 4, 2)
     lef = Lefschetz()
-    a = eq.cur.curve_hodge.lambda_symbols
+    a = eq.cur.curve_chow.lambda_symbols
     domain = sp.ZZ[[lef] + a[1:]]
 
     eq_lambda = eq.simplify()
@@ -112,7 +113,7 @@ def test_mozgovoy213() -> None:
     x = Curve("C", 2)
     eq = TwistedHiggsModuliBB(x, 1, 3)
     lef = Lefschetz()
-    a = eq.cur.curve_hodge.lambda_symbols
+    a = eq.cur.curve_chow.lambda_symbols
     domain = sp.ZZ[[lef] + a[1:]]
 
     eq_lambda = eq.simplify()

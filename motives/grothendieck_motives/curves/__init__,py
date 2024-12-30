@@ -1,2 +1,2 @@
 from .curve import Curve
-from .curvehodge import CurveHodge
+from .curvechow import CurveChow

@@ -77,8 +77,8 @@ class TwistedHiggsModuliBB(VHS):
             )
 
         result: sp.Poly = 0
-        domain_qq = sp.QQ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
-        domain_zz = sp.ZZ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
+        domain_qq = sp.QQ[[self.lef] + self.cur.curve_chow.lambda_symbols[1:]]
+        domain_zz = sp.ZZ[[self.lef] + self.cur.curve_chow.lambda_symbols[1:]]
 
         # Choose VHS components base on rank
         if self.r == 2:

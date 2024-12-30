@@ -20,7 +20,7 @@ from .grothendieck_motives.lefschetz import Lefschetz
 
 ## -------- CURVES ----------
 from .grothendieck_motives.curves.curve import Curve
-from .grothendieck_motives.curves.curvehodge import CurveHodge
+from .grothendieck_motives.curves.curvechow import CurveChow
 from .grothendieck_motives.curves.jacobian import Jacobian
 
 ## -------- GL ----------
