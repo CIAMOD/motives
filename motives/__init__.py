@@ -26,13 +26,11 @@ from .grothendieck_motives.curves.jacobian import Jacobian
 ## -------- GL ----------
 from .grothendieck_motives.groups.gl import GL
 from .grothendieck_motives.groups.g import G
-from .grothendieck_motives.groups.gl import GL
-from .grothendieck_motives.groups.o import O
-from .grothendieck_motives.groups.pgl import PGL
-from .grothendieck_motives.groups.pso import PSO
+from .grothendieck_motives.groups.psl import PSL
 from .grothendieck_motives.groups.sl import SL
 from .grothendieck_motives.groups.so import SO
-from .grothendieck_motives.groups.sp import Sp
+from .grothendieck_motives.groups.sp import SP
+from .grothendieck_motives.groups.general_groups import A, B, C, D, E, F4
 
 ## -------- MODULI ----------
 ### -------- SCHEME ----------

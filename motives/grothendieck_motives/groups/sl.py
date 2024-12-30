@@ -1,7 +1,10 @@
-from .g import G
+from .general_groups import A
 
 
-class SL(G):
+# TODO docs
+
+
+class SL(A):
     """
     Represents the special linear group SL(n) as a Grothendieck motive.
     This class inherits from the G class and represents the special linear group SL(n),
@@ -41,7 +44,7 @@ class SL(G):
         SL
             A new instance of the SL class.
         """
-        new_sl = G.__new__(cls, range(2, n + 1), n**2 - 1)
+        new_sl = A.__new__(cls, n - 1)
         new_sl.n = n
         return new_sl
 

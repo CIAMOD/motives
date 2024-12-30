@@ -7,16 +7,19 @@ from multipledispatch import dispatch
 from ...core.operand import Operand
 
 
+# TODO revisar docs
+
+
 class G(Motive, sp.AtomicExpr):
     """
     Represents a Grothendieck motive as a sympy atomic expression.
 
     This class inherits from both Motive and sympy.AtomicExpr, and represents
-    a Grothendieck motive with a given set of integers (alfas) and a dimension.
+    a Grothendieck motive with a given set of integers (ds) and a dimension.
 
     Attributes:
     -----------
-    alfas : Iterable[int]
+    ds : Iterable[int]
         The set of integers used to construct the motive.
     dim : int
         The dimension of the motive.
@@ -29,10 +32,10 @@ class G(Motive, sp.AtomicExpr):
 
     Methods:
     --------
-    __new__(cls, alfas: Iterable[int], dim: int, *args, **kwargs)
-        Creates a new instance of the G class with the specified alfas and dimension.
-    __init__(self, alfas: Iterable[int], dim: int, *args, **kwargs)
-        Initializes the G class with the specified alfas and dimension.
+    __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs)
+        Creates a new instance of the G class with the specified ds and dimension.
+    __init__(self, ds: Iterable[int], dim: int, *args, **kwargs)
+        Initializes the G class with the specified ds and dimension.
     get_adams_var(self, i: int) -> sp.Expr
         Returns the Adams variable of the motive for a given index.
     get_lambda_var(self, i: int) -> sp.Expr
@@ -47,13 +50,13 @@ class G(Motive, sp.AtomicExpr):
         Returns the set of free symbols in the group, which includes the Lefschetz motive.
     """
 
-    def __new__(cls, alfas: Iterable[int], dim: int, *args, **kwargs):
+    def __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs):
         """
-        Creates a new instance of the G class with the specified alfas and dimension.
+        Creates a new instance of the G class with the specified ds and dimension.
 
         Parameters:
         -----------
-        alfas : Iterable[int]
+        ds : Iterable[int]
             The set of integers used to construct the motive.
         dim : int
             The dimension of the motive.
@@ -71,13 +74,13 @@ class G(Motive, sp.AtomicExpr):
         new_g._assumptions["commutative"] = True
         return new_g
 
-    def __init__(self, alfas: Iterable[int], dim: int, *args, **kwargs):
+    def __init__(self, ds: Iterable[int], dim: int, *args, **kwargs):
         """
-        Initializes the G class with the specified alfas and dimension.
+        Initializes the G class with the specified ds and dimension.
 
         Parameters:
         -----------
-        alfas : Iterable[int]
+        ds : Iterable[int]
             The set of integers used to construct the motive.
         dim : int
             The dimension of the motive.
@@ -86,12 +89,12 @@ class G(Motive, sp.AtomicExpr):
         **kwargs : dict
             Additional keyword arguments.
         """
-        self.alfas = alfas
+        self.ds = ds
         self.dim = dim
 
         self.lef = Lefschetz()
         self._et_repr = self.lef**dim * sp.Mul(
-            *[1 - self.lef ** (-alfa) for alfa in alfas],
+            *[1 - self.lef ** (-d) for d in ds],
         )
         self._lambda_vars = {}
 

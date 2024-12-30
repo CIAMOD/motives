@@ -1,7 +1,10 @@
-from .g import G
+from .general_groups import C
 
 
-class Sp(G):
+# TODO docs
+
+
+class SP(C):
     """
     Represents the symplectic group SP(n) as a Grothendieck motive.
     This class inherits from the G class and represents the symplectic group SP(n),
@@ -41,7 +44,12 @@ class Sp(G):
         SP
             A new instance of the SP class.
         """
-        new_sl = G.__new__(cls, range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        if n % 2 != 0:
+            raise ValueError(
+                "The dimension of the symplectic group SP(n) must be even."
+            )
+
+        new_sl = C.__new__(cls, n // 2)
         new_sl.n = n
         return new_sl
 

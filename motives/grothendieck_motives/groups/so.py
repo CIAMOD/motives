@@ -1,8 +1,10 @@
-from .g import G
-from itertools import chain
+from .general_groups import B, D
 
 
-class SO(G):
+# TODO docs
+
+
+class SO(B):
     """
     Represents the special orthogonal group SO(n) as a Grothendieck motive.
     This class inherits from the G class and represents the special orthogonal group SO(n),
@@ -42,7 +44,11 @@ class SO(G):
         SO
             A new instance of the SO class.
         """
-        new_sl = G.__new__(cls, chain(range(2, 2 * n - 1, 2), (n,)), n * (2 * n - 1))
+        if n % 2 == 1:
+            new_sl = B.__new__(cls, (n - 1) // 2)
+        elif n % 2 == 0:
+            new_sl = D.__new__(cls, n // 2)
+
         new_sl.n = n
         return new_sl
 
