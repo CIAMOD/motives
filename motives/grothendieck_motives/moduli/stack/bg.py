@@ -137,6 +137,7 @@ class BunG(Motive, sp.AtomicExpr):
             self._lambda_vars[i] = self._et_repr.to_lambda(i)
         return self._lambda_vars[i]
 
+    @dispatch(int, sp.Expr)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this BunG in the expression.

@@ -1,4 +1,4 @@
-from g import G
+from .g import G
 
 
 class SL(G):
@@ -7,10 +7,12 @@ class SL(G):
     This class inherits from the G class and represents the special linear group SL(n),
     which consists of n x n matrices with determinant 1. The motive is constructed
     using the range of integers from 2 to n (inclusive) and the dimension n^2 - 1.
+
     Attributes:
     -----------
     n : int
         The dimension of the special linear group SL(n).
+
     Methods:
     --------
     __new__(cls, n: int, *args, **kwargs)

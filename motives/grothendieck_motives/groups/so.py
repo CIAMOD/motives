@@ -1,4 +1,4 @@
-from g import G
+from .g import G
 from itertools import chain
 
 
@@ -8,10 +8,12 @@ class SO(G):
     This class inherits from the G class and represents the special orthogonal group SO(n),
     which consists of n x n orthogonal matrices with determinant 1. The motive is constructed
     using a combination of even integers from 2 to 2n-2 and the integer n, with the dimension n * (2n - 1).
+
     Attributes:
     -----------
     n : int
         The dimension of the special orthogonal group SO(n).
+
     Methods:
     --------
     __new__(cls, n: int, *args, **kwargs)
