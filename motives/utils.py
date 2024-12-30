@@ -69,21 +69,49 @@ class SingletonMeta(type):
 
 class Partitions:
     """
-    A helper class for constructing the Mozgovoy formula.
+    A class for handling Young diagrams associated to a
+    partition of an integer r into k summands.
+    
+    A k-partition of n is represented by a nonincreasing sequence of integers
+        a_1>=a_2>=...>=a_k>=0
+    such that
+        a_1+a_2+...+a_k=r
+    
+    Given a partition (a_1,...,a_k), A Young diagram associated to a partition
+    is constructed as a finite collection of piled boxes organized in rows where
+    the number of boxes for each row is given by the integers a_i. For example,
+    the following partition of 8, (3,2,2,1), has as Youn diagram
+
+        XXXX
+        XX
+        XX
+        X
+
+    whose elements are designated as pairs (i,j) denoting the box of the
+    diagram in row i and column j.
+    
+    This class permits computing some combinatorial functions associated to the Young
+    diagram of a given partition.
 
     Parameters
     ----------
     partition : tuple[int]
-        The partition to use. It should be ordered in decreasing order.
+        The partition to use. It should be ordered in descending order.
 
     Methods
     -------
     elements()
-        Generate the elements of d(partition) for a given partition.
+        Generate the elements of the Young diagram of the partition.
     a(i, j)
-        The a operator used to construct the Mozgovoy formula.
+        Arm length of an element (i,j) in the Young diagram of the partition.
+        It is the number of elements to the right of (i,j) in the diagram.
     l(i, j)
-        The l operator used to construct the Mozgovoy formula.
+        Leg length of an element (i,j) in the Young diagram of the partition.
+        It is the number of elements below (i,j) in the diagram.
+    h(i,j)
+        hook length of an element (i,j) in the Young diagram of the partition.
+        It is the number of elements to the right or below (i,j), including itself, in the diagram.
+        It equals a(i,j)+l(i,j)+1.
     """
 
     def __init__(self, partition: tuple[int]):
@@ -92,12 +120,20 @@ class Partitions:
     @property
     def elements(self) -> Generator[tuple[int], None, None]:
         """
-        Generate the elements of d(partition) for a given partition.
+        Generate the elements of d(partition) for a given partition, i.e.,
+        the points in the Young or Ferres diagram of a partition.
+
+        For example, the partition (2,2,1) of 5 with Young diagram
+            XX
+            XX
+            X
+        has (1,1), (1,2), (2,1), (2,2) and (3,1) as elements.
 
         Yields
         ------
         tuple
-            The elements of d(partition).
+            The elements of d(partition). Each element is a pair (i,j), where
+            i indicates the row and j the column (starting from 1).
         """
         for i, el in enumerate(self._partition, 1):
             for j in range(1, el + 1):
@@ -105,7 +141,8 @@ class Partitions:
 
     def a(self, i: int, j: int) -> int:
         """
-        a operator used to construct the Mozgovoy formula.
+        Arm length of an element (i,j) in the Young diagram of a partition.
+        Denoted a(i,j), it is the number of elements to the right of (i,j) in the diagram.
 
         Parameters
         ----------
@@ -117,13 +154,14 @@ class Partitions:
         Returns
         -------
         int
-            The output of the operator.
+            The output of the operator a(i,j).
         """
         return self._partition[i - 1] - j
 
     def l(self, i: int, j: int) -> int:
         """
-        l operator used to construct the Mozgovoy formula.
+        Leg length of an element (i,j) in the Young diagram of the partition.
+        Denoted l(i,j), it is the number of elements below (i,j) in the diagram.
 
         Parameters
         ----------
@@ -135,14 +173,35 @@ class Partitions:
         Returns
         -------
         int
-            The output of the operator.
+            The output of the operator l(i,j).
         """
         index = len(self._partition) - bisect_left(self._partition[::-1], j)
         return index - i
+    
+    def h(self, i: int, j: int) -> int:
+        """
+        Hook length of an element (i,j) in the Young diagram of the partition.
+        Denoted h(i,j), it is the number of elements to the right or below (i,j),
+        including itself, in the diagram. It equals
+            a(i,j)+l(i,j)+1.
+
+        Parameters
+        ----------
+        i : int
+            The first index of the operator.
+        j : int
+            The second index of the operator.
+
+        Returns
+        -------
+        int
+            The output of the operator h(i,j).
+        """
+        return self.a(i,j)+self.l(i,j)+1
 
 def all_partitions(r: int) -> Generator[tuple[int], None, None]:
     """
-    Generate all partitions of r for k = 1, 2, ..., r.
+    Generate all partitions of r in k summands for k = 1, 2, ..., r.
 
     Parameters
     ----------

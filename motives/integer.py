@@ -12,7 +12,12 @@ from .core.operand import Operand
 
 class Integer(Operand):
     """
-    An operand in an expression tree that represents an integer.
+    An operand in an expression tree that represents an integer and such the
+    lambda, sigma and Adams operations act on this element following the natural lambda-ring
+    structure on Z, namely
+        λ^n(x)=binom(n+x-1,n)
+        σ^n(x)=binom(x,n)
+        psi^n(x)=x
 
     Parameters:
     -----------
@@ -31,7 +36,7 @@ class Integer(Operand):
     lambda_(degree: int) -> ET
         Applies the lambda operation to the current integer.
     adams(degree: int) -> ET
-        Applies the adams operation to the current integer.
+        Applies the Adams operation to the current integer.
 
     Properties:
     -----------
@@ -53,7 +58,8 @@ class Integer(Operand):
 
     def get_adams_var(self, i: int) -> int:
         """
-        Returns the adams variable of degree i.
+        Returns the Adams variable of degree i.
+        In this case, it is just its value.
 
         Parameters
         ----------
@@ -69,6 +75,8 @@ class Integer(Operand):
     def get_lambda_var(self, i: int) -> int:
         """
         Returns the lambda variable of degree i.
+        In this case it is the binomial coefficient
+            binom(i+x-1,i)
 
         Parameters
         ----------
@@ -84,8 +92,8 @@ class Integer(Operand):
     @dispatch(int, object)
     def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies an adams operation of degree `degree` to any instances of this integer
-        in the polynomial `ph`.
+        Applies an Adams operation of degree "degree" to any instances of this integer
+        in the polynomial "ph". In this case, it leaves the polynomial unchanged.
         """
         return ph
 
@@ -98,8 +106,8 @@ class Integer(Operand):
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes any instances of an adams of this integer into its equivalent
-        polynomial of lambdas.
+        Substitutes any instances of an Adams of this integer into its equivalent
+        polynomial of lambdas. In this case, it leaves the polynomial unchanged.
         """
         return ph
 
