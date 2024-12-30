@@ -3,8 +3,8 @@ from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
-from ..core.operand import Operand
-from ..core.object_1_dim import Object1Dim
+from .core.operand import Operand
+from .core.object_1_dim import Object1Dim
 
 
 class Polynomial1Var(Object1Dim, sp.Symbol):
@@ -44,7 +44,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
             warnings.warn(
                 "The name 'L' is reserved for the Lefschetz motive. Using 'Lefschetz' instead."
             )
-            from .lefschetz import Lefschetz
+            from .grothendieck_motives.lefschetz import Lefschetz
 
             return Lefschetz()
         return sp.Symbol.__new__(cls, f"s_{name}", **assumptions)

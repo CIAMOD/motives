@@ -14,7 +14,7 @@ from .core.operator import Lambda_, Sigma, Adams
 # -------- GROTHENDIECK ----------
 from .grothendieck_motives.motive import Motive
 from .grothendieck_motives.point import Point
-from .grothendieck_motives.polynomial_1_var import Polynomial1Var
+from .polynomial_1_var import Polynomial1Var
 from .grothendieck_motives.proj import Proj
 from .grothendieck_motives.lefschetz import Lefschetz
 

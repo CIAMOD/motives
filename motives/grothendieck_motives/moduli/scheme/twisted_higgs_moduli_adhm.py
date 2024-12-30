@@ -4,7 +4,7 @@ from sympy.polys.rings import PolyElement
 from ...curves.curve import Curve
 
 from ...lefschetz import Lefschetz
-from ...polynomial_1_var import Polynomial1Var
+from ....polynomial_1_var import Polynomial1Var
 
 from ....core.lambda_ring_expr import LambdaRingExpr
 from ....utils import (
