@@ -1,12 +1,13 @@
 # operand.py
 
 from __future__ import annotations  # For forward references
-from typing import TypeVar
+from functools import reduce
+import math
 import sympy as sp
 from sympy.printing.str import StrPrinter
 from multipledispatch import dispatch
 
-from .lambda_ring_expr import LambdaRingExpr
+from ..lambda_ring_expr import LambdaRingExpr
 
 
 class Operand(LambdaRingExpr):

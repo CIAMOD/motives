@@ -4,7 +4,7 @@ from typing import Iterable
 from ..lefschetz import Lefschetz
 from ...core import LambdaRingContext
 from multipledispatch import dispatch
-from ...core.operand import Operand
+from ...core.operand.operand import Operand
 
 
 # TODO revisar docs

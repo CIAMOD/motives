@@ -40,6 +40,12 @@ class Bun(BunG):
         new_bun.n = n
         return new_bun
 
+    def __init__(self, curve: Curve, n: int, *args, **kwargs):
+        """
+        TODO
+        """
+        super().__init__(curve, GL(n))
+
     def __repr__(self) -> str:
         """
         Returns the string representation of the Bun.

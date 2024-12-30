@@ -4,7 +4,7 @@ from __future__ import annotations  # For forward references
 import sympy as sp
 from multipledispatch import dispatch
 
-from .core.operand import Operand
+from .core.operand.operand import Operand
 from .core.lambda_ring_context import LambdaRingContext
 
 

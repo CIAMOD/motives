@@ -2,7 +2,7 @@ from ...motive import Motive
 from ...groups.g import G
 from ...curves.curve import Curve
 from ...lefschetz import Lefschetz
-from ....core.operand import Operand
+from ....core.operand.operand import Operand
 
 import sympy as sp
 from multipledispatch import dispatch
@@ -61,8 +61,8 @@ class BunG(Motive, sp.AtomicExpr):
         self.lef: Lefschetz = Lefschetz()
 
         self._et_repr: sp.Expr = self.lef ** (
-            (self.curve.g - 1) * sum(self.group.alfas)
-        ) * sp.Mul(*[self.curve.Z(self.lef ** (-alfa)) for alfa in self.group.alfas])
+            (self.curve.g - 1) * sum(self.group.ds)
+        ) * sp.Mul(*[self.curve.Z(self.lef ** (-d)) for d in self.group.ds])
 
         self._lambda_vars: dict[int, sp.Expr] = {}
         self._adams_vars: dict[int, sp.Expr] = {}

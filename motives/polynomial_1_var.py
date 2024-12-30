@@ -3,8 +3,8 @@ from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
-from .core.operand import Operand
-from .core.object_1_dim import Object1Dim
+from .core.operand.operand import Operand
+from .core.operand.object_1_dim import Object1Dim
 
 
 class Polynomial1Var(Object1Dim, sp.Symbol):

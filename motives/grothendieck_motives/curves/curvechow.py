@@ -7,7 +7,7 @@ import re
 
 from ...utils import expr_from_pol
 
-from ...core.operand import Operand
+from ...core.operand.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz

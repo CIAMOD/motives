@@ -3,7 +3,7 @@ import sympy as sp
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
-from ...core.operand import Operand
+from ...core.operand.operand import Operand
 
 from .curvechow import CurveChow
 from .curve import Curve

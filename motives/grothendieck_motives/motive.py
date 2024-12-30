@@ -1,4 +1,5 @@
-from ..core.operand import Operand
+from ..core.operand.operand import Operand
+
 
 class Motive(Operand):
     """

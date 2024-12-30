@@ -1,12 +1,11 @@
 # -------- BASE ----------
 from .free import Free
-from .integer import Integer
 
 # -------- CORE ----------
 from .core.lambda_ring_context import LambdaRingContext
 from .core.lambda_ring_expr import LambdaRingExpr
-from .core.operand import Operand
-from .core.object_1_dim import Object1Dim
+from .core.operand.operand import Operand
+from .core.operand.object_1_dim import Object1Dim
 
 # -------- OPERATOR ----------
 from .core.operator import Lambda_, Sigma, Adams

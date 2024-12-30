@@ -10,29 +10,30 @@ from typing import Optional, Iterable
 from functools import reduce
 from threading import Lock
 
+
 class SingletonMeta(type):
     """
     A thread-safe Singleton metaclass.
 
     This metaclass ensures that a class using it will only ever have one instance
     (singleton) throughout the lifetime of the program, regardless of how many times
-    the class is instantiated. If an instance of the class does not exist, it creates 
+    the class is instantiated. If an instance of the class does not exist, it creates
     one, otherwise, it returns the existing instance.
 
     Attributes:
     -----------
     _instances : dict
-        A dictionary that stores instances of classes using this metaclass as keys, 
+        A dictionary that stores instances of classes using this metaclass as keys,
         ensuring only one instance per class.
-    
+
     _lock : threading.Lock
-        A threading lock object that ensures thread safety when creating the 
+        A threading lock object that ensures thread safety when creating the
         singleton instance.
 
     Methods:
     --------
     __call__(cls, *args, **kwargs):
-        Overrides the default behavior of the `__call__` method to control how 
+        Overrides the default behavior of the `__call__` method to control how
         instances are created. It ensures only one instance of the class is created,
         even in a multithreaded environment.
     """
@@ -43,11 +44,11 @@ class SingletonMeta(type):
     def __call__(cls, *args, **kwargs):
         """
         Controls the instantiation of classes using this metaclass.
-        
-        This method ensures that only one instance of the class is created by 
-        checking the `_instances` dictionary. If the class does not already have 
-        an instance, it creates one. The method uses a thread lock to ensure that 
-        multiple threads do not attempt to create instances simultaneously, ensuring 
+
+        This method ensures that only one instance of the class is created by
+        checking the `_instances` dictionary. If the class does not already have
+        an instance, it creates one. The method uses a thread lock to ensure that
+        multiple threads do not attempt to create instances simultaneously, ensuring
         thread safety.
 
         Parameters:
@@ -66,6 +67,7 @@ class SingletonMeta(type):
             if cls not in cls._instances:
                 cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class Partitions:
     """
@@ -140,6 +142,7 @@ class Partitions:
         index = len(self._partition) - bisect_left(self._partition[::-1], j)
         return index - i
 
+
 def all_partitions(r: int) -> Generator[tuple[int], None, None]:
     """
     Generate all partitions of r for k = 1, 2, ..., r.
@@ -160,6 +163,7 @@ def all_partitions(r: int) -> Generator[tuple[int], None, None]:
     for k in range(1, r + 1):
         for p in ordered_partitions(r, k):
             yield p
+
 
 def multinomial_coeff(lst: list[int]) -> int:
     """
@@ -184,6 +188,7 @@ def multinomial_coeff(lst: list[int]) -> int:
             res //= j
             i -= 1
     return res
+
 
 @lru_cache(maxsize=None)
 def partitions(n: int, k: int) -> tuple[tuple[int]]:
@@ -214,6 +219,7 @@ def partitions(n: int, k: int) -> tuple[tuple[int]]:
 
     return tuple(parts)
 
+
 @lru_cache(maxsize=None)
 def ordered_partitions(n: int, k: int, prev: int = 1) -> tuple[tuple[int]]:
     """
@@ -242,6 +248,7 @@ def ordered_partitions(n: int, k: int, prev: int = 1) -> tuple[tuple[int]]:
             partitions.append(result + (i,))
 
     return tuple(partitions)
+
 
 def lambda_of_adams_expansion(lambda_vars: list[sp.Expr], n: int, k: int) -> sp.Expr:
     """
@@ -283,13 +290,14 @@ def lambda_of_adams_expansion(lambda_vars: list[sp.Expr], n: int, k: int) -> sp.
     )
     return exp
 
+
 def cancel(expr: sp.Expr, domain: sp.Domain, var: sp.Symbol) -> PolyElement:
     """
     Cancel the denominator of a given rational expression over a specified domain.
 
-    This function cancels out the denominator of a rational expression, ensuring that 
-    the returned result is in the form of a polynomial with the denominator removed. 
-    The cancellation is performed over the specified polynomial domain, and the 
+    This function cancels out the denominator of a rational expression, ensuring that
+    the returned result is in the form of a polynomial with the denominator removed.
+    The cancellation is performed over the specified polynomial domain, and the
     result is returned as a `PolyElement` object.
 
     Args:
@@ -297,7 +305,7 @@ def cancel(expr: sp.Expr, domain: sp.Domain, var: sp.Symbol) -> PolyElement:
     expr : sp.Expr
         The symbolic expression from SymPy to be simplified by canceling its denominator.
     domain : sp.Domain
-        The domain over which the polynomial is defined. This is needed to handle 
+        The domain over which the polynomial is defined. This is needed to handle
         the algebraic properties of the expression during the cancellation process.
     var : sp.Symbol
         The variable with respect to which the cancellation will be applied.
@@ -305,9 +313,9 @@ def cancel(expr: sp.Expr, domain: sp.Domain, var: sp.Symbol) -> PolyElement:
     Returns:
     --------
     PolyElement
-        A polynomial in `PolyElement` form with the denominator canceled. This is 
+        A polynomial in `PolyElement` form with the denominator canceled. This is
         equivalent to the numerator of the original expression after cancellation.
-    
+
     Raises:
     -------
     ValueError
@@ -327,6 +335,7 @@ def cancel(expr: sp.Expr, domain: sp.Domain, var: sp.Symbol) -> PolyElement:
     )
 
     return cancelled_expr
+
 
 def subs_variable(
     expr: sp.Expr,
@@ -433,6 +442,7 @@ def subs_variable(
 
     return cancelled_result
 
+
 def expr_from_pol(
     pol: PolyElement, symbols: Optional[Iterable[sp.Symbol]] = None
 ) -> sp.Expr:
@@ -465,6 +475,7 @@ def expr_from_pol(
         result.append(sp.Mul(*term, evaluate=False))
 
     return sp.Add(*result, evaluate=False)
+
 
 def to_poly_monomial(
     monomial: sp.Expr,
@@ -539,6 +550,7 @@ def to_poly_monomial(
             var,
             domain=domain,
         ), sp.Poly.from_dict({(0,): coeff_den}, var)
+
 
 def cancel_poly(
     expr: sp.Expr, domain: sp.Domain, var_den: sp.Symbol
@@ -723,7 +735,10 @@ def cancel_poly(
 
     return _together(expr)
 
-def expand_variable_1mt(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
+
+def expand_variable_1mt(
+    var: sp.Symbol,
+) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
     """
     Helper function used in a sp.replace that returns a function
     that sets up the expression to apply a collect for the expression
@@ -836,7 +851,10 @@ def expand_variable_1mt(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Call
 
     return getter_func, subs_func
 
-def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
+
+def expand_variable_1mtk(
+    var: sp.Symbol,
+) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
     """
     Helper function used in a sp.replace that returns a function that expands
     1 / (1 - var ** k) into 1 / ((1 - var) * (1 + var + ... + var ** (k - 1))).
@@ -856,12 +874,12 @@ def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Cal
 
     def getter_func(expr: sp.Expr) -> bool:
         """
-        Selects expressions of the form 1 / (1 - var ** k) or equivalent, 
+        Selects expressions of the form 1 / (1 - var ** k) or equivalent,
         where `k` is a positive exponent, to determine if they should be expanded.
 
-        This function checks if an expression matches the desired pattern and 
-        returns `True` if it should be expanded. The target form is 
-        `1 / (1 - var ** k)` or its equivalent variants, such as 
+        This function checks if an expression matches the desired pattern and
+        returns `True` if it should be expanded. The target form is
+        `1 / (1 - var ** k)` or its equivalent variants, such as
         `1 / (var ** k - 1)`.
 
         Args:
@@ -872,12 +890,14 @@ def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Cal
         Returns:
         --------
         bool
-            True if the expression matches the form and should be expanded, 
+            True if the expression matches the form and should be expanded,
             False otherwise.
         """
         if expr.is_Pow:
             base, exp = expr.as_base_exp()
-            if exp < 0 and base.is_Add:  # Check if base is a sum and exponent is negative
+            if (
+                exp < 0 and base.is_Add
+            ):  # Check if base is a sum and exponent is negative
                 terms = base.as_ordered_terms()  # Get ordered terms of the base
                 if len(terms) == 2 and base.xreplace({var: 1}) == 0:
                     # Check if the expression simplifies to 0 when var is replaced with 1
@@ -900,11 +920,11 @@ def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Cal
 
     def subs_func(expr: sp.Expr) -> sp.Expr:
         """
-        Replaces a matching subexpression of the form `1 - var ** k` or equivalent 
+        Replaces a matching subexpression of the form `1 - var ** k` or equivalent
         with an expanded version using a sum of powers of `var`.
 
-        This function processes expressions that match patterns such as 
-        `1 - var ** k` or equivalent forms (`var ** k - 1`, `- var ** k + 1`, `-1 + var ** k`), 
+        This function processes expressions that match patterns such as
+        `1 - var ** k` or equivalent forms (`var ** k - 1`, `- var ** k + 1`, `-1 + var ** k`),
         and replaces them with a new form that expands the power term into a sum of powers of `var`.
 
         Args:
@@ -915,12 +935,12 @@ def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Cal
         Returns:
         --------
         sp.Expr
-            The modified expression with the matching subexpression replaced 
+            The modified expression with the matching subexpression replaced
             by an expanded sum of powers of `var`.
         """
         base, exp = expr.as_base_exp()  # Get the base and exponent of the expression
         terms = base.as_ordered_terms()  # Break down the base into ordered terms
-        
+
         # Identify the form of the expression and extract the exponent `k`
         if terms[0] == 1:
             # Case: 1 - var ** k
@@ -940,7 +960,10 @@ def expand_variable_1mtk(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Cal
 
     return getter_func, subs_func
 
-def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
+
+def expand_variable(
+    var: sp.Symbol,
+) -> tuple[Callable[[sp.Expr], bool], Callable[[sp.Expr], sp.Expr]]:
     """
     Helper function used in a sp.replace that returns a function
     that expands the expression if it contains the variable var.
@@ -960,8 +983,8 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
 
     def subs_func(expr: sp.Expr) -> sp.Expr:
         """
-        Expands a mathematical expression by selectively expanding terms that contain a specific variable. 
-        This function handles both multiplication (`Mul`) and exponentiation (`Pow`) cases, applying the 
+        Expands a mathematical expression by selectively expanding terms that contain a specific variable.
+        This function handles both multiplication (`Mul`) and exponentiation (`Pow`) cases, applying the
         expansion to terms involving the specified variable, and recombining them with the rest of the expression.
 
         Args:
@@ -972,7 +995,7 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
         Returns:
         --------
         sp.Expr
-            The expanded expression. If the expression contains terms with the specified variable, 
+            The expanded expression. If the expression contains terms with the specified variable,
             those terms will be expanded and then recombined with the other terms in the original expression.
             If no expansion is necessary, the original expression is returned unchanged.
         """
@@ -980,8 +1003,12 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
         if expr.is_Mul:
             if expr.has(var):  # Check if the expression contains the variable
                 # Split the expression into terms that have the variable and terms that do not
-                terms_w_var = sp.Mul(*[x for x in expr.args if x.has(var)])  # Terms with the variable
-                terms_wo_var = sp.Mul(*[x for x in expr.args if not x.has(var)])  # Terms without the variable
+                terms_w_var = sp.Mul(
+                    *[x for x in expr.args if x.has(var)]
+                )  # Terms with the variable
+                terms_wo_var = sp.Mul(
+                    *[x for x in expr.args if not x.has(var)]
+                )  # Terms without the variable
                 # Expand the terms that have the variable
                 expanded_vars = sp.expand(terms_w_var, force=True)
                 if expanded_vars.is_Add:  # If expansion results in a sum of terms
@@ -990,12 +1017,16 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
                         term_var * terms_wo_var for term_var in expanded_vars.args
                     )
                 else:
-                    return expanded_vars * terms_wo_var  # Return expanded result combined with non-variable terms
+                    return (
+                        expanded_vars * terms_wo_var
+                    )  # Return expanded result combined with non-variable terms
 
         # Case 2: If the expression is a power (exponentiation)
         if expr.is_Pow:
             exp = expr.exp  # Get the exponent
-            if exp > 1 and expr.has(var):  # Check if the exponent is greater than 1 and the expression has the variable
+            if exp > 1 and expr.has(
+                var
+            ):  # Check if the exponent is greater than 1 and the expression has the variable
                 # Expand the power expression using multinomial expansion and expanding the base
                 new_expr = sp.expand_multinomial(expr, deep=False)
                 new_expr = sp.expand_power_base(new_expr, force=True)
@@ -1004,12 +1035,11 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
         # If no expansion is necessary, return the original expression
         return expr
 
-
     def getter_func(expr: sp.Expr) -> bool:
         """
         Checks whether the given expression is a multiplication (`Mul`) or exponentiation (`Pow`).
 
-        This function is used to determine if an expression should be further processed based on whether it is a multiplication or a power. 
+        This function is used to determine if an expression should be further processed based on whether it is a multiplication or a power.
 
         Args:
         -----
@@ -1019,12 +1049,13 @@ def expand_variable(var: sp.Symbol) -> tuple[Callable[[sp.Expr], bool], Callable
         Returns:
         --------
         bool
-            True if the expression is either a multiplication (`Mul`) or an exponentiation (`Pow`), 
+            True if the expression is either a multiplication (`Mul`) or an exponentiation (`Pow`),
             False otherwise.
         """
         return expr.is_Mul or expr.is_Pow
 
     return getter_func, subs_func
+
 
 def save_pol(pol: PolyElement, filename: str) -> None:
     """
@@ -1050,6 +1081,7 @@ def save_pol(pol: PolyElement, filename: str) -> None:
 
     with open(filename, "wb") as fp:
         pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 def load_pol(filename: str) -> PolyElement:
     """
@@ -1084,6 +1116,7 @@ def load_pol(filename: str) -> PolyElement:
 
     return r.from_dict(data)
 
+
 @lru_cache(maxsize=None)
 def stirling1(n: int, k: int) -> int:
     """
@@ -1091,9 +1124,9 @@ def stirling1(n: int, k: int) -> int:
 
     The Stirling numbers of the first kind count the number of permutations of `n` elements
     with exactly `k` disjoint cycles. These numbers satisfy the recurrence relation:
-    
+
     S1(n, k) = (n - 1) * S1(n - 1, k) + S1(n - 1, k - 1)
-    
+
     Base cases:
     - S1(0, 0) = 1
     - S1(n, 0) = 0 for n > 0
@@ -1123,11 +1156,11 @@ def stirling2(n: int, k: int) -> int:
     """
     Computes the Stirling number of the second kind, denoted S2(n, k).
 
-    The Stirling numbers of the second kind count the number of ways to partition 
+    The Stirling numbers of the second kind count the number of ways to partition
     `n` elements into `k` non-empty subsets. These numbers satisfy the recurrence relation:
-    
+
     S2(n, k) = k * S2(n - 1, k) + S2(n - 1, k - 1)
-    
+
     Base cases:
     - S2(n, n) = 1
     - S2(0, k) = 0 for k > 0
@@ -1151,17 +1184,18 @@ def stirling2(n: int, k: int) -> int:
         return 0
     return k * stirling2(n - 1, k) + stirling2(n - 1, k - 1)
 
-def split_semisimple_group(alfas: list[int], dim: int) -> sp.Expr:
+
+def split_semisimple_group(ds: list[int], dim: int) -> sp.Expr:
     """
     Computes the motive of an algebraic semisimple group.
 
-    This function calculates the motive of a semisimple algebraic group based on the input 
-    list of exponents and the dimension of the group. The motive is expressed in terms of 
+    This function calculates the motive of a semisimple algebraic group based on the input
+    list of exponents and the dimension of the group. The motive is expressed in terms of
     the Lefschetz motive raised to powers related to the dimension and exponents.
 
     Args:
     -----
-    alfas : list[int]
+    ds : list[int]
         A list of integers, where each element represents one higher than the exponents of the group.
     dim : int
         The dimension of the algebraic group.
@@ -1174,5 +1208,5 @@ def split_semisimple_group(alfas: list[int], dim: int) -> sp.Expr:
     from .grothendieck_motives.lefschetz import Lefschetz
 
     return Lefschetz() ** dim * sp.Mul(
-        *[1 - Lefschetz() ** (-alfa) for alfa in alfas],
+        *[1 - Lefschetz() ** (-d) for d in ds],
     )

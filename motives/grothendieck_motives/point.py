@@ -4,7 +4,7 @@ import sympy as sp
 
 from ..utils import SingletonMeta
 
-from ..core.operand import Operand
+from ..core.operand.operand import Operand
 
 from .motive import Motive
 
