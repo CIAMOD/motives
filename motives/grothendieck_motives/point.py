@@ -1,5 +1,4 @@
 from __future__ import annotations
-from multipledispatch import dispatch
 import sympy as sp
 
 from ..utils import SingletonMeta
@@ -82,8 +81,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    @dispatch(int, object)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to instances of the point in a polynomial.
 
@@ -104,7 +102,6 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return ph
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this point into an equivalent Adams polynomial.

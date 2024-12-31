@@ -5,7 +5,6 @@ from ...lefschetz import Lefschetz
 from ....core.operand.operand import Operand
 
 import sympy as sp
-from multipledispatch import dispatch
 
 
 class BunG(Motive, sp.AtomicExpr):
@@ -137,8 +136,7 @@ class BunG(Motive, sp.AtomicExpr):
             self._lambda_vars[i] = self._et_repr.to_lambda(i)
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this BunG in the expression.
 
@@ -188,7 +186,6 @@ class BunG(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this BunG into an equivalent Adams polynomial.

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from multipledispatch import dispatch
 import sympy as sp
 import warnings
 
@@ -96,8 +95,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self**i
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this Polynomial1Var in a polynomial.
 
@@ -118,7 +116,6 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return ph.xreplace({self: self.get_adams_var(degree)})
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this Polynomial1Var into an equivalent Adams polynomial.

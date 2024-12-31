@@ -2,7 +2,6 @@
 
 from __future__ import annotations  # For forward references
 import sympy as sp
-from multipledispatch import dispatch
 
 from .core.operand.operand import Operand
 from .core.lambda_ring_context import LambdaRingContext
@@ -145,8 +144,7 @@ class Free(Operand, sp.Symbol):
         self._generate_lambda_vars(i)
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to all instances of this variable in a polynomial.
 
@@ -179,7 +177,6 @@ class Free(Operand, sp.Symbol):
             }
         )
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this variable into an equivalent Adams polynomial.

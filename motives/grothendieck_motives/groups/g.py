@@ -3,7 +3,6 @@ from ..motive import Motive
 from typing import Iterable
 from ..lefschetz import Lefschetz
 from ...core import LambdaRingContext
-from multipledispatch import dispatch
 from ...core.operand.operand import Operand
 
 
@@ -112,7 +111,7 @@ class G(Motive, sp.AtomicExpr):
         sp.Expr
             The Adams variable of the motive.
         """
-        return self.lef._to_adams(i, self._et_repr)
+        return self.lef._apply_adams(i, self._et_repr)
 
     def get_lambda_var(self, i: int) -> sp.Expr:
         """
@@ -139,8 +138,7 @@ class G(Motive, sp.AtomicExpr):
 
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this group in the expression.
 
@@ -164,7 +162,6 @@ class G(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this group into an equivalent Adams polynomial.

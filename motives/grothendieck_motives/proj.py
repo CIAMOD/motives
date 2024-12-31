@@ -1,5 +1,4 @@
 import sympy as sp
-from multipledispatch import dispatch
 
 from ..core import LambdaRingContext
 from ..core.operand.operand import Operand
@@ -124,7 +123,7 @@ class Proj(Motive, sp.AtomicExpr):
         if i not in self._lambda_vars:
             lrc = LambdaRingContext()
 
-            ph_list = [self.lef._to_adams(j, self._et_repr) for j in range(i + 1)]
+            ph_list = [self.lef._apply_adams(j, self._et_repr) for j in range(i + 1)]
 
             self._lambda_vars[i] = lrc.get_adams_2_lambda_pol(i).xreplace(
                 {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
@@ -132,8 +131,7 @@ class Proj(Motive, sp.AtomicExpr):
 
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this projective space in the expression.
 
@@ -157,7 +155,6 @@ class Proj(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this projective space into an equivalent Adams polynomial.
