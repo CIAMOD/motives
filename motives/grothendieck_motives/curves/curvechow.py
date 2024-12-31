@@ -334,7 +334,7 @@ class CurveChow(Motive, sp.AtomicExpr):
                 max_adams = max(max_adams, int(match.group(1)))
 
         # Generate the lambda_to_adams polynomials up to the degree needed
-        self._generate_lambda_vars(len(self._adams_vars) - 1)
+        self._generate_lambda_vars(max_adams)
 
         for i in range(len(self._lambda_to_adams), max_adams + 1):
             self._lambda_to_adams.append(expr_from_pol(self._lambda_to_adams_pol[i]))
