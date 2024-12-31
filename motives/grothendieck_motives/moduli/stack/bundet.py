@@ -3,40 +3,40 @@ from ...curves.curve import Curve
 from ...groups.gl import GL
 
 
-class Bun(BunG):
+class BunDet(BunG):
     """
-    Represents the moduli stack of vector bundles on a curve with a general linear group GL(n).
+    Represents the moduli stack of vector bundles with fixed determinant (SL(n)-bundles) on a smooth complex projective curve.
 
-    The `Bun` is a specialized version of `BunG` where the group is specifically GL(n).
+    The `Bun` is a specialized version of `BunG` where the group is specifically SL(n).
     It supports Adams and Lambda operations, generating functions, and interacts with other motives.
 
     Attributes:
     -----------
     curve : Curve
-        The curve for which this Bun is defined.
+        The curve for which the moduli stack is defined.
     n : int
-        The dimension of the general linear group GL(n).
+        The rank of the vector bundle.
     """
 
     n: int
 
     def __new__(cls, curve: Curve, n: int, *args, **kwargs):
         """
-        Creates a new instance of the `Bun` class.
+        Creates a new instance of the `BunDet` class.
 
         Args:
         -----
         curve : Curve
-            The curve for which to create the Bun.
+            The curve for which to create the BunDet.
         n: int
-            The dimension of the general linear group GL(n).
+            The rank of the vector bundles.
 
         Returns:
         --------
         Bun
             A new instance of the `Bun` class.
         """
-        new_bun = BunG.__new__(cls, curve, GL(n))
+        new_bun = BunG.__new__(cls, curve, SL(n))
         new_bun.n = n
         return new_bun
 
@@ -55,4 +55,4 @@ class Bun(BunG):
         str
             A string representation in the form of "Bun_{curve}_{n}".
         """
-        return f"Bun_{self.curve}_{self.n}"
+        return f"Bun_{self.curve}_{self.n}^det"

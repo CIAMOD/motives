@@ -3,10 +3,12 @@ from .semisimple_g import SemisimpleG
 
 class GL(SemisimpleG):
     """
-    Represents a GL_n bundle in an expression tree.
+    Represents the Grothendieck motive of the general complex linear group GL(n,C).
 
-    A GL_n bundle represents the product \prod_{k=0}^{n-1} (L^n - L^k), where L is the Lefschetz motive.
-    This class supports operations related to Adams and Lambda transformations.
+    The motive of GL(n,C) is represented by the product
+        [GL(n,C)]=\prod_{k=0}^{n-1} (L^n - L^k),
+    where L is the Lefschetz motive.
+    This class supports operations related to Adams and lambda transformations.
 
     Attributes:
     -----------
