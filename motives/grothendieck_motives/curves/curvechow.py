@@ -274,22 +274,6 @@ class CurveChow(Motive, sp.AtomicExpr):
             }
         )
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this subtree into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this subtree.
-        """
-        return self.get_adams_var(1)
-
     def _generate_inverse(self, n: int) -> None:
         """
         Fills the inverse list up to degree `n`.

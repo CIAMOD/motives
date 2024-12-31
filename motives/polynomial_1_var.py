@@ -116,24 +116,6 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return ph.xreplace({self: self.get_adams_var(degree)})
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this Polynomial1Var into an equivalent Adams polynomial.
-
-        For a Polynomial1Var, this simply returns the Polynomial1Var itself.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Polynomial1Var itself.
-        """
-        return self
-
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this Polynomial1Var in a polynomial with their equivalent Lambda polynomials.

@@ -177,22 +177,6 @@ class Free(Operand, sp.Symbol):
             }
         )
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this variable into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial for this variable.
-        """
-        return self.get_adams_var(1)
-
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Given a polynomial ph, substitutes all the appearences of Adams variables of this variable

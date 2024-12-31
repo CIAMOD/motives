@@ -148,12 +148,8 @@ class Operand(LambdaRingExpr):
         sp.Expr
             The Adams polynomial of degree 1 for this operand.
 
-        Raises:
-        -------
-        NotImplementedError
-            If this method is not implemented in the subclass.
         """
-        raise NotImplementedError("This method must be implemented in all subclasses.")
+        return self.get_adams_var(1)
 
     def _to_adams_lambda(
         self, operands: set[Operand], adams_degree: int = 1

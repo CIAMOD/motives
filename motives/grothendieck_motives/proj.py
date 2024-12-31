@@ -155,22 +155,6 @@ class Proj(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this projective space into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this projective space.
-        """
-        return self._et_repr
-
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables of this projective space in the expression

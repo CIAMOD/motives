@@ -102,24 +102,6 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return ph
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this point into an equivalent Adams polynomial.
-
-        Since the Adams operation on a point is always 1, this method always returns 1.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial of the point, which is always 1.
-        """
-        return sp.Integer(1)
-
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
         Substitutes Adams variables in a polynomial with their equivalent Lambda polynomials.
