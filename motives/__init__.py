@@ -30,7 +30,7 @@ from .grothendieck_motives.groups.pgl import PGL
 from .grothendieck_motives.groups.sl import SL
 from .grothendieck_motives.groups.so import SO
 from .grothendieck_motives.groups.sp import SP
-from .grothendieck_motives.groups.general_groups import A, B, C, D, E, F4
+from .grothendieck_motives.groups.general_groups import A, B, C, D, E, F4, G2
 
 ## -------- MODULI ----------
 ### -------- SCHEME ----------
@@ -46,4 +46,4 @@ from .grothendieck_motives.moduli.scheme.vector_bundle_moduli import VectorBundl
 
 ### -------- STACK ----------
 from .grothendieck_motives.moduli.stack.bung import BunG
-from .grothendieck_motives.moduli.stack.bundet import Bun
+from .grothendieck_motives.moduli.stack.bundet import BunDet

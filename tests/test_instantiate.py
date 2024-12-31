@@ -46,7 +46,7 @@ from motives import VectorBundleModuli
 
 ### -------- STACK ----------
 from motives import BunG
-from motives import Bun
+from motives import BunDet
 
 import pytest
 
@@ -82,4 +82,4 @@ def test_instantiate() -> None:
     vhs = VHS(curve, 5, 3)
     vector_bundle_moduli = VectorBundleModuli(curve, 5, 3)
     bun_g = BunG(curve, sp)
-    bun = Bun(curve, 5)
+    bun = BunDet(curve, 5)

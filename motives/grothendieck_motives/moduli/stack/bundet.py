@@ -1,6 +1,6 @@
 from .bung import BunG
 from ...curves.curve import Curve
-from ...groups.gl import GL
+from ...groups.sl import SL
 
 
 class BunDet(BunG):
@@ -44,7 +44,7 @@ class BunDet(BunG):
         """
         TODO
         """
-        super().__init__(curve, GL(n))
+        super().__init__(curve, SL(n))
 
     def __repr__(self) -> str:
         """
