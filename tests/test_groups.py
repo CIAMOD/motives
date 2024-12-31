@@ -59,3 +59,12 @@ def test_G2_dim():
     assert grp.dim==28/2
     assert grp.rk==2
     return
+
+
+
+def test_BSL():
+    grp=SL(3)
+    BSL=grp.BG()
+    print(BSL)
+    assert (BSL.to_lambda()*grp.to_lambda()).simplify()==1
+    return

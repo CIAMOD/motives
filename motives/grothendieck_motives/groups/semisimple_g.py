@@ -114,7 +114,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         Motive
             The motivic class of the classifying stack BG of G.
         """
-        return 1/self._et_repr
+        return 1/self
     
 
     def get_adams_var(self, i: int) -> sp.Expr:
