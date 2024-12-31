@@ -133,7 +133,7 @@ class BunG(Motive, sp.AtomicExpr):
         """
 
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda(i)
+            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda()
         return self._lambda_vars[i]
 
     def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:

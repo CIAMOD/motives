@@ -54,7 +54,7 @@ class GL(G):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(range(1, n + 1), n**2)
+        super().__init__(range(2, n + 2), n**2)
         self.n = n
 
     def __repr__(self) -> str:
