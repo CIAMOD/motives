@@ -5,7 +5,6 @@ from functools import reduce
 import math
 import sympy as sp
 from sympy.printing.str import StrPrinter
-from multipledispatch import dispatch
 
 from ..lambda_ring_expr import LambdaRingExpr
 
@@ -103,13 +102,12 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operation of the requesed degree to instances of this operand and any of
         its Adams operations which appear in the polynomial ph.
 
-        If ph=x._to_adams(i,ph) is called iteratively for each operand x such that either x or some of
+        If ph=x._apply_adams(i,ph) is called iteratively for each operand x such that either x or some of
         its Adams operations appear in the polynomial expression P, then the resulting polynomial
         will represent ψ^i(ph).
 
@@ -134,7 +132,6 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    @dispatch(set)
     def _to_adams(self, operands: set[Operand]) -> sp.Expr:
         """
         Converts this operand into an equivalent Adams polynomial.
@@ -151,12 +148,8 @@ class Operand(LambdaRingExpr):
         sp.Expr
             The Adams polynomial of degree 1 for this operand.
 
-        Raises:
-        -------
-        NotImplementedError
-            If this method is not implemented in the subclass.
         """
-        raise NotImplementedError("This method must be implemented in all subclasses.")
+        return self.get_adams_var(1)
 
     def _to_adams_lambda(
         self, operands: set[Operand], adams_degree: int = 1

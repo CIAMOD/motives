@@ -9,7 +9,6 @@ exclude = ["motives/equations.py"]
 [tool.poetry.dependencies]
 python = "^3.10.6"
 sympy = "1.12"
-multipledispatch = "1.0.0"
 tqdm = "4.66.1"
 typeguard = "4.3.0"
 

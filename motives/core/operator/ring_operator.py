@@ -183,7 +183,7 @@ class Sigma(RingOperator):
         # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._to_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(j, ph_list[j])
 
         adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
@@ -245,7 +245,7 @@ class Sigma(RingOperator):
         # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._to_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(j, ph_list[j])
 
         adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
@@ -357,7 +357,7 @@ class Lambda_(RingOperator):
         # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._to_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(j, ph_list[j])
 
         adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
@@ -413,7 +413,7 @@ class Lambda_(RingOperator):
         # Apply the Adams operators to the polynomials in the list
         for j in range(1, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._to_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(j, ph_list[j])
 
         adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
@@ -522,7 +522,7 @@ class Adams(RingOperator):
 
         # Apply the Adams operator to all operands
         for operand in operands:
-            ph = operand._to_adams(self.degree, ph)
+            ph = operand._apply_adams(self.degree, ph)
 
         return ph
 
@@ -563,7 +563,7 @@ class Adams(RingOperator):
 
         # Apply the Adams operator to all operands
         for operand in operands:
-            ph = operand._to_adams(self.degree, ph)
+            ph = operand._apply_adams(self.degree, ph)
 
         return ph
 

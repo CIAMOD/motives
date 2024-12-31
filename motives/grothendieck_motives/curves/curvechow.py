@@ -1,5 +1,4 @@
 from typeguard import typechecked
-from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
@@ -246,8 +245,7 @@ class CurveChow(Motive, sp.AtomicExpr):
 
         return et
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies Adams operations to any instances of this CurveChow motive in a polynomial.
 
@@ -275,23 +273,6 @@ class CurveChow(Motive, sp.AtomicExpr):
                 for i in range(1, max_adams + 1)
             }
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this subtree into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this subtree.
-        """
-        return self.get_adams_var(1)
 
     def _generate_inverse(self, n: int) -> None:
         """

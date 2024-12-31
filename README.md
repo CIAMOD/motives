@@ -15,7 +15,6 @@ In the first phase, classical techniques of symbolic computing and parallelizati
 - Python >= 3.11
 - NumPy == 1.26.2
 - SymPy == 1.12
-- multipledispatch == 1.0.0
 - gmpy2 == 2.2.1
 - tqdm == 4.66.5
 - typeguard == 4.3.0
