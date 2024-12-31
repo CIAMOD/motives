@@ -6,8 +6,8 @@ from .general_groups import C
 
 class SP(C):
     """
-    Represents the symplectic group SP(n) as a Grothendieck motive.
-    This class inherits from the G class and represents the symplectic group SP(n),
+    Represents the Grothendieck motive of the complex symplectic group Sp(2n,C).
+    This class inherits from the G class and represents the symplectic group Sp(2n,C),
     which consists of 2n x 2n matrices preserving a symplectic form. The motive is constructed
     using a combination of even integers from 2 to 2n and the integer n, with the dimension n * (2n + 1).
 

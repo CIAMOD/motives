@@ -1,5 +1,5 @@
 from ...motive import Motive
-from ...groups.g import G
+from ...groups.semisimple_g import SemisimpleG
 from ...curves.curve import Curve
 from ...lefschetz import Lefschetz
 from ....core.operand.operand import Operand
@@ -25,7 +25,7 @@ class BunG(Motive, sp.AtomicExpr):
         The Lefschetz motive.
     """
 
-    def __new__(cls, curve: Curve, group: G, *args, **kwargs):
+    def __new__(cls, curve: Curve, group: SemisimpleG, *args, **kwargs):
         """
         Creates a new instance of the `BunG` class.
 
@@ -45,7 +45,7 @@ class BunG(Motive, sp.AtomicExpr):
         new_bun._assumptions["commutative"] = True
         return new_bun
 
-    def __init__(self, curve: Curve, group: G, *args, **kwargs) -> None:
+    def __init__(self, curve: Curve, group: SemisimpleG, *args, **kwargs) -> None:
         """
         Initializes a `BunG` instance.
 
@@ -57,7 +57,7 @@ class BunG(Motive, sp.AtomicExpr):
             The general group.
         """
         self.curve: Curve = curve
-        self.group: G = group
+        self.group: SemisimpleG = group
         self.lef: Lefschetz = Lefschetz()
 
         self._et_repr: sp.Expr = self.lef ** (

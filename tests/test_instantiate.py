@@ -24,7 +24,7 @@ from motives import Jacobian
 
 ## -------- GL ----------
 from motives import GL
-from motives import G
+from motives import SemisimpleG
 from motives import PSL
 from motives import PGL
 from motives import SL
@@ -62,7 +62,7 @@ def test_instantiate() -> None:
     curve_chow = CurveChow("a", 5)
     jacobian = Jacobian(curve)
     gl = GL(4)
-    g = G([1, 2, 3], 4)
+    g = SemisimpleG([1, 2, 3], 4)
     psl = PSL(4)
     pgl = PGL(4)
     sl = SL(4)

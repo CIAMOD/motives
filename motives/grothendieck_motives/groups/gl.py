@@ -1,7 +1,7 @@
-from .g import G
+from .semisimple_g import SemisimpleG
 
 
-class GL(G):
+class GL(SemisimpleG):
     """
     Represents a GL_n bundle in an expression tree.
 
@@ -38,7 +38,7 @@ class GL(G):
         GL
             A new instance of the GL class.
         """
-        new_sl = G.__new__(cls, range(1, n + 1), n**2)
+        new_sl = SemisimpleG.__new__(cls, range(1, n + 1), n**2)
         return new_sl
 
     def __init__(self, n: int, *args, **kwargs):

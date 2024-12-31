@@ -24,7 +24,7 @@ from .grothendieck_motives.curves.jacobian import Jacobian
 
 ## -------- GL ----------
 from .grothendieck_motives.groups.gl import GL
-from .grothendieck_motives.groups.g import G
+from .grothendieck_motives.groups.semisimple_g import SemisimpleG
 from .grothendieck_motives.groups.psl import PSL
 from .grothendieck_motives.groups.pgl import PGL
 from .grothendieck_motives.groups.sl import SL

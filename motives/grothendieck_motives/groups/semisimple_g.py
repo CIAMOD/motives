@@ -10,9 +10,10 @@ from ...core.operand.operand import Operand
 # TODO revisar docs
 
 
-class G(Motive, sp.AtomicExpr):
+class SemisimpleG(Motive, sp.AtomicExpr):
     """
-    Represents a Grothendieck motive as a sympy atomic expression.
+    Represents the Grothendieck motive of a connected semismple simply connected algebraic
+    group as a sympy atomic expression.
 
     This class inherits from both Motive and sympy.AtomicExpr, and represents
     a Grothendieck motive with a given set of integers (ds) and a dimension.
@@ -67,8 +68,8 @@ class G(Motive, sp.AtomicExpr):
 
         Returns:
         --------
-        G
-            A new instance of the G class.
+        SemisimpleG
+            A new instance of the SemisimpleG class.
         """
         new_g = sp.AtomicExpr.__new__(cls)
         new_g._assumptions["commutative"] = True
@@ -90,10 +91,14 @@ class G(Motive, sp.AtomicExpr):
             Additional keyword arguments.
         """
         self.ds = ds
-        self.dim = dim
+        print(list(ds))
+        print(list(ds))
+        print(list(ds))
+        self.rk =len(list(ds))
+        self.dim = 2*sum(ds,0)-self.rk
 
         self.lef = Lefschetz()
-        self._et_repr = self.lef**dim * sp.Mul(
+        self._et_repr = self.lef**self.dim * sp.Mul(
             *[1 - self.lef ** (-d) for d in ds],
         )
         self._lambda_vars = {}
