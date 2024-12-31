@@ -10,17 +10,18 @@ from multipledispatch import dispatch
 
 class BunG(Motive, sp.AtomicExpr):
     """
-    Represents the moduli stack of vector bundles on a curve in an expression tree.
+    Represents the Grothendieck motivic class of the moduli stack of principal G-bundles on
+    smooth complex projectie curve X in an expression tree.
 
-    The `BunG` is a motive associated with a `Curve` object and a general group `G`.
-    It supports Adams and Lambda operations, generating functions, and interacts with other motives.
+    The `BunG` is a motive associated with a `Curve` object and a semisimple group `G`.
+    It supports Adams and lambda operations, generating functions, and interacts with other motives.
 
     Attributes:
     -----------
     curve : Curve
         The curve for which this BunG is defined.
     group : G
-        The general group associated with this BunG.
+        The group associated with this BunG.
     lef : Lefschetz
         The Lefschetz motive.
     """
@@ -34,7 +35,7 @@ class BunG(Motive, sp.AtomicExpr):
         curve : Curve
             The curve for which to create the BunG.
         group : G
-            The general group.
+            The semisimple group.
 
         Returns:
         --------
@@ -54,14 +55,14 @@ class BunG(Motive, sp.AtomicExpr):
         curve : Curve
             The curve for which this BunG is defined.
         group : G
-            The general group.
+            The semisimple group.
         """
         self.curve: Curve = curve
         self.group: SemisimpleG = group
         self.lef: Lefschetz = Lefschetz()
 
         self._et_repr: sp.Expr = self.lef ** (
-            (self.curve.g - 1) * sum(self.group.ds)
+            (self.curve.g - 1) * self.group.dim
         ) * sp.Mul(*[self.curve.Z(self.lef ** (-d)) for d in self.group.ds])
 
         self._lambda_vars: dict[int, sp.Expr] = {}

@@ -45,5 +45,5 @@ from .grothendieck_motives.moduli.scheme.vhs import VHS
 from .grothendieck_motives.moduli.scheme.vector_bundle_moduli import VectorBundleModuli
 
 ### -------- STACK ----------
-from .grothendieck_motives.moduli.stack.bg import BunG
+from .grothendieck_motives.moduli.stack.bung import BunG
 from .grothendieck_motives.moduli.stack.bun import Bun

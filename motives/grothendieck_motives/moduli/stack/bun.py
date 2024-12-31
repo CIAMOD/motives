@@ -1,4 +1,4 @@
-from .bg import BunG
+from .bung import BunG
 from ...curves.curve import Curve
 from ...groups.gl import GL
 

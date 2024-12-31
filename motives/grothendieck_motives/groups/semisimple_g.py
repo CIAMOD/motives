@@ -34,9 +34,9 @@ class SemisimpleG(Motive, sp.AtomicExpr):
     Methods:
     --------
     __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs)
-        Creates a new instance of the G class with the specified ds and dimension.
+        Creates a new instance of the G class with the specified ds and rank.
     __init__(self, ds: Iterable[int], dim: int, *args, **kwargs)
-        Initializes the G class with the specified ds and dimension.
+        Initializes the G class with the specified ds and rank.
     get_adams_var(self, i: int) -> sp.Expr
         Returns the Adams variable of the motive for a given index.
     get_lambda_var(self, i: int) -> sp.Expr
@@ -53,14 +53,14 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
     def __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs):
         """
-        Creates a new instance of the G class with the specified ds and dimension.
+        Creates a new instance of the G class with the specified ds and rank.
 
         Parameters:
         -----------
         ds : Iterable[int]
             The set of integers used to construct the motive.
         dim : int
-            The dimension of the motive.
+            The rank of the motive.
         *args : tuple
             Additional arguments.
         **kwargs : dict
@@ -77,7 +77,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
     def __init__(self, ds: Iterable[int], dim: int, *args, **kwargs):
         """
-        Initializes the G class with the specified ds and dimension.
+        Initializes the G class with the specified ds and rank.
 
         Parameters:
         -----------
