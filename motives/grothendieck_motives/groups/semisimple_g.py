@@ -104,6 +104,19 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         )
         self._lambda_vars = {}
 
+    def BG(self) -> Motive:
+        """
+        Computes the motive of the classifying stack of G, BG=[pt/G], taking
+            [BG]=1/[G].
+
+        Returns:
+        --------
+        Motive
+            The motivic class of the classifying stack BG of G.
+        """
+        return 1/self._et_repr
+    
+
     def get_adams_var(self, i: int) -> sp.Expr:
         """
         Returns the Adams variable of the motive for a given index.

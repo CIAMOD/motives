@@ -75,6 +75,7 @@ def test_instantiate() -> None:
     d = D(12)
     e = E(6)
     f4 = F4()
+    BSL= SL(3).BG()
     twisted_higgs_moduli = TwistedHiggsModuli(curve, 5, 3)
     twisted_higgs_moduli_bb = TwistedHiggsModuliBB(curve, 5, 3)
     twisted_higgs_moduli_adhm = TwistedHiggsModuliADHM(curve, 5, 3)
