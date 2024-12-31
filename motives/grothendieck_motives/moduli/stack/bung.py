@@ -1,31 +1,31 @@
 from ...motive import Motive
-from ...groups.g import G
+from ...groups.semisimple_g import SemisimpleG
 from ...curves.curve import Curve
 from ...lefschetz import Lefschetz
 from ....core.operand.operand import Operand
 
 import sympy as sp
-from multipledispatch import dispatch
 
 
 class BunG(Motive, sp.AtomicExpr):
     """
-    Represents the moduli stack of vector bundles on a curve in an expression tree.
+    Represents the Grothendieck motivic class of the moduli stack of principal G-bundles on
+    smooth complex projectie curve X in an expression tree.
 
-    The `BunG` is a motive associated with a `Curve` object and a general group `G`.
-    It supports Adams and Lambda operations, generating functions, and interacts with other motives.
+    The `BunG` is a motive associated with a `Curve` object and a semisimple group `G`.
+    It supports Adams and lambda operations, generating functions, and interacts with other motives.
 
     Attributes:
     -----------
     curve : Curve
         The curve for which this BunG is defined.
     group : G
-        The general group associated with this BunG.
+        The group associated with this BunG.
     lef : Lefschetz
         The Lefschetz motive.
     """
 
-    def __new__(cls, curve: Curve, group: G, *args, **kwargs):
+    def __new__(cls, curve: Curve, group: SemisimpleG, *args, **kwargs):
         """
         Creates a new instance of the `BunG` class.
 
@@ -34,7 +34,7 @@ class BunG(Motive, sp.AtomicExpr):
         curve : Curve
             The curve for which to create the BunG.
         group : G
-            The general group.
+            The semisimple group.
 
         Returns:
         --------
@@ -45,7 +45,7 @@ class BunG(Motive, sp.AtomicExpr):
         new_bun._assumptions["commutative"] = True
         return new_bun
 
-    def __init__(self, curve: Curve, group: G, *args, **kwargs) -> None:
+    def __init__(self, curve: Curve, group: SemisimpleG, *args, **kwargs) -> None:
         """
         Initializes a `BunG` instance.
 
@@ -54,14 +54,14 @@ class BunG(Motive, sp.AtomicExpr):
         curve : Curve
             The curve for which this BunG is defined.
         group : G
-            The general group.
+            The semisimple group.
         """
         self.curve: Curve = curve
-        self.group: G = group
+        self.group: SemisimpleG = group
         self.lef: Lefschetz = Lefschetz()
 
         self._et_repr: sp.Expr = self.lef ** (
-            (self.curve.g - 1) * sum(self.group.ds)
+            (self.curve.g - 1) * self.group.dim
         ) * sp.Mul(*[self.curve.Z(self.lef ** (-d)) for d in self.group.ds])
 
         self._lambda_vars: dict[int, sp.Expr] = {}
@@ -115,7 +115,7 @@ class BunG(Motive, sp.AtomicExpr):
             The BunG with the Adams operator applied.
         """
         if i not in self._adams_vars:
-            self._adams_vars[i] = self._et_repr.to_adams(i)
+            self._adams_vars[i] = self._et_repr.adams(i).to_adams()
         return self._adams_vars[i]
 
     def get_lambda_var(self, i: int) -> sp.Expr:
@@ -134,11 +134,10 @@ class BunG(Motive, sp.AtomicExpr):
         """
 
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = self._et_repr.to_lambda(i)
+            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda()
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this BunG in the expression.
 
@@ -187,20 +186,3 @@ class BunG(Motive, sp.AtomicExpr):
             f"There is a BunG in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this BunG into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this BunG.
-        """
-        return self._et_repr.to_adams()

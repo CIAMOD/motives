@@ -1,2 +1,2 @@
-from .bg import BunG
-from .bun import Bun
+from .bung import BunG
+from .bundet import BunDet

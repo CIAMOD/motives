@@ -1,4 +1,3 @@
-from multipledispatch import dispatch
 import sympy as sp
 
 from ..motive import Motive
@@ -144,8 +143,7 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         return {self.chow, Lefschetz()}
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this Jacobian in the expression.
 
@@ -168,23 +166,6 @@ class Jacobian(Motive, sp.AtomicExpr):
             f"There is a motive in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this Jacobian into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this Jacobian.
-        """
-        return self._et_repr.to_adams()
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """

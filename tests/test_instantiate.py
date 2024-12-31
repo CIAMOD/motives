@@ -24,7 +24,7 @@ from motives import Jacobian
 
 ## -------- GL ----------
 from motives import GL
-from motives import G
+from motives import SemisimpleG
 from motives import PSL
 from motives import PGL
 from motives import SL
@@ -46,7 +46,7 @@ from motives import VectorBundleModuli
 
 ### -------- STACK ----------
 from motives import BunG
-from motives import Bun
+from motives import BunDet
 
 import pytest
 
@@ -62,7 +62,7 @@ def test_instantiate() -> None:
     curve_chow = CurveChow("a", 5)
     jacobian = Jacobian(curve)
     gl = GL(4)
-    g = G([1, 2, 3], 4)
+    g = SemisimpleG([1, 2, 3], 4)
     psl = PSL(4)
     pgl = PGL(4)
     sl = SL(4)
@@ -75,10 +75,11 @@ def test_instantiate() -> None:
     d = D(12)
     e = E(6)
     f4 = F4()
+    BSL= SL(3).BG()
     twisted_higgs_moduli = TwistedHiggsModuli(curve, 5, 3)
     twisted_higgs_moduli_bb = TwistedHiggsModuliBB(curve, 5, 3)
     twisted_higgs_moduli_adhm = TwistedHiggsModuliADHM(curve, 5, 3)
     vhs = VHS(curve, 5, 3)
     vector_bundle_moduli = VectorBundleModuli(curve, 5, 3)
     bun_g = BunG(curve, sp)
-    bun = Bun(curve, 5)
+    bun = BunDet(curve, 5)
