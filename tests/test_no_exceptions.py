@@ -26,13 +26,6 @@ from motives import A, B, C, D, E, F4
 
 ## -------- MODULI ----------
 ### -------- SCHEME ----------
-from motives import TwistedHiggsModuli
-from motives import (
-    TwistedHiggsModuliBB,
-)
-from motives import (
-    TwistedHiggsModuliADHM,
-)
 from motives import VHS
 from motives import VectorBundleModuli
 
@@ -93,7 +86,7 @@ def test_adams_lambda_all() -> None:
     curve_chow = CurveChow("C", 4)
     jacobian = Jacobian(curve)
     gl = GL(4)
-    g = G((4, 3, 4, 8), 19)
+    g = G([4, 3, 4, 8], 19)
     psl = PSL(4)
     pgl = PGL(4)
     sl = SL(4)

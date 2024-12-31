@@ -18,7 +18,7 @@ class G(Motive, sp.AtomicExpr):
 
     Attributes:
     -----------
-    ds : Iterable[int]
+    ds : list[int]
         The set of integers used to construct the motive.
     dim : int
         The dimension of the motive.
@@ -31,9 +31,9 @@ class G(Motive, sp.AtomicExpr):
 
     Methods:
     --------
-    __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs)
+    __new__(cls, ds: list[int], dim: int, *args, **kwargs)
         Creates a new instance of the G class with the specified ds and dimension.
-    __init__(self, ds: Iterable[int], dim: int, *args, **kwargs)
+    __init__(self, ds: list[int], dim: int, *args, **kwargs)
         Initializes the G class with the specified ds and dimension.
     get_adams_var(self, i: int) -> sp.Expr
         Returns the Adams variable of the motive for a given index.
@@ -49,13 +49,13 @@ class G(Motive, sp.AtomicExpr):
         Returns the set of free symbols in the group, which includes the Lefschetz motive.
     """
 
-    def __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs):
+    def __new__(cls, ds: list[int], dim: int, *args, **kwargs):
         """
         Creates a new instance of the G class with the specified ds and dimension.
 
         Parameters:
         -----------
-        ds : Iterable[int]
+        ds : list[int]
             The set of integers used to construct the motive.
         dim : int
             The dimension of the motive.
@@ -69,11 +69,13 @@ class G(Motive, sp.AtomicExpr):
         G
             A new instance of the G class.
         """
+        if not isinstance(ds, list):
+            raise ValueError("The set of integers ds must be a list.")
         new_g = sp.AtomicExpr.__new__(cls)
         new_g._assumptions["commutative"] = True
         return new_g
 
-    def __init__(self, ds: Iterable[int], dim: int, *args, **kwargs):
+    def __init__(self, ds: list[int], dim: int, *args, **kwargs):
         """
         Initializes the G class with the specified ds and dimension.
 
