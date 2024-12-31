@@ -38,7 +38,7 @@ class GL(SemisimpleG):
         GL
             A new instance of the GL class.
         """
-        new_sl = SemisimpleG.__new__(cls, range(1, n + 1), n**2)
+        new_sl = SemisimpleG.__new__(cls, list(range(2, n + 2)), n**2)
         return new_sl
 
     def __init__(self, n: int, *args, **kwargs):
@@ -54,7 +54,7 @@ class GL(SemisimpleG):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(range(1, n + 1), n**2)
+        super().__init__(list(range(2, n + 2)), n**2)
         self.n = n
 
     def __repr__(self) -> str:

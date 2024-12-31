@@ -3,7 +3,6 @@ from typing import TypeVar
 
 Jacobian = TypeVar("Jacobian")
 
-from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
@@ -21,7 +20,7 @@ from .curvechow import CurveChow
 
 class Curve(Motive, sp.AtomicExpr):
     """
-    Represents the motivic class of an abstract smooth complex algebraic curve 
+    Represents the motivic class of an abstract smooth complex algebraic curve
     of genus g in the an expression tree in the Grothendieck ring of varieties or Chow motives
     (or any extension of completion of them).
 
@@ -176,6 +175,13 @@ class Curve(Motive, sp.AtomicExpr):
         sp.Expr
             The curve with the Adams operator applied.
         """
+        if i == 1:
+            return (
+                self.curve_chow.get_adams_var(1)
+                + self.lefschetz.get_adams_var(1)
+                + self.point.get_adams_var(1)
+            )
+
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
@@ -248,8 +254,7 @@ class Curve(Motive, sp.AtomicExpr):
         """
         return self.P(t) / ((1 - t) * (1 - self.lefschetz * t))
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this curve in the polynomial.
 
@@ -270,27 +275,6 @@ class Curve(Motive, sp.AtomicExpr):
         raise Exception(
             f"There is a curve in the expression {ph}. "
             "It should have been converted to its components."
-        )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this curve into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            A polynomial of Adams operators equivalent to this curve.
-        """
-        return (
-            self.curve_chow._to_adams(operands)
-            + self.lefschetz._to_adams(operands)
-            + self.point._to_adams(operands)
         )
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:

@@ -46,7 +46,7 @@ class A(SemisimpleG):
         A
             A new instance of the A class.
         """
-        new_sl = SemisimpleG.__new__(cls, range(2, n + 2), n * (n + 1))
+        new_sl = SemisimpleG.__new__(cls, list(range(2, n + 2)), n * (n + 1))
         return new_sl
 
     def __init__(self, n: int, *args, **kwargs):
@@ -62,7 +62,7 @@ class A(SemisimpleG):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(range(2, n + 2), n * (n + 1))
+        super().__init__(list(range(2, n + 2)), n * (n + 1))
         self.n = n
 
 
@@ -103,7 +103,7 @@ class B(SemisimpleG):
         B
             A new instance of the B class.
         """
-        new_sl = SemisimpleG.__new__(cls, range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        new_sl = SemisimpleG.__new__(cls, list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
         new_sl.n = n
         return new_sl
 
@@ -120,7 +120,7 @@ class B(SemisimpleG):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        super().__init__(list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
         self.n = n
 
 
@@ -161,7 +161,7 @@ class C(SemisimpleG):
         C
             A new instance of the C class.
         """
-        new_sl = SemisimpleG.__new__(cls, range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        new_sl = SemisimpleG.__new__(cls, list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
         new_sl.n = n
         return new_sl
 
@@ -178,7 +178,7 @@ class C(SemisimpleG):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(range(2, 2 * n + 1, 2), n * (2 * n + 1))
+        super().__init__(list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
         self.n = n
 
 
@@ -219,7 +219,9 @@ class D(SemisimpleG):
         D
             A new instance of the D class.
         """
-        new_sl = SemisimpleG.__new__(cls, chain(range(2, 2 * n, 2), (n,)), n * (2 * n - 1))
+        new_sl = SemisimpleG.__new__(
+            cls, list(range(2, 2 * n, 2)) + [n], n * (2 * n - 1)
+        )
         new_sl.n = n
         return new_sl
 
@@ -236,7 +238,7 @@ class D(SemisimpleG):
         **kwargs : dict
             Additional keyword arguments.
         """
-        super().__init__(chain(range(2, 2 * n - 1, 2), (n,)), n * (2 * n - 1))
+        super().__init__(list(range(2, 2 * n - 1, 2)) + [n], n * (2 * n - 1))
         self.n = n
 
 

@@ -3,7 +3,6 @@ from ..motive import Motive
 from typing import Iterable
 from ..lefschetz import Lefschetz
 from ...core import LambdaRingContext
-from multipledispatch import dispatch
 from ...core.operand.operand import Operand
 
 
@@ -20,7 +19,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
     Attributes:
     -----------
-    ds : Iterable[int]
+    ds : list[int]
         The set of integers used to construct the motive.
     dim : int
         The dimension of the motive.
@@ -33,10 +32,10 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
     Methods:
     --------
-    __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs)
-        Creates a new instance of the G class with the specified ds and rank.
-    __init__(self, ds: Iterable[int], dim: int, *args, **kwargs)
-        Initializes the G class with the specified ds and rank.
+    __new__(cls, ds: list[int], dim: int, *args, **kwargs)
+        Creates a new instance of the G class with the specified ds and dimension.
+    __init__(self, ds: list[int], dim: int, *args, **kwargs)
+        Initializes the G class with the specified ds and dimension.
     get_adams_var(self, i: int) -> sp.Expr
         Returns the Adams variable of the motive for a given index.
     get_lambda_var(self, i: int) -> sp.Expr
@@ -51,13 +50,13 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         Returns the set of free symbols in the group, which includes the Lefschetz motive.
     """
 
-    def __new__(cls, ds: Iterable[int], dim: int, *args, **kwargs):
+    def __new__(cls, ds: list[int], dim: int, *args, **kwargs):
         """
         Creates a new instance of the G class with the specified ds and rank.
 
         Parameters:
         -----------
-        ds : Iterable[int]
+        ds : list[int]
             The set of integers used to construct the motive.
         dim : int
             The rank of the motive.
@@ -71,11 +70,13 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         SemisimpleG
             A new instance of the SemisimpleG class.
         """
+        if not isinstance(ds, list):
+            raise ValueError("The set of integers ds must be a list.")
         new_g = sp.AtomicExpr.__new__(cls)
         new_g._assumptions["commutative"] = True
         return new_g
 
-    def __init__(self, ds: Iterable[int], dim: int, *args, **kwargs):
+    def __init__(self, ds: list[int], dim: int, *args, **kwargs):
         """
         Initializes the G class with the specified ds and rank.
 
@@ -117,7 +118,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         sp.Expr
             The Adams variable of the motive.
         """
-        return self.lef._to_adams(i, self._et_repr)
+        return self.lef._apply_adams(i, self._et_repr)
 
     def get_lambda_var(self, i: int) -> sp.Expr:
         """
@@ -144,8 +145,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this group in the expression.
 
@@ -168,23 +168,6 @@ class SemisimpleG(Motive, sp.AtomicExpr):
             f"There is a group in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this group into an equivalent Adams polynomial.
-
-        Parameters:
-        -----------
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this group.
-        """
-        return self._et_repr
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """

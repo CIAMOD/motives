@@ -5,7 +5,6 @@ from ...lefschetz import Lefschetz
 from ....core.operand.operand import Operand
 
 import sympy as sp
-from multipledispatch import dispatch
 
 
 class BunG(Motive, sp.AtomicExpr):
@@ -116,7 +115,7 @@ class BunG(Motive, sp.AtomicExpr):
             The BunG with the Adams operator applied.
         """
         if i not in self._adams_vars:
-            self._adams_vars[i] = self._et_repr.to_adams(i)
+            self._adams_vars[i] = self._et_repr.adams(i).to_adams()
         return self._adams_vars[i]
 
     def get_lambda_var(self, i: int) -> sp.Expr:
@@ -135,11 +134,10 @@ class BunG(Motive, sp.AtomicExpr):
         """
 
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = self._et_repr.to_lambda(i)
+            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda()
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this BunG in the expression.
 
@@ -188,20 +186,3 @@ class BunG(Motive, sp.AtomicExpr):
             f"There is a BunG in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this BunG into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this BunG.
-        """
-        return self._et_repr.to_adams()
