@@ -80,6 +80,6 @@ def test_instantiate() -> None:
     twisted_higgs_moduli_bb = TwistedHiggsModuliBB(curve, 5, 3)
     twisted_higgs_moduli_adhm = TwistedHiggsModuliADHM(curve, 5, 3)
     vhs = VHS(curve, (1,2),(1,1),1)
-    vector_bundle_moduli = VectorBundleModuli(curve, 3)
+    vector_bundle_moduli = VectorBundleModuli(curve, 3,2)
     bun_g = BunG(curve, sp)
     bun = BunDet(curve, 5)

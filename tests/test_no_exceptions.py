@@ -100,7 +100,7 @@ def test_adams_lambda_all() -> None:
     e = E(6)
     f4 = F4()
     vhs = VHS(curve, (2,1), (1,1),3).calculate()
-    vector_bundle_moduli = VectorBundleModuli(curve, 3).calculate()
+    vector_bundle_moduli = VectorBundleModuli(curve, 3,2).calculate()
     bun_g = BunG(curve, psl)
     bun = BunDet(curve, 4)
 
