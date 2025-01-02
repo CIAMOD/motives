@@ -31,7 +31,7 @@ from motives import VectorBundleModuli
 
 ### -------- STACK ----------
 from motives import BunG
-from motives import Bun
+from motives import BunDet
 
 
 def test_construction() -> None:
@@ -99,10 +99,10 @@ def test_adams_lambda_all() -> None:
     d = D(4)
     e = E(6)
     f4 = F4()
-    vhs = VHS(curve, 4, 3).calculate_vhs((2, 1))
-    vector_bundle_moduli = VectorBundleModuli(curve, 4, 3).calculate_vector_bundle((3,))
+    vhs = VHS(curve, (2,1), (1,1),3).calculate()
+    vector_bundle_moduli = VectorBundleModuli(curve, 3).calculate()
     bun_g = BunG(curve, psl)
-    bun = Bun(curve, 4)
+    bun = BunDet(curve, 4)
 
     ets = [
         free,
