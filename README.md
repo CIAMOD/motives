@@ -6,7 +6,7 @@ Grothendieck's motive of a variety is an invariant that provides extensive infor
 
 ## Methodology
 
-The simplification algorithm is based on a refinement of the abstract simplification algorithm for λ-ring expressions developed in [Alfaya '22]. See [Sanchez, Alfaya, Pizarroso '24] for the complete mathematical description of the algorithms and equations used by the package.
+The simplification algorithm is based on a refinement of the abstract simplification algorithm for λ-ring expressions developed in [Alfaya '22]. See [Sanchez, Alfaya and Pizarroso '24] for the complete mathematical description of the algorithms and equations used by the package.
 
 The package works on λ-rings (R,λ,σ) under the following assumptions:
 - R is a unital abelian ring with no additive torsion.
@@ -29,7 +29,7 @@ The package includes modules for working with the Grothendieck ring of motives, 
 ## Citation
 If you use the "motives" package in your work, please cite the paper
 
-Daniel Sanchez, David Alfaya and Jaime Pizarroso. Motives meet SymPy: studying λ-ring expressions in Python. _in preparation_, 2024.
+Daniel Sanchez, David Alfaya and Jaime Pizarroso. [Motives meet SymPy: studying λ-ring expressions in Python](https://arxiv.org/abs/2501.00563). _arXiv:2501.00563_, 2025.
 
 ## Getting Started
 
@@ -98,6 +98,6 @@ _Journal of Geometry and Physics_, 201:105195–1 – 105195–55, 2024.
 - [García-Prada, Heinloth and Schmitt '14] Oscar García-Prada, Jochen Heinloth, and Alexander Schmitt. On the motives of moduli of chains and Higgs bundles. _Journal of the European Mathematical Society_, 16:2617–2668, 2014.
 - [Heinloth '07 ] Franziska Heinloth. A note on functional equations for zeta functions with values in Chow motives. _Ann. Inst. Fourier (Grenoble)_, 57(6):1927–1945, 2007.
 - [Sánchez '14] Jonathan S´anchez. Motives of moduli spaces of pairs and applications. _PhD thesis, Universidad Complutense de Madrid_, Madrid, 2014.
-- [Sanchez, Alfaya, Pizarroso '24] Daniel Sanchez, David Alfaya and Jaime Pizarroso. Motives meet SymPy: studying λ-ring expressions in Python. _in preparation_, 2024.
+- [Sanchez, Alfaya and Pizarroso '24] Daniel Sanchez, David Alfaya and Jaime Pizarroso. Motives meet SymPy: studying λ-ring expressions in Python. _arXiv:2501.00563_, 2025.
 - [Mozgovoy '12] Sergey Mozgovoy. Solutions of the motivic ADHM recursion formula. _Int. Math. Res. Not. IMRN_, 2012(18):4218–
 4244, 2012.
