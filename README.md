@@ -46,7 +46,7 @@ Daniel Sanchez, David Alfaya and Jaime Pizarroso. [Motives meet SymPy: studying 
 
 1. Clone the repository
    ```sh
-   git clone https://github.com/CIAMOD/motivic_decomposition.git
+   git clone https://github.com/CIAMOD/motives.git
    ```
 2. Install the required packages
    ```sh
