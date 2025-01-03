@@ -2,11 +2,12 @@ from sympy.polys.rings import PolyElement
 
 from ...curves.curve import Curve
 
+from .bundle_moduli import BundleModuli
 from .twisted_higgs_moduli_bb import TwistedHiggsModuliBB
 from .twisted_higgs_moduli_adhm import TwistedHiggsModuliADHM
 
 
-class TwistedHiggsModuli:
+class TwistedHiggsModuli(BundleModuli):
     """
     The motive of the moduli space of L-twisted Higgs bundles over the curve X.
 
@@ -46,11 +47,11 @@ class TwistedHiggsModuli:
             The method to use to derive the formula. By default ('auto'), it uses the BB derivation for
             r <= 3 and the ADHM derivation for r > 3. It can also be explicitly set to 'BB' or 'ADHM'.
         """
-        self.cur = x
-        self.g = self.cur.g
+
         self.p = p
         self.r = r
-
+        super().__init__(x)
+        
         # Automatically decide which method to use if 'auto' is selected
         if method == "auto":
             if r <= 3:

@@ -2,15 +2,19 @@
 
 from __future__ import annotations  # For forward references
 import sympy as sp
-from multipledispatch import dispatch
 
-from .core.operand import Operand
+from .core.operand.operand import Operand
 from .core.lambda_ring_context import LambdaRingContext
 
 
 class Free(Operand, sp.Symbol):
     """
-    Represents an abstract variable node in an expression.
+    Represents an abstract variable node in an expression, treated as a generator of a
+    free lambda-ring or a free extension of a lambda-ring.
+
+    The lambda operations of a Free object are considered by default as algebraically independent
+    elements in the expression. New SymPy Symbols are created for each necessary lambda operation and
+    Adams operation of a Free object when they appear in an expression.
 
     A `Free` inherits from both `Operand` and SymPy's `Symbol`, and it is used to represent
     a variable in an expression tree. This class cannot be named 'L' (reserved for the Lefschetz
@@ -29,7 +33,7 @@ class Free(Operand, sp.Symbol):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes a `Free` with empty lists of Adams and Lambda variables.
+        Initializes a "Free" lambda-ring variable with empty lists of Adams and lambda variables.
 
         Args:
         -----
@@ -43,7 +47,7 @@ class Free(Operand, sp.Symbol):
 
     def __new__(cls, name: str, **assumptions):
         """
-        Creates a new instance of `Free` while enforcing naming restrictions.
+        Creates a new instance of a "Free" lambda-ring variable while enforcing naming restrictions.
 
         Args:
         -----
@@ -95,7 +99,7 @@ class Free(Operand, sp.Symbol):
 
     def _generate_lambda_vars(self, n: int) -> None:
         """
-        Generates the Lambda variables for this variable up to degree `n`.
+        Generates the lambda variables for this variable up to degree `n`.
 
         Args:
         -----
@@ -125,23 +129,22 @@ class Free(Operand, sp.Symbol):
 
     def get_lambda_var(self, i: int) -> sp.Expr:
         """
-        Returns the Lambda variable of this variable for a given degree `i`.
+        Returns the lambda variable of this variable for a given degree `i`.
 
         Args:
         -----
         i : int
-            The degree of the Lambda operator.
+            The degree of the lambda operator.
 
         Returns:
         --------
         sp.Expr
-            The Lambda variable for degree `i`.
+            The lambda variable for degree `i`.
         """
         self._generate_lambda_vars(i)
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to all instances of this variable in a polynomial.
 
@@ -174,26 +177,10 @@ class Free(Operand, sp.Symbol):
             }
         )
 
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this variable into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial for this variable.
-        """
-        return self.get_adams_var(1)
-
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """
-        Substitutes Adams variables of this variable in a polynomial with Lambda polynomials.
+        Given a polynomial ph, substitutes all the appearences of Adams variables of this variable
+        in ph by the corresponding polynomials in lambda operations of this variable representing them.
 
         This method is used to convert Adams polynomials into Lambda polynomials.
 
@@ -205,7 +192,8 @@ class Free(Operand, sp.Symbol):
         Returns:
         --------
         sp.Expr
-            The polynomial with Adams variables replaced by Lambda variables.
+            The polynomial with Adams variables of this variable replaced by polynomials in lambda
+            variables of this variable.
         """
         lrc = LambdaRingContext()
 

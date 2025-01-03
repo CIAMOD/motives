@@ -6,85 +6,92 @@ from ...curves.curve import Curve
 from ...lefschetz import Lefschetz
 
 from ....core.lambda_ring_expr import LambdaRingExpr
+from .bundle_moduli import BundleModuli
 
 
-# TODO: Documentacion de clase VectorBundleModuli
-class VectorBundleModuli:
-    def __init__(self, x: Curve, p: int, r: int):
+class VectorBundleModuli(BundleModuli):
+    def __init__(self, x: Curve, r: int, d:int):
         """
-        Initializes the VectorBundleModuli class with the given curve and parameters.
+        Class for computing the motive of the moduli space of vector bundles
+        of rank r and degree d over a curve x.
 
         Args:
         -----
         x : Curve
             The curve motive used in the formula.
-        p : int
-            A positive integer such that deg(L) = 2g - 2 + p.
         r : int
-            The rank of the underlying vector bundles (must be 2 or 3).
+            The rank of the vector bundles.
+        d : int
+            The degree of the vector bundles.
         """
-        if r not in [1, 2, 3]:
-            raise ValueError("The rank should be either 2 or 3")
 
-        self.cur = x
-        self.g = self.cur.g
-        self.p = p
+        super().__init__(x)
         self.r = r
-        self.dl = 2 * self.g - 2 + p
-        self.lef = Lefschetz()
-        self.vhs: dict[tuple, LambdaRingExpr] = {}
+        self.d=d
 
-        self._initiate_vector_bundles()
+        self._initiate_vector_bundle_moduli()
 
-    def _initiate_vector_bundles(self):
+    def _initiate_vector_bundle_moduli(self):
         """
         Initiates the Vector Bundle Moduli for the first few dimensions.
         """
-        self.vhs[(1,)] = self.cur.Jac
-        self.vhs[(2,)] = (
-            self.lef ** (4 * self.dl + 4 - 4 * self.g)
-            * (self.cur.Jac * self.cur.P(self.lef) - self.lef**self.g * self.cur.Jac**2)
-            / ((self.lef - 1) * (self.lef**2 - 1))
-        )
-        self.vhs[(3,)] = (
-            self.lef ** (9 * self.dl + 9 - 9 * self.g)
-            * self.cur.Jac
-            * (
-                self.lef ** (3 * self.g - 1)
-                * (1 + self.lef + self.lef**2)
-                * self.cur.Jac**2
-                - self.lef ** (2 * self.g - 1)
-                * (1 + self.lef) ** 2
-                * self.cur.Jac
-                * self.cur.P(self.lef)
-                + self.cur.P(self.lef) * self.cur.P(self.lef**2)
+        if self.r==1:
+            self._et_repr: sp.Expr= self.cur.Jac
+        elif self.r==2 and self.d % 2 !=0:
+            self._et_repr: sp.Expr= self._compute_motive_rk2()
+        elif self.r==3 and self.d % 3!=0:
+            self._et_repr: sp.Expr= self._compute_motive_rk3()
+        else:
+            self._et_repr: sp.Expr= self._compute_motive_rkr(self.r,self.d)
+
+    def _compute_motive_rk2(self) -> sp.Expr:
+        """
+        Calculates the expresion of the motive of the moduli space of vector bundles in rank 2
+        using the equation from [Sánchez '14]
+        """
+        return (
+                (self.cur.Jac * self.cur.P(self.lef) - self.lef**self.g * self.cur.Jac**2)
+                / ((self.lef - 1) * (self.lef**2 - 1))
             )
-            / ((self.lef - 1) * (self.lef**2 - 1) ** 2 * (self.lef**3 - 1))
-        )
-        return
+    
+    def _compute_motive_rk3(self) -> sp.Expr:
+        """
+        Calculates the expresion of the motive of the moduli space of vector bundles in rank 3
+        using the equation from [García-Prada, Heinloth, Schmitt '14]
+        """
+        return (
+                self.cur.Jac
+                * (
+                    self.lef ** (3 * self.g - 1)
+                    * (1 + self.lef + self.lef**2)
+                    * self.cur.Jac**2
+                    - self.lef ** (2 * self.g - 1)
+                    * (1 + self.lef) ** 2
+                    * self.cur.Jac
+                    * self.cur.P(self.lef)
+                    + self.cur.P(self.lef) * self.cur.P(self.lef**2)
+                )
+                / ((self.lef - 1) * (self.lef**2 - 1) ** 2 * (self.lef**3 - 1))
+            )
 
-    def _calculate_vector_bundle(self, n: tuple) -> sp.Expr:
+    def _compute_motive_rkr(self,r:int, d:int) -> sp.Expr:
         """
-        Calculates the Vector Bundle Moduli for the given tuple `(n,)`. Private method.
+        Calculates the expresion of the motive of the moduli space of vector bundles in rank r
+        using the general equation from [del Baño '01].
+
+        Args:
+        -----
+        r : int
+            The rank of the vector bundles.
+        d : int
+            The degree of the vector bundles.
         """
-        # TODO: Implementar el calculo del Vector Bundle de dimension `n`
-        # No tenemos aun la formula para calcularlo, hay que buscarla
         raise NotImplementedError(
-            f"The calculation of the Vector Bundle Moduli with dimension {n} is not yet implemented."
-        )
+                f"The calculation of the Vector Bundle Moduli with dimension {self.r} is not yet implemented."
+            )
 
-    def calculate_vector_bundle(self, n: tuple) -> sp.Expr:
+    def calculate(self) -> sp.Expr:
         """
-        Calculates the Vector Bundle Moduli for the given tuple `(n,)`. Public method.
+        Calculates the vector bundle moduli for the given tuple `(n,)`. Public method.
         """
-        if n not in self.vhs:
-            self._calculate_vector_bundle(n)
-        return self.vhs[n]
-
-    def get_vector_bundle(self, n: int) -> sp.Expr:
-        """
-        Returns the Vector Bundle Moduli for the given int `n`.
-        """
-        if (n,) not in self.vhs:
-            self.calculate_vector_bundle(n)
-        return self.vhs[(n,)]
+        return self._et_repr

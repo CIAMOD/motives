@@ -1,5 +1,4 @@
 from typeguard import typechecked
-from multipledispatch import dispatch
 import sympy as sp
 from sympy.polys.rings import PolyRing
 from sympy.polys.rings import PolyElement
@@ -7,17 +6,17 @@ import re
 
 from ...utils import expr_from_pol
 
-from ...core.operand import Operand
+from ...core.operand.operand import Operand
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
 
 
-class CurveHodge(Motive, sp.AtomicExpr):
+class CurveChow(Motive, sp.AtomicExpr):
     """
-    Represents a Hodge motive for a curve in an expression tree.
+    Represents a Chow motive for a curve in an expression tree.
 
-    A `CurveHodge` object is initialized with a name and genus (g), and it allows the generation
+    A `CurveChow` object is initialized with a name and genus (g), and it allows the generation
     of Adams and Lambda variables based on the genus. It supports operations such as applying
     Adams or Lambda operators, generating Adams and Lambda variables, and computing generating functions.
 
@@ -26,15 +25,15 @@ class CurveHodge(Motive, sp.AtomicExpr):
     g : int
         The genus of the curve, which defines the degree limits of the Adams and Lambda operators.
     name : str
-        The name of the CurveHodge motive.
+        The name of the CurveChow motive.
     lambda_symbols : list[sp.AtomicExpr]
-        A list of Lambda symbols generated for the CurveHodge motive.
+        A list of Lambda symbols generated for the CurveChow motive.
     _adams_pattern : re.Pattern
         The regular expression pattern for Adams variables.
     _domain : sp.Domain
         The domain used for the polynomial ring of Lambda operators.
     _ring : PolyRing
-        The polynomial ring for the CurveHodge motive.
+        The polynomial ring for the CurveChow motive.
     _domain_symbols : list[PolyElement]
         The list of domain symbols used in the polynomial ring.
     _lef_symbol : PolyElement
@@ -50,37 +49,37 @@ class CurveHodge(Motive, sp.AtomicExpr):
     _lambda_to_adams : list[sp.Expr]
         The list of expressions for converting Lambda to Adams variables.
     _adams_vars : list[sp.Expr]
-        The list of Adams variables generated for the CurveHodge motive.
+        The list of Adams variables generated for the CurveChow motive.
     """
 
     def __new__(cls, name: str, g: int = 1, *args, **kwargs):
         """
-        Creates a new instance of `CurveHodge`.
+        Creates a new instance of `CurveChow`.
 
         Args:
         -----
         name : str
-            The name of the CurveHodge motive.
+            The name of the CurveChow motive.
         g : int, optional
             The genus of the curve, default is 1.
 
         Returns:
         --------
-        CurveHodge
-            A new instance of `CurveHodge`.
+        CurveChow
+            A new instance of `CurveChow`.
         """
-        new_hodge = sp.AtomicExpr.__new__(cls)
-        new_hodge._assumptions["commutative"] = True
-        return new_hodge
+        new_chow = sp.AtomicExpr.__new__(cls)
+        new_chow._assumptions["commutative"] = True
+        return new_chow
 
     def __init__(self, name: str, g: int = 1, *args, **kwargs):
         """
-        Initializes a `CurveHodge` instance.
+        Initializes a `CurveChow` instance.
 
         Args:
         -----
         name : str
-            The name of the CurveHodge motive.
+            The name of the CurveChow motive.
         g : int, optional
             The genus of the curve, default is 1.
         """
@@ -122,7 +121,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the CurveHodge motive.
+        Returns the string representation of the CurveChow motive.
 
         Returns:
         --------
@@ -133,7 +132,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
 
     def _hashable_content(self) -> tuple:
         """
-        Returns the hashable content of the CurveHodge motive.
+        Returns the hashable content of the CurveChow motive.
 
         Returns:
         --------
@@ -181,7 +180,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
 
     def get_adams_var(self, i: int) -> sp.Expr:
         """
-        Returns the CurveHodge motive with an Adams operation applied to it.
+        Returns the CurveChow motive with an Adams operation applied to it.
 
         Args:
         -----
@@ -191,14 +190,14 @@ class CurveHodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The CurveHodge motive with the Adams operator applied.
+            The CurveChow motive with the Adams operator applied.
         """
         self._generate_adams_vars(i)
         return self._adams_vars[i]
 
     def get_lambda_var(self, i: int) -> sp.Expr:
         """
-        Returns the CurveHodge motive with a Lambda operation applied to it.
+        Returns the CurveChow motive with a Lambda operation applied to it.
 
         For Lambda operations with degree greater than 2g, the result is 0.
 
@@ -210,14 +209,14 @@ class CurveHodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The CurveHodge motive with the Lambda operator applied, or 0 if the degree exceeds 2g.
+            The CurveChow motive with the Lambda operator applied, or 0 if the degree exceeds 2g.
         """
         return sp.Integer(0) if i >= len(self._lambda_vars) else self._lambda_vars[i]
 
     @typechecked
     def Z(self, t: int | sp.Expr) -> sp.Expr:
         """
-        Computes the generating function of the CurveHodge curve.
+        Computes the generating function of the CurveChow curve.
 
         The generating function is Σ_{i=0}^{2g} λ_i * t^i.
 
@@ -229,7 +228,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The generating function of the CurveHodge curve.
+            The generating function of the CurveChow curve.
         """
         l = Lefschetz()
 
@@ -246,10 +245,9 @@ class CurveHodge(Motive, sp.AtomicExpr):
 
         return et
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
-        Applies Adams operations to any instances of this CurveHodge motive in a polynomial.
+        Applies Adams operations to any instances of this CurveChow motive in a polynomial.
 
         Args:
         -----
@@ -261,7 +259,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
         Returns:
         --------
         sp.Expr
-            The polynomial with Adams operators applied to the CurveHodge motive.
+            The polynomial with Adams operators applied to the CurveChow motive.
         """
         max_adams = 1
         operands = ph.free_symbols
@@ -275,23 +273,6 @@ class CurveHodge(Motive, sp.AtomicExpr):
                 for i in range(1, max_adams + 1)
             }
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this subtree into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this subtree.
-        """
-        return self.get_adams_var(1)
 
     def _generate_inverse(self, n: int) -> None:
         """
@@ -334,7 +315,7 @@ class CurveHodge(Motive, sp.AtomicExpr):
                 max_adams = max(max_adams, int(match.group(1)))
 
         # Generate the lambda_to_adams polynomials up to the degree needed
-        self._generate_lambda_vars(len(self._adams_vars) - 1)
+        self._generate_lambda_vars(max_adams)
 
         for i in range(len(self._lambda_to_adams), max_adams + 1):
             self._lambda_to_adams.append(expr_from_pol(self._lambda_to_adams_pol[i]))

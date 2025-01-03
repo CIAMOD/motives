@@ -31,12 +31,12 @@ def compare_equation(
     cur = Curve("x", g=g)
 
     # Compute the motive of rank r using ADHM derivation
-    moz = TwistedHiggsModuli(x=cur, p=p, r=r, method="ADHM")
-    eq_m = moz.compute(verbose=verbose)
+    adhm = TwistedHiggsModuli(x=cur, p=p, r=r, method="ADHM")
+    eq_adhm = adhm.compute(verbose=verbose)
 
     # Compute the motive of rank r using BB derivation
-    dav = TwistedHiggsModuli(x=cur, p=p, r=r, method="BB")
-    eq_d = dav.compute(verbose=verbose)
+    bb = TwistedHiggsModuli(x=cur, p=p, r=r, method="BB")
+    eq_bb = bb.compute(verbose=verbose)
 
     if time is True:
         print("Polynomials computed")
@@ -44,13 +44,13 @@ def compare_equation(
         print(f"------------ Time: {end - start} ------------")
 
     # Compare the two polynomials
-    if eq_d - eq_m == 0:
-        save_pol(eq_d, filename)
+    if eq_adhm - eq_bb == 0:
+        save_pol(eq_bb, filename)
 
         if verbose > 0:
             print("Saved polynomial. Success.")
         if verbose > 1:
-            print(f"Polynomial: {eq_d}")
+            print(f"Polynomial: {eq_bb}")
 
         return True
     return False

@@ -10,5 +10,5 @@ class Piccard:
         """
         self.d = d
 
-        # TODO: Implement the Piccard group, it should be the Jacobian of the curve
+        # TODO: Implement the Piccard variety, it should be the Jacobian of the curve
         raise NotImplementedError("Piccard group not implemented yet")

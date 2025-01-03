@@ -1,10 +1,11 @@
 import sympy as sp
 from sympy.polys.rings import PolyElement
+from sympy.ntheory import mobius
 
 from ...curves.curve import Curve
 
 from ...lefschetz import Lefschetz
-from ...polynomial_1_var import Polynomial1Var
+from ....polynomial_1_var import Polynomial1Var
 
 from ....core.lambda_ring_expr import LambdaRingExpr
 from ....utils import (
@@ -36,7 +37,7 @@ class TwistedHiggsModuliADHM:
     r : int
         The rank of the underlying vector bundles.
     lef : Lefschetz
-        The Lefschetz operator.
+        The Lefschetz motive.
     t : Polynomial1Var
         The Polynomial1Var t that will be substituted for 1 during calculations.
     T : Polynomial1Var
@@ -64,11 +65,36 @@ class TwistedHiggsModuliADHM:
         self.g = self.cur.g
         self.p = p
         self.r = r
-        self._mobius = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0]
         self.lef = Lefschetz()
         self.t, self.T = Polynomial1Var("t"), Polynomial1Var("T")
         self.gen_f: LambdaRingExpr = 0
         self.coeff: dict[sp.Expr, sp.Expr] = {}
+
+    #List of values of the Möbius functions, precomputed for efficiency
+    _MOBIUS=[1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0] 
+    
+    def _mobius(self, n:int) -> int:
+        """
+        Computes the Möbius function of n, which is
+            - 0 if n is divisible by the square of a prime
+            - (-1)^k if n is the product of k different primes
+
+        The values computed with this function are saved for efficiency.
+
+        Args:
+        -----
+        n : int
+            Positive integer.
+
+        Returns:
+        --------
+        int
+            Möbius function of n
+        """
+        if n>len(self._MOBIUS):
+            for i in range(len(self._MOBIUS),n):
+                self._MOBIUS[i-1]=mobius(i)
+        return self._MOBIUS[n-1]
 
     def gen_func(self) -> LambdaRingExpr:
         """
@@ -109,7 +135,7 @@ class TwistedHiggsModuliADHM:
                 pleth = pleth.adams(j)
 
                 self.gen_f += (
-                    sp.Integer((-1) ** (k + 1) * self._mobius[j - 1])
+                    sp.Integer((-1) ** (k + 1) * self._mobius(j))
                     / sp.Integer(j * k)
                     * pleth**k
                 )
@@ -184,8 +210,8 @@ class TwistedHiggsModuliADHM:
         if verbose > 0:
             print("Formula prepared for collection in 1 / (1 - t).")
 
-        poly_domain = sp.ZZ[self.cur.curve_hodge.lambda_symbols[1:]]
-        domain = sp.ZZ[[lef] + self.cur.curve_hodge.lambda_symbols[1:]]
+        poly_domain = sp.ZZ[self.cur.curve_chow.lambda_symbols[1:]]
+        domain = sp.ZZ[[lef] + self.cur.curve_chow.lambda_symbols[1:]]
 
         # Cancel the necessary terms and substitute
         Hr = subs_variable(Hr, t, 1, lef, domain=poly_domain, verbose=verbose)

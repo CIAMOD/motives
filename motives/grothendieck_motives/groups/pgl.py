@@ -1,12 +1,4 @@
-class PGL:
-    def __init__(self, n: int, *args, **kwargs) -> None:
-        """
-        Initializes a `PGL` instance.
+from .psl import PSL
 
-        Args:
-        -----
-        n : int
-            The dimension of the PGL_n bundle.
-        """
-        # TODO: Implement this class
-        raise NotImplementedError("This class is not implemented yet.")
+
+PGL = PSL

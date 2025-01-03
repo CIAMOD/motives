@@ -2,7 +2,7 @@ import sympy as sp
 import math
 from functools import reduce
 
-from ..operand import Operand
+from .operand import Operand
 
 
 def get_max_adams_degree_num(self: sp.Rational) -> int:

@@ -1,21 +1,22 @@
 from __future__ import annotations
-from multipledispatch import dispatch
 import sympy as sp
 
 from ..utils import SingletonMeta
 
-from ..core.operand import Operand
+from ..core.operand.operand import Operand
 
 from .motive import Motive
 
 
 class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
     """
-    Represents a point motive in an expression.
+    Represents the motive of a (closed) point in an expression in the Grothendieck lambda-ring of
+    varieties, the Grothendieck rin of Chow motives or in any extension or completion of such rings
+    begin considered.
 
     The point motive is a universal motive and acts as a singleton. It inherits from
     `Motive` and SymPy's `AtomicExpr`, meaning it is treated as an indivisible expression
-    and supports Adams and Lambda operations, though they always return 1 for this motive.
+    and supports Adams and lambda or sigma operations, though they always return 1 for this motive.
     """
 
     def __new__(cls) -> Point:
@@ -80,8 +81,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    @dispatch(int, object)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to instances of the point in a polynomial.
 
@@ -101,25 +101,6 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
             The original polynomial, unchanged.
         """
         return ph
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this point into an equivalent Adams polynomial.
-
-        Since the Adams operation on a point is always 1, this method always returns 1.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial of the point, which is always 1.
-        """
-        return sp.Integer(1)
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """

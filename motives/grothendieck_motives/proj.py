@@ -1,8 +1,7 @@
 import sympy as sp
-from multipledispatch import dispatch
 
 from ..core import LambdaRingContext
-from ..core.operand import Operand
+from ..core.operand.operand import Operand
 
 from .motive import Motive
 from .lefschetz import Lefschetz
@@ -10,18 +9,21 @@ from .lefschetz import Lefschetz
 
 class Proj(Motive, sp.AtomicExpr):
     """
-    Represents a projective space P^n in an expression tree.
+    Represents the motivic class of a complex projective space P^n in the Grothendieck lambda-ring of
+    varieties, the Grothendieck rin of Chow motives or in any extension or completion of such rings
+    begin considered.
 
-    A projective space is a motive that represents the sum 1 + L + ... + L^n,
+    It is equal to the sum
+        1 + L + ... + L^n,
     where L is the Lefschetz motive. This class supports operations related to
-    Adams and Lambda transformations.
+    Adams and lambda operations.
 
     Attributes:
     -----------
     n : int
         The dimension of the projective space.
     lef : Lefschetz
-        The Lefschetz motive associated with the projective space.
+        The Lefschetz motive used for the equation of the motive of the projective space.
     _et_repr : sp.Expr
         The projective space as a sympy expression.
     _lambda_vars : dict[int, sp.Expr]
@@ -121,7 +123,7 @@ class Proj(Motive, sp.AtomicExpr):
         if i not in self._lambda_vars:
             lrc = LambdaRingContext()
 
-            ph_list = [self.lef._to_adams(j, self._et_repr) for j in range(i + 1)]
+            ph_list = [self.lef._apply_adams(j, self._et_repr) for j in range(i + 1)]
 
             self._lambda_vars[i] = lrc.get_adams_2_lambda_pol(i).xreplace(
                 {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
@@ -129,13 +131,12 @@ class Proj(Motive, sp.AtomicExpr):
 
         return self._lambda_vars[i]
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this projective space in the expression.
 
         This method raises an exception because projective spaces should not appear directly
-        in the expression. Instead, they should be decomposed into their components.
+        as leaves of the expression. Instead, they should be decomposed into their components.
 
         Args:
         -----
@@ -153,23 +154,6 @@ class Proj(Motive, sp.AtomicExpr):
             f"There is a projective space in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this projective space into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this projective space.
-        """
-        return self._et_repr
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """

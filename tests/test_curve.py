@@ -1,8 +1,9 @@
 import pytest
 import sympy as sp
 
-from motives import Curve, Lefschetz, Point, CurveHodge, Lambda_
+from motives import Curve, Lefschetz, Point, CurveChow, Lambda_
 from motives.utils import partitions
+
 
 @pytest.mark.parametrize("k", [k for k in range(1, 9)])
 def test_lambda_of_adams_expansion(k: int) -> None:
@@ -12,11 +13,11 @@ def test_lambda_of_adams_expansion(k: int) -> None:
 
     point = Point()
     le = Lefschetz()
-    hodge = CurveHodge("C", g=g)
+    chow = CurveChow("C", g=g)
 
     et_conv = sp.Add(
         *[
-            sp.Mul(*[Lambda_(i1, point), Lambda_(i2, le), Lambda_(i3, hodge)])
+            sp.Mul(*[Lambda_(i1, point), Lambda_(i2, le), Lambda_(i3, chow)])
             for (i1, i2, i3) in partitions(k, 3)
         ]
     )
@@ -26,9 +27,9 @@ def test_lambda_of_adams_expansion(k: int) -> None:
 
 
 @pytest.mark.parametrize("g,k", [(g, k) for k in range(1, 10) for g in range(2, 5)])
-def test_hodge_lambda(g: int, k: int) -> None:
+def test_chow_lambda(g: int, k: int) -> None:
     g = 3
-    h = CurveHodge("C", g=g)
+    h = CurveChow("C", g=g)
 
     et = h.lambda_(k)
 

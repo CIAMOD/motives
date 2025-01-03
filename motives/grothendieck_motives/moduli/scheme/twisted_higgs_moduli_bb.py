@@ -2,12 +2,18 @@ import sympy as sp
 from sympy.polys.rings import PolyElement
 import math
 
+#from .bundle_moduli import BundleModuli
 from .vhs import VHS
+
 
 from ...curves.curve import Curve
 
+from .bundle_moduli import BundleModuli
+from ....core.lambda_ring_expr import LambdaRingExpr
+from ...lefschetz import Lefschetz
 
-class TwistedHiggsModuliBB(VHS):
+
+class TwistedHiggsModuliBB(BundleModuli):
     """
     The motive of the moduli space of L-twisted Higgs bundles over the curve X.
 
@@ -49,9 +55,123 @@ class TwistedHiggsModuliBB(VHS):
         if r not in [1, 2, 3]:
             raise ValueError("The rank should be either 2 or 3")
 
-        super().__init__(x, p, r)
+        super().__init__(x)
+
+        self.cur = x
+        self.g = self.cur.g
+        self.lef = Lefschetz()
+        self.p = p
+        self.r = r
+        self.dl = 2 * self.g - 2 + p
+        self.vhs: dict[tuple, LambdaRingExpr] = {}
+        self._initiate_vector_bundles()
+        self._initiate_vhs()
 
         print("TwistedHiggsModuliBB initialized")
+
+    def _initiate_vector_bundles(self):
+        """
+        Initiates the Vector Bundle Moduli for the first few dimensions.
+        """
+        self.vhs[(1,)] = self.cur.Jac
+        self.vhs[(2,)] = (
+            self.lef ** (4 * self.dl + 4 - 4 * self.g)
+            * (self.cur.Jac * self.cur.P(self.lef) - self.lef**self.g * self.cur.Jac**2)
+            / ((self.lef - 1) * (self.lef**2 - 1))
+        )
+        self.vhs[(3,)] = (
+            self.lef ** (9 * self.dl + 9 - 9 * self.g)
+            * self.cur.Jac
+            * (
+                self.lef ** (3 * self.g - 1)
+                * (1 + self.lef + self.lef**2)
+                * self.cur.Jac**2
+                - self.lef ** (2 * self.g - 1)
+                * (1 + self.lef) ** 2
+                * self.cur.Jac
+                * self.cur.P(self.lef)
+                + self.cur.P(self.lef) * self.cur.P(self.lef**2)
+            )
+            / ((self.lef - 1) * (self.lef**2 - 1) ** 2 * (self.lef**3 - 1))
+        )
+        return
+
+    def _initiate_vhs(self):
+        """
+        Initiates the VHS for the first few dimensions.
+        """
+        
+        self.vhs[(1, 1)] = (
+            self.lef ** (3 * self.dl + 2 - 2 * self.g)
+            * self.cur.Jac
+            * sp.Add(
+                *[
+                    self.cur.lambda_(1 - 2 * i + self.dl)
+                    for i in range(1, (self.dl + 1) // 2 + 1)
+                ]
+            )
+        )
+        self.vhs[(1, 2)] = (
+            (self.lef ** (7 * self.dl + 5 - 5 * self.g) * self.cur.Jac**2)
+            * sp.Add(
+                *[
+                    self.lef ** (i + self.g)
+                    * sp.Add(
+                        *[
+                            self.cur.lambda_(j)
+                            * self.lef ** (2 * (-2 * i + self.dl - j))
+                            for j in range(-2 * i + self.dl + 1)
+                        ]
+                    )
+                    - sp.Add(
+                        *[
+                            self.cur.lambda_(j) * self.lef**j
+                            for j in range(-2 * i + self.dl + 1)
+                        ]
+                    )
+                    for i in range(1, math.floor(self.dl / 2 + 1 / 3) + 1)
+                ]
+            )
+            / (self.lef - 1)
+        )
+        self.vhs[(2, 1)] = (
+            (self.lef ** (7 * self.dl + 5 - 5 * self.g) * self.cur.Jac**2)
+            * sp.Add(
+                *[
+                    self.lef ** (i + self.g - 1)
+                    * sp.Add(
+                        *[
+                            self.cur.lambda_(j)
+                            * self.lef ** (2 * (-2 * i + self.dl + 1 - j))
+                            for j in range(-2 * i + self.dl + 1 + 1)
+                        ]
+                    )
+                    - sp.Add(
+                        *[
+                            self.cur.lambda_(j) * self.lef**j
+                            for j in range(-2 * i + self.dl + 1 + 1)
+                        ]
+                    )
+                    for i in range(1, math.floor(self.dl / 2 + 2 / 3) + 1)
+                ]
+            )
+            / (self.lef - 1)
+        )
+
+        self.vhs[(1, 1, 1)] = (
+            self.lef ** (6 * self.dl + 3 - 3 * self.g)
+            * self.cur.Jac
+            * sp.Add(
+                *[
+                    self.cur.lambda_(-i + j + self.dl)
+                    * self.cur.lambda_(1 - i - 2 * j + self.dl)
+                    for i in range(1, self.dl + 1)
+                    for j in range(
+                        max(-self.dl + i, 1 - i), math.floor((self.dl - i + 1) / 2) + 1
+                    )
+                ]
+            )
+        )
 
     def simplify(self, *, verbose: int = 0) -> PolyElement:
         """
@@ -77,8 +197,8 @@ class TwistedHiggsModuliBB(VHS):
             )
 
         result: sp.Poly = 0
-        domain_qq = sp.QQ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
-        domain_zz = sp.ZZ[[self.lef] + self.cur.curve_hodge.lambda_symbols[1:]]
+        domain_qq = sp.QQ[[self.lef] + self.cur.curve_chow.lambda_symbols[1:]]
+        domain_zz = sp.ZZ[[self.lef] + self.cur.curve_chow.lambda_symbols[1:]]
 
         # Choose VHS components base on rank
         if self.r == 2:

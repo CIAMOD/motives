@@ -1,11 +1,10 @@
-from multipledispatch import dispatch
 import sympy as sp
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
-from ...core.operand import Operand
+from ...core.operand.operand import Operand
 
-from .curvehodge import CurveHodge
+from .curvechow import CurveChow
 from .curve import Curve
 
 
@@ -14,14 +13,14 @@ class Jacobian(Motive, sp.AtomicExpr):
     Represents the Jacobian of a curve in an expression tree.
 
     The `Jacobian` is a motive associated with a `Curve` object. It supports Adams and Lambda operations,
-    generating functions, and interacts with other motives like the CurveHodge.
+    generating functions, and interacts with other motives like the CurveChow.
 
     Attributes:
     -----------
     curve : Curve
         The curve for which this Jacobian is defined.
-    hodge : CurveHodge
-        The Hodge of the curve.
+    chow : CurveChow
+        The Chow of the curve.
     g : int
         The genus of the curve.
     """
@@ -54,7 +53,7 @@ class Jacobian(Motive, sp.AtomicExpr):
             The curve for which this Jacobian is defined.
         """
         self.curve: Curve = curve
-        self.hodge: CurveHodge = curve.curve_hodge
+        self.chow: CurveChow = curve.curve_chow
         self.g: int = curve.g
 
         self._adams_vars: dict[int, sp.Expr] = {}
@@ -64,9 +63,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         self._et_repr: sp.Expr = sp.Add(
             *[
                 (
-                    self.hodge.lambda_(i)
+                    self.chow.lambda_(i)
                     if i <= self.g
-                    else self.hodge.lambda_(2 * self.g - i) * l ** (i - self.g)
+                    else self.chow.lambda_(2 * self.g - i) * l ** (i - self.g)
                 )
                 for i in range(2 * self.g + 1)
             ]
@@ -142,10 +141,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         set[sp.Symbol]
             The set of free symbols in the Jacobian.
         """
-        return {self.hodge, Lefschetz()}
+        return {self.chow, Lefschetz()}
 
-    @dispatch(int, sp.Expr)
-    def _to_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this Jacobian in the expression.
 
@@ -168,23 +166,6 @@ class Jacobian(Motive, sp.AtomicExpr):
             f"There is a motive in the expression {ph}. "
             "It should have been converted to its components."
         )
-
-    @dispatch(set)
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
-        """
-        Converts this Jacobian into an equivalent Adams polynomial.
-
-        Args:
-        -----
-        operands : set[Operand]
-            The set of all operands in the expression tree.
-
-        Returns:
-        --------
-        sp.Expr
-            The Adams polynomial equivalent to this Jacobian.
-        """
-        return self._et_repr.to_adams()
 
     def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
         """

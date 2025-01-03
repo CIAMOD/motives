@@ -5,7 +5,9 @@ from functools import reduce
 
 class LambdaRingContext(metaclass=SingletonMeta):
     """
-    A class representing a Lambda-Ring context.
+    A class representing a lambda-ring context. This singleton class contains methods
+    for computing the universal polynomials relating the lambda, sigma and Adams operations
+    of a lambda-ring, as well as keeping a cache of the already computed polynomials.
 
     Attributes:
     -----------
@@ -29,7 +31,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes a Lambda-Ring context.
+        Initializes the lambda-ring context.
 
         Parameters:
         -----------
@@ -209,7 +211,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._lambda_2_sigma_pols)
 
-        self._lambda_2_sigma_pols += [1] * (n + 1 - previous_len)
+        self._lambda_2_sigma_pols += [sp.Integer(1)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._lambda_2_sigma_pols[k] = sp.Add(
@@ -273,7 +275,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._adams_2_sigma_pols)
 
-        self._adams_2_sigma_pols += [0] * (n + 1 - previous_len)
+        self._adams_2_sigma_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._adams_2_sigma_pols[k] = sp.Add(
@@ -313,7 +315,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._sigma_2_adams_pols)
 
-        self._sigma_2_adams_pols += [0] * (n + 1 - previous_len)
+        self._sigma_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._sigma_2_adams_pols[k] = sp.Add(
@@ -339,7 +341,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def _compute_sigma_2_adams_pols_recurrent(self, n: int):
         """
         Computes the array of sigma to Adams polynomials up to degree n using the recurrence relation for the
-        Newton polynomials.
+        Hirzebruch-Newton polynomials.
         ψ_n(x  (-1) ** (i - 1) * i * self.sigma_vars[i]
             for i in raeters:
         -----------
@@ -385,7 +387,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._adams_2_lambda_pols)
 
-        self._adams_2_lambda_pols += [0] * (n + 1 - previous_len)
+        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._adams_2_lambda_pols[k] = sp.expand(
@@ -413,7 +415,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._adams_2_lambda_pols)
 
-        self._adams_2_lambda_pols += [0] * (n + 1 - previous_len)
+        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._adams_2_lambda_pols[k] = (
@@ -449,7 +451,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._adams_2_lambda_pols)
 
-        self._adams_2_lambda_pols += [0] * (n + 1 - previous_len)
+        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._adams_2_lambda_pols[k] = sp.Add(
@@ -489,7 +491,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._lambda_2_adams_pols)
 
-        self._lambda_2_adams_pols += [0] * (n + 1 - previous_len)
+        self._lambda_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         # Create the polynomials using the convolution ψ_n(x)=-Σ(-1)**i*i*σ_i(x)*λ_(n-i)(x))
         for k in range(max(1, previous_len), n + 1):
@@ -521,7 +523,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
         """
         previous_len = len(self._lambda_2_adams_pols)
 
-        self._lambda_2_adams_pols += [0] * (n + 1 - previous_len)
+        self._lambda_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._lambda_2_adams_pols[k] = sp.Add(
