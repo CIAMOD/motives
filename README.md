@@ -1,6 +1,6 @@
 # Motives 0.2.0
 
-![lambda image](https://github.com/CIAMOD/motivic_decomposition/assets/94676306/8c7f232a-6fe7-44df-9300-761e9003186c)
+![Lambda Image](https://github.com/user-attachments/assets/aa6f0c16-2ae5-4d86-92f7-86d47ac6596f)
 
 Motives is a symbolic manipulation package based on SymPy, which handles motivic expressions in the Grothendieck ring of Chow
 motives and other types of λ-rings. Grothendieck's motive of a variety is an invariant that provides extensive information about its geometry. Manipulating motivic formulas and understanding when two distinct expressions can represent the same variety is sometimes complex but mathematically interesting. The goal of this package is to provide a comprehensive tool that allows efficient manipulation and comparison of motives, as well as expressions in other λ-rings. Furthermore, it contains the equations for the motives of some commonly used moduli spaces, so that the package can be applied easily to test hypothesis and conjectural results on their geometry.
@@ -106,5 +106,4 @@ Special thanks to everyone who contributed to the project:
 - [Heinloth '07 ] Franziska Heinloth. A note on functional equations for zeta functions with values in Chow motives. _Ann. Inst. Fourier (Grenoble)_, 57(6):1927–1945, 2007.
 - [Sánchez '14] Jonathan S´anchez. Motives of moduli spaces of pairs and applications. _PhD thesis, Universidad Complutense de Madrid_, Madrid, 2014.
 - [Sanchez, Alfaya and Pizarroso '24] Daniel Sanchez, David Alfaya and Jaime Pizarroso. Motives meet SymPy: studying λ-ring expressions in Python. _arXiv:2501.00563_, 2025.
-- [Mozgovoy '12] Sergey Mozgovoy. Solutions of the motivic ADHM recursion formula. _Int. Math. Res. Not. IMRN_, 2012(18):4218–
-  4244, 2012.
+- [Mozgovoy '12] Sergey Mozgovoy. Solutions of the motivic ADHM recursion formula. _Int. Math. Res. Not. IMRN_, 2012(18):4218–4244, 2012.
