@@ -1,6 +1,6 @@
 # Motives 0.2.0
 
-![lambda image](https://github.com/CIAMOD/motivic_decomposition/assets/94676306/8c7f232a-6fe7-44df-9300-761e9003186c)
+![Lambda Image](https://github.com/user-attachments/assets/aa6f0c16-2ae5-4d86-92f7-86d47ac6596f)
 
 Grothendieck's motive of a variety is an invariant that provides extensive information about its geometry. Manipulating motivic formulas and understanding when two distinct expressions can represent the same variety is sometimes complex but mathematically interesting. The goal of this package is to provide a comprehensive tool that allows efficient manipulation and comparison of motives, as well as expressions in other λ-rings. Furthermore, it contains the equations for the motives of some commonly used moduli spaces, so that the package can be applied easily to test hypothesis and conjectural results on their geometry.
 
