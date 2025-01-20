@@ -2,6 +2,11 @@
 
 ![lambda image](https://github.com/CIAMOD/motivic_decomposition/assets/94676306/8c7f232a-6fe7-44df-9300-761e9003186c)
 
+[![pypi](https://img.shields.io/pypi/v/motives.svg)](https://pypi.python.org/pypi/motives)
+[![PyPI Downloads](https://static.pepy.tech/badge/motives)](https://pepy.tech/projects/motives)
+[![python](https://img.shields.io/badge/python-%5E3.10-blue)]()
+[![os](https://img.shields.io/badge/OS-Ubuntu%2C%20Mac%2C%20Windows-purple)]()
+
 Grothendieck's motive of a variety is an invariant that provides extensive information about its geometry. Manipulating motivic formulas and understanding when two distinct expressions can represent the same variety is sometimes complex but mathematically interesting. The goal of this package is to provide a comprehensive tool that allows efficient manipulation and comparison of motives, as well as expressions in other λ-rings. Furthermore, it contains the equations for the motives of some commonly used moduli spaces, so that the package can be applied easily to test hypothesis and conjectural results on their geometry.
 
 ## Methodology
@@ -80,7 +85,7 @@ Special thanks to everyone who contributed to the project:
 - Jaime Pizarroso Gonzalo, Department of Telematics and Computing and Institute for Research in Technology, ICAI, Comillas Pontifical University
 - Tomás Luis Gómez de Quiroga, Institute of Mathematical Sciences, UAM-UCM-UC3M-CSIC
 - Daniel Sánchez Sánchez, Student of the Degree in Mathematical Engineering and Artificial Intelligence, Institute for Research in Technology, ICAI, Comillas Pontifical University
-- Alejandro García Martínez de Guinea, Student of the Degree in Mathematical Engineering and Artificial Intelligence, Institute for Research in Technology, ICAI, Comillas Pontifical University
+- Alejandro Martínez de Guinea García, Student of the Degree in Mathematical Engineering and Artificial Intelligence, Institute for Research in Technology, ICAI, Comillas Pontifical University
 - Sergio Herreros Pérez, Student of the Degree in Mathematical Engineering and Artificial Intelligence, Institute for Research in Technology, ICAI, Comillas Pontifical University
 
 
