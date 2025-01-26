@@ -43,7 +43,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return "pt"
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the point motive with an Adams operation applied to it.
 
@@ -54,6 +54,9 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         -----
         i : int
             The degree of the Adams operator.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams_ object.
 
         Returns:
         --------
@@ -62,7 +65,7 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the point motive with a Lambda operation applied to it.
 
@@ -73,6 +76,9 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         -----
         i : int
             The degree of the Lambda operator.
+        as_symbol : bool, optional
+            If True, returns the Lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------
@@ -81,7 +87,9 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return sp.Integer(1)
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to instances of the point in a polynomial.
 
@@ -102,7 +110,9 @@ class Point(Motive, sp.AtomicExpr, metaclass=SingletonMeta):
         """
         return ph
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes Adams variables in a polynomial with their equivalent Lambda polynomials.
 

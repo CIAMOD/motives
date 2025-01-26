@@ -42,6 +42,17 @@ class VectorBundleModuli(BundleModuli):
         else:
             self._et_repr: sp.Expr = self._compute_motive_rkr(self.r, self.d)
 
+    def get_max_adams_degree(self) -> int:
+        """
+        Returns the maximum degree of the Adams operator for this motive.
+
+        Returns:
+        --------
+        int
+            The maximum degree of the Adams operator.
+        """
+        return self._et_repr.get_max_adams_degree()
+
     def _compute_motive_rk2(self) -> sp.Expr:
         """
         Calculates the expresion of the motive of the moduli space of vector bundles in rank 2

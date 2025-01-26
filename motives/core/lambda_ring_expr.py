@@ -58,7 +58,7 @@ class LambdaRingExpr(sp.Expr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def to_adams(self) -> sp.Expr:
+    def to_adams(self, as_symbol: bool = False) -> sp.Expr:
         """
         Converts this expression into an equivalent Adams polynomial, a polynomial
         depending only on Adams operations of the leaves of the given expression Tree.
@@ -69,9 +69,12 @@ class LambdaRingExpr(sp.Expr):
             A polynomial of Adams operators equivalent to this expression.
         """
         operands: set[Operand] = self.free_symbols
-        return self._to_adams(operands)
+        max_adams_degree = self.get_max_adams_degree()
+        return self._to_adams(
+            operands, max_adams_degree=max_adams_degree, as_symbol=as_symbol
+        )
 
-    def to_lambda(self, *, optimize: bool = True) -> sp.Expr:
+    def to_lambda(self, as_symbol: bool = False, *, optimize: bool = True) -> sp.Expr:
         """
         Converts this expression into an equivalent lambda polynomial, a polynomial
         depending only on lambda operations of the leaves of the given expression Tree.
@@ -87,14 +90,22 @@ class LambdaRingExpr(sp.Expr):
             A polynomial of Lambda operators equivalent to this expression.
         """
         operands: set[Operand] = self.free_symbols
+        max_adams_degree = self.get_max_adams_degree()
 
         if optimize:
-            adams_pol = self._to_adams_lambda(operands, 1)
+            adams_pol = self._to_adams_lambda(
+                operands,
+                max_adams_degree=max_adams_degree,
+                as_symbol=as_symbol,
+                adams_degree=1,
+            )
         else:
-            adams_pol = self._to_adams(operands)
+            adams_pol = self._to_adams(
+                operands, max_adams_degree=max_adams_degree, as_symbol=as_symbol
+            )
 
         for operand in operands:
-            adams_pol = operand._subs_adams(adams_pol)
+            adams_pol = operand._subs_adams(adams_pol, max_adams_degree, as_symbol)
 
         return adams_pol
 
@@ -134,6 +145,11 @@ class LambdaRingExpr(sp.Expr):
         """
         from .operator.ring_operator import Lambda_
 
+        if degree == 0:
+            return sp.Integer(1)
+        if degree == 1:
+            return self
+
         return Lambda_(degree, self)
 
     @typechecked
@@ -153,9 +169,16 @@ class LambdaRingExpr(sp.Expr):
         """
         from .operator.ring_operator import Adams
 
+        if degree == 0:
+            return sp.Integer(1)
+        if degree == 1:
+            return self
+
         return Adams(degree, self)
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+    def _to_adams(
+        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Converts this expression subtree into an equivalent Adams polynomial.
 
@@ -177,10 +200,14 @@ class LambdaRingExpr(sp.Expr):
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
     def _to_adams_lambda(
-        self, operands: set[Operand], adams_degree: int = 1
+        self,
+        operands: set[Operand],
+        max_adams_degree: int,
+        as_symbol: bool = False,
+        adams_degree: int = 1,
     ) -> sp.Expr:
         """
-        Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion, 
+        Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion,
         converting only lambda operations into Adams polynomials if needed and letting subexpressions which are already
         lambda polynomials unnafected if no adams, lambda or sigma operation acts on them.
 

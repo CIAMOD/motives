@@ -47,8 +47,6 @@ class Curve(Motive, sp.AtomicExpr):
         A dictionary storing Lambda variables for different degrees.
     _lambda_vars_pol : list[PolyElement]
         A list storing the polynomial representations of Lambda variables.
-    _adams_vars : list[sp.AtomicExpr]
-        A list storing the Adams variables for the curve.
     """
 
     def __new__(cls, name: sp.Symbol, g: int = 1, *args, **kwargs):
@@ -93,7 +91,6 @@ class Curve(Motive, sp.AtomicExpr):
 
         self._lambda_vars: dict[int, sp.Expr] = {}
         self._lambda_vars_pol: list[PolyElement] = []
-        self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
 
     def __repr__(self) -> str:
         """
@@ -116,20 +113,6 @@ class Curve(Motive, sp.AtomicExpr):
             A tuple containing the name and genus.
         """
         return (self.name, self.g)
-
-    def _generate_adams_vars(self, n: int) -> None:
-        """
-        Generates the Adams variables needed for the curve up to degree `n`.
-
-        Args:
-        -----
-        n : int
-            The maximum degree of Adams needed.
-        """
-        self.curve_chow._generate_adams_vars(n)
-        self._adams_vars += [
-            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
-        ]
 
     def _generate_lambda_vars(self, n: int) -> None:
         """
@@ -161,7 +144,7 @@ class Curve(Motive, sp.AtomicExpr):
                 )
             )
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the curve with an Adams operation applied to it.
 
@@ -169,23 +152,22 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Adams operator.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            expression with Adams_ objects.
 
         Returns:
         --------
         sp.Expr
             The curve with the Adams operator applied.
         """
-        if i == 1:
-            return (
-                self.curve_chow.get_adams_var(1)
-                + self.lefschetz.get_adams_var(1)
-                + self.point.get_adams_var(1)
-            )
+        return (
+            self.curve_chow.get_adams_var(i, as_symbol)
+            + self.lefschetz.get_adams_var(i, as_symbol)
+            + self.point.get_adams_var(i, as_symbol)
+        )
 
-        self._generate_adams_vars(i)
-        return self._adams_vars[i]
-
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: False) -> sp.Expr:
         """
         Returns the curve with a Lambda operation applied to it.
 
@@ -193,6 +175,9 @@ class Curve(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
+        as_symbol : bool, optional
+            If True, returns the Lambda variable as a SymPy Symbol. Otherwise, returns it as an
+            expression with Lambda_ objects.
 
         Returns:
         --------
@@ -202,7 +187,14 @@ class Curve(Motive, sp.AtomicExpr):
         self._generate_lambda_vars(i)
 
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = expr_from_pol(self._lambda_vars_pol[i])
+            self._lambda_vars[i] = expr_from_pol(self._lambda_vars_pol[i]).xreplace(
+                {
+                    symbol: self.curve_chow.get_lambda_var(j, as_symbol)
+                    for j, symbol in enumerate(
+                        self.curve_chow.lambda_symbols[2:], start=2
+                    )
+                }
+            )
 
         return self._lambda_vars[i]
 
@@ -254,7 +246,9 @@ class Curve(Motive, sp.AtomicExpr):
         """
         return self.P(t) / ((1 - t) * (1 - self.lefschetz * t))
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this curve in the polynomial.
 
@@ -277,7 +271,9 @@ class Curve(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 
@@ -294,7 +290,7 @@ class Curve(Motive, sp.AtomicExpr):
         sp.Expr
             The polynomial with Adams variables substituted by Lambda polynomials.
         """
-        ph = self.curve_chow._subs_adams(ph)
+        ph = self.curve_chow._subs_adams(ph, max_adams_degree, as_symbol)
         return ph
 
     @property

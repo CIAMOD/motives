@@ -18,8 +18,6 @@ class GL(SemisimpleG):
         The Lefschetz motive associated with the bundle.
     _et_repr : sp.Expr
         The motive of the group GL_n as a SymPy expression.
-    _lambda_vars : dict[int, sp.Expr]
-        A dictionary of the lambda variables generated for this group.
     """
 
     def __new__(cls, n: int, *args, **kwargs):

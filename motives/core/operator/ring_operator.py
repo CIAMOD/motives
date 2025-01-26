@@ -151,7 +151,9 @@ class Sigma(RingOperator):
         """
         return max(self.degree, self.child.get_max_groth_degree())
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+    def _to_adams(
+        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Converts the sigma subtree into an equivalent Adams polynomial.
 
@@ -176,14 +178,16 @@ class Sigma(RingOperator):
         lrc = LambdaRingContext()
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands)
+        ph = self.child._to_adams(operands, max_adams_degree, as_symbol)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
         # Apply the Adams operators to the polynomials in the list
-        for j in range(1, self.degree + 1):
+        for j in range(2, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._apply_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(
+                    j, ph_list[j], max_adams_degree, as_symbol
+                )
 
         adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
@@ -195,6 +199,8 @@ class Sigma(RingOperator):
     def _to_adams_lambda(
         self,
         operands: set[Operand],
+        max_adams_degree: int,
+        as_symbol: bool = False,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -228,13 +234,15 @@ class Sigma(RingOperator):
             lambda_to_sigma = lrc.get_lambda_2_sigma_pol(self.degree)
             return lambda_to_sigma.xreplace(
                 {
-                    lrc.lambda_vars[i]: self.child.get_lambda_var(i)
+                    lrc.lambda_vars[i]: self.child.get_lambda_var(i, as_symbol)
                     for i in range(self.degree + 1)
                 }
             )
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams_lambda(operands, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(
+            operands, max_adams_degree, as_symbol, adams_degree + self.degree
+        )
 
         if self.degree == 1:
             return ph
@@ -243,9 +251,11 @@ class Sigma(RingOperator):
         ph_list = [ph for _ in range(self.degree + 1)]
 
         # Apply the Adams operators to the polynomials in the list
-        for j in range(1, self.degree + 1):
+        for j in range(2, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._apply_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(
+                    j, ph_list[j], max_adams_degree, as_symbol
+                )
 
         adams_to_sigma = lrc.get_adams_2_sigma_pol(self.degree)
 
@@ -325,7 +335,9 @@ class Lambda_(RingOperator):
         """
         return max(self.degree, self.child.get_max_groth_degree())
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+    def _to_adams(
+        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Converts the lambda subtree into an equivalent Adams polynomial.
 
@@ -350,14 +362,16 @@ class Lambda_(RingOperator):
         lrc = LambdaRingContext()
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands)
+        ph = self.child._to_adams(operands, max_adams_degree, as_symbol)
         # Create a list of the polynomial ph so that ph_list[j] = ψj(ph) for all j
         ph_list = [ph for _ in range(self.degree + 1)]
 
         # Apply the Adams operators to the polynomials in the list
-        for j in range(1, self.degree + 1):
+        for j in range(2, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._apply_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(
+                    j, ph_list[j], max_adams_degree, as_symbol
+                )
 
         adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
@@ -369,6 +383,8 @@ class Lambda_(RingOperator):
     def _to_adams_lambda(
         self,
         operands: set[Operand],
+        max_adams_degree: int,
+        as_symbol: bool = False,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -399,10 +415,12 @@ class Lambda_(RingOperator):
         # Optimization: If the child is an operand and there are no Adams operators on top,
         # return the lambda variable directly
         if isinstance(self.child, Operand) and adams_degree == 1:
-            return self.child.get_lambda_var(self.degree)
+            return self.child.get_lambda_var(self.degree, as_symbol)
 
         # Get the polynomial by calling _to_adams_lambda on the child
-        ph = self.child._to_adams_lambda(operands, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(
+            operands, max_adams_degree, as_symbol, adams_degree + self.degree
+        )
 
         if self.degree == 1:
             return ph
@@ -411,9 +429,11 @@ class Lambda_(RingOperator):
         ph_list = [ph for _ in range(self.degree + 1)]
 
         # Apply the Adams operators to the polynomials in the list
-        for j in range(1, self.degree + 1):
+        for j in range(2, self.degree + 1):
             for operand in operands:
-                ph_list[j] = operand._apply_adams(j, ph_list[j])
+                ph_list[j] = operand._apply_adams(
+                    j, ph_list[j], max_adams_degree, as_symbol
+                )
 
         adams_to_lambda = lrc.get_adams_2_lambda_pol(self.degree)
 
@@ -493,7 +513,9 @@ class Adams(RingOperator):
         """
         return self.child.get_max_groth_degree()
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+    def _to_adams(
+        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Converts the Adams subtree into an equivalent Adams polynomial.
 
@@ -515,20 +537,22 @@ class Adams(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams on the child
-        ph = self.child._to_adams(operands)
+        ph = self.child._to_adams(operands, max_adams_degree, as_symbol)
 
         if self.degree == 1:
             return ph
 
         # Apply the Adams operator to all operands
         for operand in operands:
-            ph = operand._apply_adams(self.degree, ph)
+            ph = operand._apply_adams(self.degree, ph, max_adams_degree, as_symbol)
 
         return ph
 
     def _to_adams_lambda(
         self,
         operands: set[Operand],
+        max_adams_degree: int,
+        as_symbol: bool = False,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
@@ -556,19 +580,21 @@ class Adams(RingOperator):
             return sp.Integer(1)
 
         # Get the polynomial by calling _to_adams_lambda on the child
-        ph = self.child._to_adams_lambda(operands, adams_degree + self.degree)
+        ph = self.child._to_adams_lambda(
+            operands, max_adams_degree, as_symbol, adams_degree + self.degree
+        )
 
         if self.degree == 1:
             return ph
 
         # Apply the Adams operator to all operands
         for operand in operands:
-            ph = operand._apply_adams(self.degree, ph)
+            ph = operand._apply_adams(self.degree, ph, max_adams_degree, as_symbol)
 
         return ph
 
 
-def to_adams(self: sp.Expr) -> sp.Expr:
+def to_adams(self: sp.Expr, as_symbol: bool = False) -> sp.Expr:
     """
     Converts the current expression into a polynomial of Adams operators.
 
@@ -583,11 +609,16 @@ def to_adams(self: sp.Expr) -> sp.Expr:
         The polynomial of Adams operators equivalent to the current expression.
     """
     operands: set[Operand] = self.free_symbols
+    max_adams_degree = self.get_max_adams_degree()
 
-    return self._to_adams(operands)
+    return self._to_adams(
+        operands, max_adams_degree=max_adams_degree, as_symbol=as_symbol
+    )
 
 
-def to_lambda(self: sp.Expr, *, optimize=True) -> sp.Expr:
+def to_lambda(
+    self: sp.Expr, as_symbol: bool = False, *, optimize: bool = True
+) -> sp.Expr:
     """
     Converts the current expression into a polynomial of lambda operators.
 
@@ -606,14 +637,21 @@ def to_lambda(self: sp.Expr, *, optimize=True) -> sp.Expr:
     sp.Expr
         The polynomial of lambda operators equivalent to the current expression.
     """
-    # Initialize a Grothendieck ring context if not provided
     operands: set[Operand] = self.free_symbols
+    max_adams_degree = self.get_max_adams_degree()
 
     # Get the Adams polynomial of the tree, with optimization if requested
     if optimize:
-        adams_pol = self._to_adams_lambda(operands, 1)
+        adams_pol = self._to_adams_lambda(
+            operands,
+            max_adams_degree=max_adams_degree,
+            as_symbol=as_symbol,
+            adams_degree=1,
+        )
     else:
-        adams_pol = self._to_adams(operands)
+        adams_pol = self._to_adams(
+            operands, max_adams_degree=max_adams_degree, as_symbol=as_symbol
+        )
 
     # If the result is an integer, return it directly
     if isinstance(adams_pol, (sp.Integer, int)):
@@ -621,7 +659,7 @@ def to_lambda(self: sp.Expr, *, optimize=True) -> sp.Expr:
 
     # Substitute Adams variables for lambda variables
     for operand in operands:
-        adams_pol = operand._subs_adams(adams_pol)
+        adams_pol = operand._subs_adams(adams_pol, max_adams_degree, as_symbol)
 
     return adams_pol
 
@@ -689,4 +727,8 @@ def adams(self: sp.Expr, degree: int) -> sp.Expr:
     sp.Expr
         An expression with the Adams operator applied.
     """
+    if degree == 0:
+        return 1
+    if degree == 1:
+        return self
     return Adams(degree, self)

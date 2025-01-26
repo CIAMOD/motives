@@ -95,8 +95,8 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         print(list(ds))
         print(list(ds))
         print(list(ds))
-        self.rk =len(list(ds))
-        self.dim = 2*sum(ds,0)-self.rk
+        self.rk = len(list(ds))
+        self.dim = 2 * sum(ds, 0) - self.rk
 
         self.lef = Lefschetz()
         self._et_repr = self.lef**self.dim * sp.Mul(
@@ -114,10 +114,9 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         Motive
             The motivic class of the classifying stack BG of G.
         """
-        return 1/self
-    
+        return 1 / self
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Adams variable of the motive for a given index.
 
@@ -125,15 +124,19 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         -----------
         i : int
             The index of the Adams variable.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as a
+            Adams object
 
         Returns:
         --------
         sp.Expr
             The Adams variable of the motive.
         """
-        return self.lef._apply_adams(i, self._et_repr)
+        # The max_adams_degree is not needed for the Lefschetz so we use 0.
+        return self.lef._apply_adams(i, self._et_repr, 0, as_symbol)
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the lambda variable of the motive for a given index.
 
@@ -141,6 +144,9 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         -----------
         i : int
             The index of the lambda variable.
+        as_symbol : bool, optional
+            If True, returns the Lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object
 
         Returns:
         --------
@@ -150,7 +156,7 @@ class SemisimpleG(Motive, sp.AtomicExpr):
         if i not in self._lambda_vars:
             lrc = LambdaRingContext()
 
-            ph_list = [self.get_adams_var(j) for j in range(i + 1)]
+            ph_list = [self.get_adams_var(j, as_symbol) for j in range(i + 1)]
 
             self._lambda_vars[i] = lrc.get_adams_2_lambda_pol(i).xreplace(
                 {lrc.adams_vars[i]: ph_list[i] for i in range(i + 1)}
@@ -158,7 +164,9 @@ class SemisimpleG(Motive, sp.AtomicExpr):
 
         return self._lambda_vars[i]
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this group in the expression.
 
@@ -182,7 +190,9 @@ class SemisimpleG(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes Adams variables of this group in the expression
         with their equivalent Lambda polynomials.

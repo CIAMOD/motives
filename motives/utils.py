@@ -4,7 +4,8 @@ from typing import Callable, Generator
 from bisect import bisect_left
 from tqdm import tqdm
 import pickle
-from functools import lru_cache
+from functools import lru_cache, reduce
+from operator import mul
 import os
 from typing import Optional, Iterable
 from functools import reduce
@@ -78,12 +79,12 @@ class Partitions:
     """
     A class for handling Young diagrams associated to a
     partition of an integer r into k summands.
-    
+
     A k-partition of n is represented by a nonincreasing sequence of integers
         a_1>=a_2>=...>=a_k>=0
     such that
         a_1+a_2+...+a_k=r
-    
+
     Given a partition (a_1,...,a_k), A Young diagram associated to a partition
     is constructed as a finite collection of piled boxes organized in rows where
     the number of boxes for each row is given by the integers a_i. For example,
@@ -96,7 +97,7 @@ class Partitions:
 
     whose elements are designated as pairs (i,j) denoting the box of the
     diagram in row i and column j.
-    
+
     This class permits computing some combinatorial functions associated to the Young
     diagram of a given partition.
 
@@ -184,7 +185,7 @@ class Partitions:
         """
         index = len(self._partition) - bisect_left(self._partition[::-1], j)
         return index - i
-    
+
     def h(self, i: int, j: int) -> int:
         """
         Hook length of an element (i,j) in the Young diagram of the partition.
@@ -204,7 +205,7 @@ class Partitions:
         int
             The output of the operator h(i,j).
         """
-        return self.a(i,j)+self.l(i,j)+1
+        return self.a(i, j) + self.l(i, j) + 1
 
 
 def all_partitions(r: int) -> Generator[tuple[int], None, None]:
@@ -227,6 +228,30 @@ def all_partitions(r: int) -> Generator[tuple[int], None, None]:
     for k in range(1, r + 1):
         for p in ordered_partitions(r, k):
             yield p
+
+
+def preorder_traversal(expr):
+    yield expr
+    if isinstance(expr, sp.Basic):
+        for arg in expr.args:
+            yield from preorder_traversal(arg)
+
+
+def prod(iterable: Iterable) -> object:
+    """
+    Calculate the product of an iterable.
+
+    Parameters
+    ----------
+    iterable : Iterable[Any]
+        The iterable to calculate the product of.
+
+    Returns
+    -------
+    Any
+        The product of the iterable
+    """
+    return reduce(mul, iterable, 1)
 
 
 def multinomial_coeff(lst: list[int]) -> int:
@@ -255,9 +280,9 @@ def multinomial_coeff(lst: list[int]) -> int:
 
 
 @lru_cache(maxsize=None)
-def partitions(n: int, k: int) -> tuple[tuple[int]]:
+def partitions(n: int, k: int, minimum: int = 0) -> tuple[tuple[int]]:
     """
-    Generate all partitions of n into k parts.
+    Generate all partitions of n into k parts with each part being at least `minimum`.
 
     Parameters
     ----------
@@ -265,23 +290,46 @@ def partitions(n: int, k: int) -> tuple[tuple[int]]:
         The number to partition.
     k : int
         The number of parts.
+    minimum : int, optional
+        The minimum value for each part in the partition (default is 0).
 
-    Yields
-    ------
+    Returns
+    -------
     tuple
-        A partition of n into k parts.
+        A partition of n into k parts with each part being at least `minimum`.
     """
     if k < 1:
         return ()
     if k == 1:
-        return ((n,),)
+        if n >= minimum:
+            return ((n,),)
+        return ()
 
     parts = []
-    for i in range(n + 1):
-        for result in partitions(n - i, k - 1):
+    for i in range(minimum, n + 1):
+        for result in partitions(n - i, k - 1, minimum):
             parts.append((i,) + result)
 
     return tuple(parts)
+
+
+def sp_decimal_part(p: int, q: int) -> sp.Rational:
+    """
+    Calculate the decimal part of a fraction.
+
+    Parameters
+    ----------
+    p : int
+        The numerator of the fraction.
+    q : int
+        The denominator of the fraction.
+
+    Returns
+    -------
+    sp.Rational
+        The decimal part of the fraction.
+    """
+    return sp.Rational(p, q) - sp.Rational(p // q)
 
 
 @lru_cache(maxsize=None)

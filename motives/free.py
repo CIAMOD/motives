@@ -2,9 +2,12 @@
 
 from __future__ import annotations  # For forward references
 import sympy as sp
+import re
 
 from .core.operand.operand import Operand
+from .core.operator.ring_operator import Adams, Lambda_
 from .core.lambda_ring_context import LambdaRingContext
+from .utils import preorder_traversal
 
 
 class Free(Operand, sp.Symbol):
@@ -25,25 +28,9 @@ class Free(Operand, sp.Symbol):
     -----------
     name : str
         A string representing the name of the variable.
-    _adams_vars : list[sp.AtomicExpr]
-        A list of Adams variables generated for this variable, with degree-based indexing.
-    _lambda_vars : list[sp.AtomicExpr]
-        A list of Lambda variables generated for this variable, with degree-based indexing.
     """
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initializes a "Free" lambda-ring variable with empty lists of Adams and lambda variables.
-
-        Args:
-        -----
-        *args : tuple
-            Positional arguments passed to the superclass constructor.
-        **kwargs : dict
-            Keyword arguments passed to the superclass constructor.
-        """
-        self._adams_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
-        self._lambda_vars: list[sp.AtomicExpr] = [sp.Integer(1), self]
+    adams_pattern = re.compile(r"ψ(\d+)\((\w+)\)")
 
     def __new__(cls, name: str, **assumptions):
         """
@@ -84,33 +71,7 @@ class Free(Operand, sp.Symbol):
         """
         return self.name
 
-    def _generate_adams_vars(self, n: int) -> None:
-        """
-        Generates the Adams variables for this variable up to degree `n`.
-
-        Args:
-        -----
-        n : int
-            The maximum degree of Adams needed.
-        """
-        self._adams_vars += [
-            sp.Symbol(f"ψ_{i}({self})") for i in range(len(self._adams_vars), n + 1)
-        ]
-
-    def _generate_lambda_vars(self, n: int) -> None:
-        """
-        Generates the lambda variables for this variable up to degree `n`.
-
-        Args:
-        -----
-        n : int
-            The maximum degree of Lambda needed.
-        """
-        self._lambda_vars += [
-            sp.Symbol(f"λ_{i}({self})") for i in range(len(self._lambda_vars), n + 1)
-        ]
-
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Adams variable of this variable for a given degree `i`.
 
@@ -118,16 +79,24 @@ class Free(Operand, sp.Symbol):
         -----
         i : int
             The degree of the Adams operator.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams object.
 
         Returns:
         --------
         sp.Expr
             The Adams variable for degree `i`.
         """
-        self._generate_adams_vars(i)
-        return self._adams_vars[i]
+        if i == 0:
+            return 1
+        if i == 1:
+            return self
+        if as_symbol is False:
+            return self.adams(i)
+        return sp.Symbol(f"ψ{i}({self})")
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the lambda variable of this variable for a given degree `i`.
 
@@ -135,16 +104,22 @@ class Free(Operand, sp.Symbol):
         -----
         i : int
             The degree of the lambda operator.
+        as_symbol : bool, optional
+            If True, returns the lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------
         sp.Expr
             The lambda variable for degree `i`.
         """
-        self._generate_lambda_vars(i)
-        return self._lambda_vars[i]
+        if as_symbol is False:
+            return self.lambda_(i)
+        return sp.Symbol(f"λ{i}({self})")
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to all instances of this variable in a polynomial.
 
@@ -157,27 +132,27 @@ class Free(Operand, sp.Symbol):
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which to apply the Adams operator.
+        as_symbol : bool, optional
+            If True, ph is a polynomial in SymPy symbols. Otherwise, ph is a polynomial in
+            Adams_ objects.
 
         Returns:
         --------
         sp.Expr
             The polynomial with the Adams operator applied.
         """
-        max_adams = -1
-        operands = ph.free_symbols
-        for i, adams in reversed(list(enumerate(self._adams_vars))):
-            if adams in operands:
-                max_adams = i
-                break
-
         return ph.xreplace(
             {
-                self.get_adams_var(i): self.get_adams_var(degree * i)
-                for i in range(1, max_adams + 1)
+                self.get_adams_var(i, as_symbol=as_symbol): self.get_adams_var(
+                    i * degree, as_symbol=as_symbol
+                )
+                for i in range(1, max_adams_degree + 1)
             }
         )
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Given a polynomial ph, substitutes all the appearences of Adams variables of this variable
         in ph by the corresponding polynomials in lambda operations of this variable representing them.
@@ -199,13 +174,15 @@ class Free(Operand, sp.Symbol):
 
         ph = ph.xreplace(
             {
-                self.get_adams_var(i): lrc.get_lambda_2_adams_pol(i)
-                for i in range(2, len(self._adams_vars))
+                self.get_adams_var(i, as_symbol=as_symbol): lrc.get_lambda_2_adams_pol(
+                    i
+                )
+                for i in range(1, max_adams_degree + 1)
             }
         )
         ph = ph.xreplace(
             {
-                lrc.lambda_vars[i]: self.get_lambda_var(i)
+                lrc.lambda_vars[i]: self.get_lambda_var(i, as_symbol=as_symbol)
                 for i in range(1, len(lrc.lambda_vars))
             }
         )

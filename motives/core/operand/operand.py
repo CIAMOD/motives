@@ -60,7 +60,7 @@ class Operand(LambdaRingExpr):
         """
         return 0
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the operand with an Adams operation of order i applied to it.
 
@@ -68,6 +68,9 @@ class Operand(LambdaRingExpr):
         -----
         i : int
             The degree of the Adams operator to apply.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams_ object.
 
         Returns:
         --------
@@ -81,7 +84,7 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the operand with a lambda operation of order i applied to it.
 
@@ -89,6 +92,9 @@ class Operand(LambdaRingExpr):
         -----
         i : int
             The degree of the Lambda operator to apply.
+        as_symbol : bool, optional
+            If True, returns the lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------
@@ -102,7 +108,9 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operation of the requesed degree to instances of this operand and any of
         its Adams operations which appear in the polynomial ph.
@@ -132,7 +140,9 @@ class Operand(LambdaRingExpr):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def _to_adams(self, operands: set[Operand]) -> sp.Expr:
+    def _to_adams(
+        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Converts this operand into an equivalent Adams polynomial.
 
@@ -149,10 +159,14 @@ class Operand(LambdaRingExpr):
             The Adams polynomial of degree 1 for this operand.
 
         """
-        return self.get_adams_var(1)
+        return self.get_adams_var(1, as_symbol)
 
     def _to_adams_lambda(
-        self, operands: set[Operand], adams_degree: int = 1
+        self,
+        operands: set[Operand],
+        max_adams_degree: int,
+        as_symbol: bool = False,
+        adams_degree: int = 1,
     ) -> sp.Expr:
         """
         Converts this operand into an equivalent Adams polynomial, with optimizations for Lambda conversion.
@@ -172,9 +186,11 @@ class Operand(LambdaRingExpr):
         sp.Expr
             The Adams polynomial of degree 1 for this operand.
         """
-        return self._to_adams(operands)
+        return self._to_adams(operands, max_adams_degree, as_symbol)
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes any Adams operations on this operand in the given polynomial with their equivalent lambda polynomial.
 

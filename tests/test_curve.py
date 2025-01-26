@@ -22,7 +22,9 @@ def test_lambda_of_adams_expansion(k: int) -> None:
         ]
     )
 
-    assert (et.to_adams() - et_conv.to_adams()).simplify() == 0
+    assert (
+        et.to_adams(as_symbol=False) - et_conv.to_adams(as_symbol=False)
+    ).simplify() == 0
     return
 
 
@@ -33,9 +35,9 @@ def test_chow_lambda(g: int, k: int) -> None:
 
     et = h.lambda_(k)
 
-    pol = et.to_lambda()
+    pol = et.to_lambda(as_symbol=False)
 
-    diff = pol - h.get_lambda_var(k)
+    diff = pol - h.get_lambda_var(k, as_symbol=False)
 
     assert diff == 0 or diff.expand().simplify() == 0
 
@@ -46,7 +48,7 @@ def test_curve_lambda() -> None:
 
     et = cur.lambda_(3)
 
-    pol_wo_lambda = et.to_lambda(optimize=False).expand().simplify()
-    pol_w_lambda = et.to_lambda(optimize=True).expand().simplify()
+    pol_wo_lambda = et.to_lambda(as_symbol=False, optimize=False).expand().simplify()
+    pol_w_lambda = et.to_lambda(as_symbol=False, optimize=True).expand().simplify()
 
     assert (pol_wo_lambda - pol_w_lambda).expand().simplify() == 0

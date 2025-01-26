@@ -59,7 +59,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self.name
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Polynomial1Var with an Adams operation applied to it.
 
@@ -69,6 +69,9 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         -----
         i : int
             The degree of the Adams operator.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams_ object.
 
         Returns:
         --------
@@ -77,7 +80,7 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self**i
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Polynomial1Var with a Lambda operation applied to it.
 
@@ -87,6 +90,9 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         -----
         i : int
             The degree of the Lambda operator.
+        as_symbol : bool, optional
+            If True, returns the lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------
@@ -95,7 +101,9 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         """
         return self**i
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this Polynomial1Var in a polynomial.
 
@@ -114,9 +122,11 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         sp.Expr
             The polynomial with the Adams operator applied to the Polynomial1Var.
         """
-        return ph.xreplace({self: self.get_adams_var(degree)})
+        return ph.xreplace({self: self.get_adams_var(degree, as_symbol=as_symbol)})
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes Adams variables of this Polynomial1Var in a polynomial with their equivalent Lambda polynomials.
 

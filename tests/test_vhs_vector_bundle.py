@@ -35,7 +35,7 @@ def test_vhs(g, p, rks):
 
     vhs_real = vhs_real * lef ** (3 * dl + 2 - 2 * g)
 
-    assert (vhs_thm - vhs_real).to_adams().simplify() == 0
+    assert (vhs_thm - vhs_real).to_adams(as_symbol=False).simplify() == 0
 
 
 @pytest.mark.parametrize("g,r", ((g, r) for g in range(2, 6) for r in [2, 3]))
@@ -46,10 +46,10 @@ def test_vector_bundle(g, r):
     vbm = VectorBundleModuli(cur, r, d)
 
     if r == 2:
-        et1 = vbm._compute_motive_rk2().to_adams()
+        et1 = vbm._compute_motive_rk2().to_adams(as_symbol=False)
     elif r == 3:
-        et1 = vbm._compute_motive_rk3().to_adams()
-    et2 = vbm._compute_motive_rkr(r, d).to_adams()
+        et1 = vbm._compute_motive_rk3().to_adams(as_symbol=False)
+    et2 = vbm._compute_motive_rkr(r, d).to_adams(as_symbol=False)
 
     result = (et1 - et2).simplify()
 
@@ -68,16 +68,16 @@ def test_vector_bundle_r(g, d, r):
     cur = Curve("c", g)
 
     vbm = VectorBundleModuli(cur, r, d)
-    et1 = vbm._compute_motive_rkr(r, d).to_adams()
+    et1 = vbm._compute_motive_rkr(r, d).to_adams(as_symbol=False)
 
     vbm = VectorBundleModuli(cur, r, d + r)
-    et2 = vbm._compute_motive_rkr(r, d + r).to_adams()
+    et2 = vbm._compute_motive_rkr(r, d + r).to_adams(as_symbol=False)
 
     vbm = VectorBundleModuli(cur, r, d + 2 * r)
-    et3 = vbm._compute_motive_rkr(r, d + 2 * r).to_adams()
+    et3 = vbm._compute_motive_rkr(r, d + 2 * r).to_adams(as_symbol=False)
 
     vbm = VectorBundleModuli(cur, r, r - d)
-    et4 = vbm._compute_motive_rkr(r, r - d).to_adams()
+    et4 = vbm._compute_motive_rkr(r, r - d).to_adams(as_symbol=False)
 
     assert (et1 - et2).simplify() == 0
     assert (et2 - et3).simplify() == 0

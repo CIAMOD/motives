@@ -59,7 +59,7 @@ def test_lambda() -> None:
         + 1
     )
 
-    et = et.to_lambda()
+    et = et.to_lambda(as_symbol=False)
     return
 
 
@@ -72,7 +72,7 @@ def test_adams() -> None:
         (x + y) ** 3
     ).lambda_(3)
 
-    et = et.to_adams()
+    et = et.to_adams(as_symbol=False)
     return
 
 
@@ -99,8 +99,8 @@ def test_adams_lambda_all() -> None:
     d = D(4)
     e = E(6)
     f4 = F4()
-    vhs = VHS(curve, (2,1), (1,1),3).calculate()
-    vector_bundle_moduli = VectorBundleModuli(curve, 3,2).calculate()
+    vhs = VHS(curve, (2, 1), (1, 1), 3).calculate()
+    vector_bundle_moduli = VectorBundleModuli(curve, 3, 2).calculate()
     bun_g = BunG(curve, psl)
     bun = BunDet(curve, 4)
 
@@ -133,5 +133,5 @@ def test_adams_lambda_all() -> None:
         bun,
     ]
     for el in ets:
-        el.lambda_(3).to_adams()
-        el.sigma(3).to_lambda()
+        el.lambda_(3).to_adams(as_symbol=False)
+        el.sigma(3).to_lambda(as_symbol=False)

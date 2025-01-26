@@ -86,7 +86,12 @@ def get_lambda_var_num(self: sp.Rational, i: int) -> sp.Expr:
     )
 
 
-def _to_adams_num(self: sp.Rational, operands: set[Operand]) -> sp.Expr:
+def _to_adams_num(
+    self: sp.Rational,
+    operands: set[Operand],
+    max_adams_degree: int,
+    as_symbol: bool = False,
+) -> sp.Expr:
     """
     Converts this `Rational` subtree into an equivalent Adams polynomial.
 
@@ -111,6 +116,8 @@ def _to_adams_num(self: sp.Rational, operands: set[Operand]) -> sp.Expr:
 def _to_adams_lambda_num(
     self: sp.Rational,
     operands: set[Operand],
+    max_adams_degree: int,
+    as_symbol: bool = False,
     adams_degree: int = 1,
 ) -> sp.Expr:
     """
@@ -133,10 +140,12 @@ def _to_adams_lambda_num(
     sp.Expr
         The `Rational` operand itself.
     """
-    return self._to_adams(operands)
+    return self._to_adams(operands, max_adams_degree, as_symbol)
 
 
-def _subs_adams_num(self: sp.Rational, ph: sp.Expr) -> sp.Expr:
+def _subs_adams_num(
+    self: sp.Rational, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+) -> sp.Expr:
     """
     Substitutes any Adams of the `Rational` operand in `ph` for its equivalent polynomial of lambdas.
 

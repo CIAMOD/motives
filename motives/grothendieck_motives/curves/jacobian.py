@@ -93,7 +93,18 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         return (self.curve,)
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_max_adams_degree(self) -> int:
+        """
+        Returns the maximum degree of the Adams operator for this Jacobian.
+
+        Returns:
+        --------
+        int
+            The maximum degree of the Adams operator.
+        """
+        return self.g
+
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Jacobian with an Adams operation applied to it.
 
@@ -101,6 +112,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Adams operator.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams_ object.
 
         Returns:
         --------
@@ -108,11 +122,21 @@ class Jacobian(Motive, sp.AtomicExpr):
             The Jacobian with the Adams operator applied.
         """
         if i not in self._adams_vars:
-            self._adams_vars[i] = self._et_repr.adams(i).to_adams()
+            self._adams_vars[i] = self._et_repr.adams(i).to_adams(as_symbol=True)
+
+        if as_symbol is False:
+            return self._adams_vars[i].xreplace(
+                {
+                    self.chow.get_adams_var(j, as_symbol=True): self.chow.get_adams_var(
+                        j, as_symbol=False
+                    )
+                    for j in range(2, i * self.g + 1)
+                }
+            )
 
         return self._adams_vars[i]
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the Jacobian with a Lambda operation applied to it.
 
@@ -120,6 +144,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         -----
         i : int
             The degree of the Lambda operator.
+        as_symbol : bool, optional
+            If True, returns the Lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------
@@ -127,7 +154,15 @@ class Jacobian(Motive, sp.AtomicExpr):
             The Jacobian with the Lambda operator applied.
         """
         if i not in self._lambda_vars:
-            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda()
+            self._lambda_vars[i] = self._et_repr.lambda_(i).to_lambda(as_symbol=True)
+
+        if as_symbol is False:
+            return self._lambda_vars[i].xreplace(
+                {
+                    symbol: self.chow.get_lambda_var(j, as_symbol=False)
+                    for j, symbol in enumerate(self.chow.lambda_symbols[2:], start=2)
+                }
+            )
 
         return self._lambda_vars[i]
 
@@ -143,7 +178,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         return {self.chow, Lefschetz()}
 
-    def _apply_adams(self, degree: int, ph: sp.Expr) -> sp.Expr:
+    def _apply_adams(
+        self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Applies the Adams operator to any instances of this Jacobian in the expression.
 
@@ -167,7 +204,9 @@ class Jacobian(Motive, sp.AtomicExpr):
             "It should have been converted to its components."
         )
 
-    def _subs_adams(self, ph: sp.Expr) -> sp.Expr:
+    def _subs_adams(
+        self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+    ) -> sp.Expr:
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 

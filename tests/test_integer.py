@@ -5,13 +5,14 @@ import math
 from motives import Free
 from motives.utils import lambda_of_adams_expansion
 
+
 @pytest.mark.parametrize("n,k", [(i, j) for i in range(2, 6) for j in range(2, 4)])
 def test_lambda_of_adams_expansion(n: int, k: int) -> None:
     x = Free("x")
     et = x.adams(k).lambda_(n)
-    et = et.to_lambda()
+    et = et.to_lambda(as_symbol=False)
 
-    lambda_vars = [x.get_lambda_var(i) for i in range(n * k + 1)]
+    lambda_vars = [x.get_lambda_var(i, as_symbol=False) for i in range(n * k + 1)]
     lambda_expansion = lambda_of_adams_expansion(lambda_vars, n, k)
 
     result = et - lambda_expansion
@@ -24,8 +25,9 @@ def test_lambda_of_adams_expansion(n: int, k: int) -> None:
 def test_lambda_expansion_2(n: int, k: int) -> None:
     value = 5
     x = Free("x")
-    x._generate_lambda_vars(n * k)
-    et = lambda_of_adams_expansion(x._lambda_vars, n, k)
+    et = lambda_of_adams_expansion(
+        [x.get_lambda_var(i, as_symbol=False) for i in range(n * k + 1)], n, k
+    )
 
     lambda_ = lambda n, x: math.comb(n + x - 1, x - 1)
     sigma = lambda n, x: math.comb(x, n)
@@ -35,7 +37,10 @@ def test_lambda_expansion_2(n: int, k: int) -> None:
 
     assert (
         et.subs(
-            zip(x._lambda_vars[1:], (lambda_(i, value) for i in range(1, n * k + 1)))
+            {
+                x.get_lambda_var(i, as_symbol=False): lambda_(i, value)
+                for i in range(1, n * k + 1)
+            }
         )
         == expected
     )
@@ -54,7 +59,7 @@ def test_adams(n: int, k: int) -> None:
 
     expected = lambda_(n, adams(k, value))
 
-    assert et.to_adams() == expected
+    assert et.to_adams(as_symbol=False) == expected
     return
 
 
@@ -64,7 +69,7 @@ def test_lambda(n: int, k: int) -> None:
     x = Free("x")
     et = x.adams(k).lambda_(n)
 
-    et = et.to_lambda()
+    et = et.to_lambda(as_symbol=False)
 
     lambda_ = lambda n, x: math.comb(n + x - 1, x - 1)
     sigma = lambda n, x: math.comb(x, n)
@@ -73,12 +78,16 @@ def test_lambda(n: int, k: int) -> None:
     expected = lambda_(n, adams(k, value))
 
     assert (
-        et.subs(
-            zip(x._lambda_vars[1:], (lambda_(i, value) for i in range(1, n * k + 1)))
+        et.xreplace(
+            {
+                x.get_lambda_var(i, as_symbol=False): lambda_(i, value)
+                for i in range(1, n * k + 1)
+            }
         )
         == expected
     )
     return
+
 
 def test_lambda2() -> None:
     value = 5
@@ -89,7 +98,7 @@ def test_lambda2() -> None:
         for j in range(max(-5 + i, 1 - i), math.floor((5 - i + 1) / 2) + 1)
     )
 
-    et_lambda = et.to_lambda()
+    et_lambda = et.to_lambda(as_symbol=False)
 
     lambda_ = lambda n, x: math.comb(n + x - 1, x - 1)
 
@@ -100,8 +109,11 @@ def test_lambda2() -> None:
     )
 
     assert (
-        et_lambda.subs(
-            zip(x._lambda_vars[1:], (lambda_(i, value) for i in range(1, 20)))
+        et_lambda.xreplace(
+            {
+                x.get_lambda_var(i, as_symbol=False): lambda_(i, value)
+                for i in range(1, 20)
+            }
         )
         == expected
     )
