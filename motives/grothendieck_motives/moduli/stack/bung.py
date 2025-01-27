@@ -127,12 +127,13 @@ class BunG(Motive, sp.AtomicExpr):
         if i not in self._adams_vars:
             self._adams_vars[i] = self._et_repr.adams(i).to_adams(as_symbol=True)
 
-        if not as_symbol:
+        if as_symbol is False:
             return self._adams_vars[i].xreplace(
                 {
                     self.curve.curve_chow.get_adams_var(
-                        i, as_symbol=True
-                    ): self.curve.curve_chow.get_adams_var(i, as_symbol=False)
+                        j, as_symbol=True
+                    ): self.curve.curve_chow.get_adams_var(j, as_symbol=False)
+                    for j in range(2, i * self.curve.g + 1)
                 }
             )
 
@@ -161,9 +162,10 @@ class BunG(Motive, sp.AtomicExpr):
         if not as_symbol:
             return self._lambda_vars[i].xreplace(
                 {
-                    self.curve.curve_chow.get_lambda_var(
-                        i, as_symbol=True
-                    ): self.curve.curve_chow.get_lambda_var(i, as_symbol=False)
+                    symbol: self.curve.curve_chow.get_lambda_var(j, as_symbol=False)
+                    for j, symbol in enumerate(
+                        self.curve.curve_chow.lambda_symbols[2:], start=2
+                    )
                 }
             )
 
