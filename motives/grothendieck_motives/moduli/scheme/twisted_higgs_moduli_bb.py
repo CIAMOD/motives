@@ -2,7 +2,7 @@ import sympy as sp
 from sympy.polys.rings import PolyElement
 import math
 
-#from .bundle_moduli import BundleModuli
+# from .bundle_moduli import BundleModuli
 from .vhs import VHS
 
 
@@ -100,7 +100,7 @@ class TwistedHiggsModuliBB(BundleModuli):
         """
         Initiates the VHS for the first few dimensions.
         """
-        
+
         self.vhs[(1, 1)] = (
             self.lef ** (3 * self.dl + 2 - 2 * self.g)
             * self.cur.Jac
@@ -213,7 +213,7 @@ class TwistedHiggsModuliBB(BundleModuli):
             # Access the expression associated with the current key
             expr = self.vhs.get(vhs_key)
             # Convert to lambda variables
-            lambda_pol = expr.to_lambda()
+            lambda_pol = expr.to_lambda(as_symbol=True)
 
             if verbose > 0:
                 print(f"Computed lambda of VHS {vhs_key}")

@@ -6,47 +6,41 @@ from functools import reduce
 class LambdaRingContext(metaclass=SingletonMeta):
     """
     A class representing a lambda-ring context. This singleton class contains methods
-    for computing the universal polynomials relating the lambda, sigma and Adams operations
+    for computing the universal polynomials relating the lambda, sigma, and Adams operations
     of a lambda-ring, as well as keeping a cache of the already computed polynomials.
 
     Attributes:
     -----------
-    lambda_vars : list
-        A list of SymPy symbols representing the lambda variables.
-    sigma_vars : list
-        A list of SymPy symbols representing the sigma variables.
-    adams_vars : list
-        A list of SymPy symbols representing the Adams variables.
-    _lambda_2_sigma_pols : list
-        A list of SymPy polynomials mapping lambda variables to sigma variables.
-    _adams_2_lambda_pols : list
-        A list of SymPy polynomials mapping Adams variables to lambda variables.
-    _adams_2_sigma_pols : list
-        A list of SymPy polynomials mapping Adams variables to sigma variables.
-    _sigma_2_adams_pols : list
-        A list of SymPy polynomials mapping sigma variables to Adams variables.
-    _lambda_2_adams_pols : list
-        A list of SymPy polynomials mapping lambda variables to Adams variables.
+    lambda_vars : list[sp.Expr]
+        A list of SymPy expressions representing the lambda variables.
+    sigma_vars : list[sp.Expr]
+        A list of SymPy expressions representing the sigma variables.
+    adams_vars : list[sp.Expr]
+        A list of SymPy expressions representing the Adams variables.
+    _lambda_2_sigma_pols : dict[int, sp.Expr]
+        A dictionary mapping lambda variable indices to sigma variable polynomials.
+    _adams_2_lambda_pols : dict[int, sp.Expr]
+        A dictionary mapping Adams variable indices to lambda variable polynomials.
+    _adams_2_sigma_pols : dict[int, sp.Expr]
+        A dictionary mapping Adams variable indices to sigma variable polynomials.
+    _sigma_2_adams_pols : dict[int, sp.Expr]
+        A dictionary mapping sigma variable indices to Adams variable polynomials.
+    _lambda_2_adams_pols : dict[int, sp.Expr]
+        A dictionary mapping lambda variable indices to Adams variable polynomials.
     """
 
     def __init__(self, *args, **kwargs):
         """
         Initializes the lambda-ring context.
-
-        Parameters:
-        -----------
-        mode : str
-            The mode to use to compute the Adams to lambda polynomials.
-            It can be "recurrent", "partitions", or "old".
         """
         self.lambda_vars: list[sp.Expr] = [sp.Integer(1)]
         self.sigma_vars: list[sp.Expr] = [sp.Integer(1)]
         self.adams_vars: list[sp.Expr] = [sp.Integer(1)]
-        self._lambda_2_sigma_pols: list[sp.Expr] = []
-        self._adams_2_lambda_pols: list[sp.Expr] = []
-        self._adams_2_sigma_pols: list[sp.Expr] = []
-        self._sigma_2_adams_pols: list[sp.Expr] = []
-        self._lambda_2_adams_pols: list[sp.Expr] = []
+        self._lambda_2_sigma_pols: dict[int, sp.Expr] = {}
+        self._adams_2_lambda_pols: dict[int, sp.Expr] = {}
+        self._adams_2_sigma_pols: dict[int, sp.Expr] = {}
+        self._sigma_2_adams_pols: dict[int, sp.Expr] = {}
+        self._lambda_2_adams_pols: dict[int, sp.Expr] = {}
 
         self.mode = "partitions"
 
@@ -79,7 +73,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def get_lambda_2_sigma_pol(self, n: int) -> sp.Expr:
         """
         Returns the polynomial that maps lambda variables to sigma variables and viceversa.
-        λ_n(x)=P(σ_1(x),...,σ_n(x)) and σ_n(x)=P(λ_1(x),...,λ_n(x))
+        That is, the following polynomial: p(λ_0, λ_1, ..., λ_n) = σ_n || p(σ_0, σ_1, ..., σ_n) = λ_n.
 
         Parameters:
         -----------
@@ -99,7 +93,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def get_adams_2_sigma_pol(self, n: int) -> sp.Expr:
         """
         Returns the polynomial that maps Adams variables to sigma variables.
-        σ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        That is, the following polynomial: p(ψ_0, ψ_1, ..., ψ_n) = σ_n.
 
         Parameters:
         -----------
@@ -124,7 +118,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def get_sigma_2_adams_pol(self, n: int) -> sp.Expr:
         """
         Returns the polynomial that maps sigma variables to Adams variables.
-        ψ_n(x)=P(σ_1(x),...,σ_n(x))
+        That is, the following polynomial: p(σ_0, σ_1, ..., σ_n) = ψ_n.
 
         Parameters:
         -----------
@@ -149,7 +143,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def get_adams_2_lambda_pol(self, n: int) -> sp.Expr:
         """
         Returns the polynomial that maps Adams variables to lambda variables.
-        λ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        That is, the following polynomial: p(ψ_0, ψ_1, ..., ψ_n) = λ_n.
 
         Parameters:
         -----------
@@ -174,7 +168,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
     def get_lambda_2_adams_pol(self, n: int) -> sp.Expr:
         """
         Returns the polynomial that maps lambda variables to Adams variables.
-        ψ_n(x)=P(λ_1(x),...,λ_n(x))
+        That is, the following polynomial: p(λ_0, λ_1, ..., λ_n) = ψ_n.
 
         Parameters:
         -----------
@@ -198,8 +192,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_lambda_2_sigma_pols(self, n: int):
         """
-        Computes the array of lambda to sigma polynomials up to degree n.
-        λ_n(x)=P(σ_1(x),...,σ_n(x))
+        Computes the lambda to sigma polynomials up to degree n.
 
         Parameters:
         -----------
@@ -207,13 +200,15 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._lambda_2_sigma_pols)
+        self._lambda_2_sigma_pols[0] = 1
 
-        self._lambda_2_sigma_pols += [sp.Integer(1)] * (n + 1 - previous_len)
+        for k in range(1, n + 1):
+            if k in self._lambda_2_sigma_pols:
+                continue
 
-        for k in range(max(1, previous_len), n + 1):
             self._lambda_2_sigma_pols[k] = sp.Add(
                 *(
                     sp.Mul(
@@ -228,9 +223,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_adams_2_sigma_pols_recurrent(self, n: int):
         """
-        Computes the array of Adams to sigma polynomials up to degree n using the recurrence relation for the
-        inverse Newton polynomials.
-        σ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the Adams to sigma polynomials up to degree n using the recurrence relation.
 
         Parameters:
         -----------
@@ -238,14 +231,15 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
         previous_len = len(self._adams_2_sigma_pols)
 
-        self._adams_2_sigma_pols += [
-            sp.Mul((-1) ** (i - 1), self.adams_vars[i])
+        self._adams_2_sigma_pols.update(
+            (i, sp.Mul((-1) ** (i - 1), self.adams_vars[i]))
             for i in range(previous_len, n + 1)
-        ]
+        )
 
         for k in range(max(2, previous_len), n + 1):
             self._adams_2_sigma_pols[k] += sp.Add(
@@ -262,8 +256,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_adams_2_sigma_pols_partitions(self, n: int):
         """
-        Computes the array of Adams to sigma polynomials up to degree n using partitions.
-        σ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the Adams to sigma polynomials up to degree n using partitions.
 
         Parameters:
         -----------
@@ -271,39 +264,31 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._adams_2_sigma_pols)
-
-        self._adams_2_sigma_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        for k in range(max(1, previous_len), n + 1):
-            self._adams_2_sigma_pols[k] = sp.Add(
-                *(
-                    sp.Mul(
-                        *(self.adams_vars[a] for a in partition),
-                        sp.Pow(
-                            reduce(
-                                lambda x, y: x * y,
-                                (
-                                    sp.factorial(partition.count(i))
-                                    for i in set(partition)
-                                ),
-                                1,
-                            )
-                            * reduce(lambda x, y: x * y, partition, 1),
-                            -1,
-                        ),
-                        (-1) ** (len(partition) + k),
-                    )
-                    for partition in all_partitions(k)
+        self._adams_2_sigma_pols[n] = sp.Add(
+            *(
+                sp.Mul(
+                    *(self.adams_vars[a] for a in partition),
+                    sp.Pow(
+                        reduce(
+                            lambda x, y: x * y,
+                            (sp.factorial(partition.count(i)) for i in set(partition)),
+                            1,
+                        )
+                        * reduce(lambda x, y: x * y, partition, 1),
+                        -1,
+                    ),
+                    (-1) ** (len(partition) + n),
                 )
+                for partition in all_partitions(n)
             )
+        )
 
     def _compute_sigma_2_adams_pols_partitions(self, n: int):
         """
-        Computes the array of Adams to sigma polynomials up to degree n using partitions.
-        σ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the sigma to Adams polynomials up to degree n using partitions.
 
         Parameters:
         -----------
@@ -311,52 +296,46 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._sigma_2_adams_pols)
-
-        self._sigma_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        for k in range(max(1, previous_len), n + 1):
-            self._sigma_2_adams_pols[k] = sp.Add(
-                *(
-                    sp.Mul(
-                        *(self.sigma_vars[a] for a in partition),
-                        self.sigma_vars[k - l],
-                        (
-                            multinomial_coeff(
-                                [partition.count(i) for i in set(partition)]
-                            )
-                            if partition
-                            else 1
-                        )
-                        * (-1) ** (len(partition) + k + 1)
-                        * (k - l),
+        self._sigma_2_adams_pols[n] = sp.Add(
+            *(
+                sp.Mul(
+                    *(self.sigma_vars[a] for a in partition),
+                    self.sigma_vars[n - l],
+                    (
+                        multinomial_coeff([partition.count(i) for i in set(partition)])
+                        if partition
+                        else 1
                     )
-                    for l in range(k)
-                    for partition in all_partitions(l)
+                    * (-1) ** (len(partition) + n + 1)
+                    * (n - l),
                 )
+                for l in range(n)
+                for partition in all_partitions(l)
             )
+        )
 
     def _compute_sigma_2_adams_pols_recurrent(self, n: int):
         """
-        Computes the array of sigma to Adams polynomials up to degree n using the recurrence relation for the
-        Hirzebruch-Newton polynomials.
-        ψ_n(x  (-1) ** (i - 1) * i * self.sigma_vars[i]
-            for i in raeters:
+        Computes the sigma to Adams polynomials up to degree n using the recurrence relation.
+
+        Parameters:
         -----------
         n : int
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
         previous_len = len(self._sigma_2_adams_pols)
 
-        self._sigma_2_adams_pols += [
-            sp.Mul((-1) ** (i - 1), i, self.sigma_vars[i])
+        self._sigma_2_adams_pols.update(
+            (i, sp.Mul((-1) ** (i - 1), i, self.sigma_vars[i]))
             for i in range(previous_len, n + 1)
-        ]
+        )
 
         for k in range(max(2, previous_len), n + 1):
             self._sigma_2_adams_pols[k] -= sp.Add(
@@ -373,9 +352,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_adams_2_lambda_pols_old(self, n: int):
         """
-        Computes the array of Adams to lambda polynomials up to degree n swapping the sigma variables for
-        lambda variables.
-        λ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the Adams to lambda polynomials up to degree n by substituting sigma variables with lambda variables.
 
         Parameters:
         -----------
@@ -383,27 +360,21 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._adams_2_lambda_pols)
-
-        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        for k in range(max(1, previous_len), n + 1):
-            self._adams_2_lambda_pols[k] = sp.expand(
-                self.get_lambda_2_sigma_pol(k).xreplace(
-                    {
-                        self.lambda_vars[i]: self.get_adams_2_sigma_pol(i)
-                        for i in range(n + 1)
-                    }
-                )
+        self._adams_2_lambda_pols[n] = sp.expand(
+            self.get_lambda_2_sigma_pol(n).xreplace(
+                {
+                    self.lambda_vars[i]: self.get_adams_2_sigma_pol(i)
+                    for i in range(n + 1)
+                }
             )
+        )
 
     def _compute_adams_2_lambda_pols_recurrent(self, n: int):
         """
-        Computes the array of Adams to lambda polynomials up to degree n using the recurrence relation for the
-        Adams to lambda polynomials.
-        λ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the Adams to lambda polynomials up to degree n using the recurrence relation.
 
         Parameters:
         -----------
@@ -411,11 +382,10 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
         previous_len = len(self._adams_2_lambda_pols)
-
-        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
 
         for k in range(max(1, previous_len), n + 1):
             self._adams_2_lambda_pols[k] = (
@@ -437,9 +407,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_adams_2_lambda_pols_partitions(self, n: int):
         """
-        Computes the array of Adams to lambda polynomials up to degree n from the formula:
-        Σ[a1,...,ai ∈ p(n)] (Π_j (ψ_aj(x)/aj) * 1 / (#1s * #2s * ... * #ks))
-        λ_n(x)=P(ψ_1(x),...,ψ_n(x))
+        Computes the Adams to lambda polynomials up to degree n using partitions.
 
         Parameters:
         -----------
@@ -447,39 +415,30 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._adams_2_lambda_pols)
-
-        self._adams_2_lambda_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        for k in range(max(1, previous_len), n + 1):
-            self._adams_2_lambda_pols[k] = sp.Add(
-                *(
-                    sp.Mul(
-                        *(self.adams_vars[a] for a in partition),
-                        sp.Pow(
-                            reduce(
-                                lambda x, y: x * y,
-                                (
-                                    sp.factorial(partition.count(i))
-                                    for i in set(partition)
-                                ),
-                                1,
-                            )
-                            * reduce(lambda x, y: x * y, partition, 1),
-                            -1,
-                        ),
-                    )
-                    for partition in all_partitions(k)
+        self._adams_2_lambda_pols[n] = sp.Add(
+            *(
+                sp.Mul(
+                    *(self.adams_vars[a] for a in partition),
+                    sp.Pow(
+                        reduce(
+                            lambda x, y: x * y,
+                            (sp.factorial(partition.count(i)) for i in set(partition)),
+                            1,
+                        )
+                        * reduce(lambda x, y: x * y, partition, 1),
+                        -1,
+                    ),
                 )
+                for partition in all_partitions(n)
             )
+        )
 
     def _compute_lambda_2_adams_pols_recurrent(self, n: int):
         """
-        Computes the array of lambda to Adams polynomials up to degree n swapping the sigma variables for
-        lambda variables in the convolution.
-        ψ_n(x)=P(λ_1(x),...,λ_n(x))
+        Computes the lambda to Adams polynomials up to degree n using the recurrence relation.
 
         Parameters:
         -----------
@@ -487,13 +446,11 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
         previous_len = len(self._lambda_2_adams_pols)
 
-        self._lambda_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        # Create the polynomials using the convolution ψ_n(x)=-Σ(-1)**i*i*σ_i(x)*λ_(n-i)(x))
         for k in range(max(1, previous_len), n + 1):
             self._lambda_2_adams_pols[k] = -sp.Add(
                 *(
@@ -510,8 +467,7 @@ class LambdaRingContext(metaclass=SingletonMeta):
 
     def _compute_lambda_2_adams_pols_partitions(self, n: int):
         """
-        Computes the array of lambda to Adams polynomials up to degree n from partitions
-        ψ_n(x)=P(λ_1(x),...,λ_n(x))
+        Computes the lambda to Adams polynomials up to degree n using partitions.
 
         Parameters:
         -----------
@@ -519,32 +475,26 @@ class LambdaRingContext(metaclass=SingletonMeta):
             The maximum degree to compute the polynomials for.
 
         Returns:
-            None
+        --------
+        None
         """
-        previous_len = len(self._lambda_2_adams_pols)
-
-        self._lambda_2_adams_pols += [sp.Integer(0)] * (n + 1 - previous_len)
-
-        for k in range(max(1, previous_len), n + 1):
-            self._lambda_2_adams_pols[k] = sp.Add(
-                *(
-                    sp.Mul(
-                        *(self.lambda_vars[a] for a in partition),
-                        self.lambda_vars[k - l],
-                        (
-                            multinomial_coeff(
-                                [partition.count(i) for i in set(partition)]
-                            )
-                            if partition
-                            else 1
-                        )
-                        * (-1) ** len(partition)
-                        * (k - l),
+        self._lambda_2_adams_pols[n] = sp.Add(
+            *(
+                sp.Mul(
+                    *(self.lambda_vars[a] for a in partition),
+                    self.lambda_vars[n - l],
+                    (
+                        multinomial_coeff([partition.count(i) for i in set(partition)])
+                        if partition
+                        else 1
                     )
-                    for l in range(k)
-                    for partition in all_partitions(l)
+                    * (-1) ** len(partition)
+                    * (n - l),
                 )
+                for l in range(n)
+                for partition in all_partitions(l)
             )
+        )
 
 
 if __name__ == "__main__":
@@ -557,14 +507,17 @@ if __name__ == "__main__":
     print("sigma to lambda polynomials: ")
 
     s_rec = perf_counter()
-    res_rec = groth.get_lambda_2_sigma_pol(n)
+    res_rec = groth.get_sigma_2_adams_pol(n)
     e_rec = perf_counter()
 
-    # s_old = perf_counter()
-    # res_old = groth_old.get_adams_2_sigma_pol(n)
-    # e_old = perf_counter()
+    groth.mode = "recurrent"
+    groth._sigma_2_adams_pols = {}
+
+    s_old = perf_counter()
+    res_old = groth.get_sigma_2_adams_pol(n)
+    e_old = perf_counter()
 
     # print(f"-----result rec-----\n{res_rec}")
-    print(f"-----result-----\n{res_rec}")
+    print(f"-----result-----\n{res_rec - res_old}")
 
-    print(f"-----time rec----- {e_rec-s_rec}")
+    print(f"-----time rec----- {e_rec - s_rec}")

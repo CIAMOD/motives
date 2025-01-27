@@ -70,10 +70,10 @@ class TwistedHiggsModuliADHM:
         self.gen_f: LambdaRingExpr = 0
         self.coeff: dict[sp.Expr, sp.Expr] = {}
 
-    #List of values of the Möbius functions, precomputed for efficiency
-    _MOBIUS=[1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0] 
-    
-    def _mobius(self, n:int) -> int:
+    # List of values of the Möbius functions, precomputed for efficiency
+    _MOBIUS = [1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0]
+
+    def _mobius(self, n: int) -> int:
         """
         Computes the Möbius function of n, which is
             - 0 if n is divisible by the square of a prime
@@ -91,10 +91,10 @@ class TwistedHiggsModuliADHM:
         int
             Möbius function of n
         """
-        if n>len(self._MOBIUS):
-            for i in range(len(self._MOBIUS),n):
-                self._MOBIUS[i-1]=mobius(i)
-        return self._MOBIUS[n-1]
+        if n > len(self._MOBIUS):
+            for i in range(len(self._MOBIUS), n):
+                self._MOBIUS[i - 1] = mobius(i)
+        return self._MOBIUS[n - 1]
 
     def gen_func(self) -> LambdaRingExpr:
         """
@@ -178,7 +178,7 @@ class TwistedHiggsModuliADHM:
         lef = Lefschetz()
 
         if self.coeff == {}:
-            sp_M_sum = self.gen_f.to_lambda()
+            sp_M_sum = self.gen_f.to_lambda(as_symbol=True)
 
             if verbose > 0:
                 print("Formula converted to lambdas.")

@@ -86,7 +86,12 @@ def get_lambda_var_num(self: sp.Rational, i: int) -> sp.Expr:
     )
 
 
-def _to_adams_num(self: sp.Rational, operands: set[Operand]) -> sp.Expr:
+def _to_adams_num(
+    self: sp.Rational,
+    operands: set[Operand],
+    max_adams_degree: int,
+    as_symbol: bool = False,
+) -> sp.Expr:
     """
     Converts this `Rational` subtree into an equivalent Adams polynomial.
 
@@ -99,6 +104,10 @@ def _to_adams_num(self: sp.Rational, operands: set[Operand]) -> sp.Expr:
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
 
     Returns:
     --------
@@ -111,6 +120,8 @@ def _to_adams_num(self: sp.Rational, operands: set[Operand]) -> sp.Expr:
 def _to_adams_lambda_num(
     self: sp.Rational,
     operands: set[Operand],
+    max_adams_degree: int,
+    as_symbol: bool = False,
     adams_degree: int = 1,
 ) -> sp.Expr:
     """
@@ -125,18 +136,24 @@ def _to_adams_lambda_num(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
     adams_degree : int, optional
-        The cumulative Adams degree higher than this node in the expression tree.
+        The cumulative Adams degree higher than this node in the expression tree. Defaults to 1.
 
     Returns:
     --------
     sp.Expr
         The `Rational` operand itself.
     """
-    return self._to_adams(operands)
+    return self._to_adams(operands, max_adams_degree, as_symbol)
 
 
-def _subs_adams_num(self: sp.Rational, ph: sp.Expr) -> sp.Expr:
+def _subs_adams_num(
+    self: sp.Rational, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
+) -> sp.Expr:
     """
     Substitutes any Adams of the `Rational` operand in `ph` for its equivalent polynomial of lambdas.
 
@@ -150,6 +167,10 @@ def _subs_adams_num(self: sp.Rational, ph: sp.Expr) -> sp.Expr:
     -----
     ph : sp.Expr
         The polynomial to substitute the Adams variables into.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
 
     Returns:
     --------

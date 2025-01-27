@@ -1,4 +1,5 @@
 from .general_groups import C
+from typing import Tuple
 
 
 # TODO docs
@@ -6,32 +7,32 @@ from .general_groups import C
 
 class SP(C):
     """
-    Represents the Grothendieck motive of the complex symplectic group Sp(2n,C).
-    This class inherits from the G class and represents the symplectic group Sp(2n,C),
-    which consists of 2n x 2n matrices preserving a symplectic form. The motive is constructed
-    using a combination of even integers from 2 to 2n and the integer n, with the dimension n * (2n + 1).
+    Represents the Grothendieck motive of the complex symplectic group Sp(2n, C).
 
-    Attributes:
-    -----------
+    This class inherits from the C class and represents the symplectic group Sp(2n, C),
+    which consists of 2n x 2n matrices preserving a symplectic form.
+
+    Attributes
+    ----------
     n : int
         The dimension of the symplectic group SP(n).
 
-    Methods:
-    --------
-    __new__(cls, n: int, *args, **kwargs)
+    Methods
+    -------
+    __new__(cls, n: int, *args, **kwargs) -> "SP":
         Creates a new instance of the SP class with the specified dimension n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the SP group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> Tuple[int]:
         Returns a tuple containing the dimension n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "SP":
         """
         Creates a new instance of the SP class with the specified dimension n.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n : int
             The dimension of the symplectic group SP(n).
         *args : tuple
@@ -39,10 +40,15 @@ class SP(C):
         **kwargs : dict
             Additional keyword arguments.
 
-        Returns:
-        --------
+        Returns
+        -------
         SP
             A new instance of the SP class.
+
+        Raises
+        ------
+        ValueError
+            If n is not an even integer.
         """
         if n % 2 != 0:
             raise ValueError(
@@ -57,20 +63,20 @@ class SP(C):
         """
         Returns a string representation of the SP group.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             A string representation of the SP group in the format 'SP_n'.
         """
         return f"SP_{self.n}"
 
-    def _hashable_content(self) -> tuple:
+    def _hashable_content(self) -> Tuple[int]:
         """
         Returns a tuple containing the dimension n, used for hashing.
 
-        Returns:
-        --------
-        tuple
+        Returns
+        -------
+        tuple of int
             A tuple containing the dimension n.
         """
         return (self.n,)

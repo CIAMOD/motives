@@ -36,7 +36,7 @@ class Object1Dim(Operand):
         """
         return self.__repr__()
 
-    def get_adams_var(self, i: int) -> sp.Expr:
+    def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the one-dimensional object with an Adams operation applied to it.
 
@@ -44,6 +44,9 @@ class Object1Dim(Operand):
         -----
         i : int
             The degree of the Adams operator to apply.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams_ object.
 
         Returns:
         --------
@@ -52,7 +55,7 @@ class Object1Dim(Operand):
         """
         raise NotImplementedError("This method must be implemented in all subclasses.")
 
-    def get_lambda_var(self, i: int) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the one-dimensional object with a Lambda operation applied to it.
 
@@ -60,6 +63,9 @@ class Object1Dim(Operand):
         -----
         i : int
             The degree of the Lambda operator to apply.
+        as_symbol : bool, optional
+            If True, returns the Lambda variable as a SymPy Symbol. Otherwise, returns it as a
+            Lambda_ object.
 
         Returns:
         --------

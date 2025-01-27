@@ -38,7 +38,9 @@ def get_max_groth_degree_pow(self: sp.Pow) -> int:
     return self.base.get_max_groth_degree()
 
 
-def _to_adams_pow(self: sp.Pow, operands: set[Operand]) -> sp.Expr:
+def _to_adams_pow(
+    self: sp.Pow, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+) -> sp.Expr:
     """
     Converts the `Pow` subtree into an equivalent Adams polynomial.
 
@@ -51,18 +53,24 @@ def _to_adams_pow(self: sp.Pow, operands: set[Operand]) -> sp.Expr:
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
 
     Returns:
     --------
     sp.Expr
         A polynomial of Adams operators equivalent to this subtree.
     """
-    return self.base._to_adams(operands) ** self.exp
+    return self.base._to_adams(operands, max_adams_degree, as_symbol) ** self.exp
 
 
 def _to_adams_lambda_pow(
     self: sp.Pow,
     operands: set[Operand],
+    max_adams_degree: int,
+    as_symbol: bool = False,
     adams_degree: int = 1,
 ) -> sp.Expr:
     """
@@ -78,12 +86,19 @@ def _to_adams_lambda_pow(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
     adams_degree : int, optional
-        The cumulative Adams degree higher than this node in the expression tree.
+        The cumulative Adams degree higher than this node in the expression tree. Defaults to 1.
 
     Returns:
     --------
     sp.Expr
         A polynomial of Adams operators equivalent to this subtree.
     """
-    return self.base._to_adams_lambda(operands, adams_degree) ** self.exp
+    return (
+        self.base._to_adams_lambda(operands, max_adams_degree, as_symbol, adams_degree)
+        ** self.exp
+    )

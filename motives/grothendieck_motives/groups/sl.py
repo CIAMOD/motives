@@ -1,46 +1,43 @@
 from .general_groups import A
 
 
-# TODO docs
-
-
 class SL(A):
     """
     Represents the special linear group SL(n) as a Grothendieck motive.
-    This class inherits from the G class and represents the special linear group SL(n),
+    This class inherits from the A class and represents the special linear group SL(n),
     which consists of n x n matrices with determinant 1. The motive is constructed
-    using the range of integers from 2 to n (inclusive) and the dimension n^2 - 1.
+    using the range of integers from 2 to n (inclusive) and the dimension n² - 1.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     n : int
         The dimension of the special linear group SL(n).
 
-    Methods:
-    --------
-    __new__(cls, n: int, *args, **kwargs)
+    Methods
+    -------
+    __new__(cls, n: int, *args: Any, **kwargs: Any) -> "SL":
         Creates a new instance of the SL class with the specified dimension n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the SL group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the dimension n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "SL":
         """
         Creates a new instance of the SL class with the specified dimension n.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n : int
             The dimension of the special linear group SL(n).
-        *args : tuple
-            Additional arguments.
-        **kwargs : dict
+        *args : Any
+            Additional positional arguments.
+        **kwargs : Any
             Additional keyword arguments.
 
-        Returns:
-        --------
+        Returns
+        -------
         SL
             A new instance of the SL class.
         """
@@ -52,8 +49,8 @@ class SL(A):
         """
         Returns a string representation of the SL group.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             A string representation of the SL group in the format 'SL_n'.
         """
@@ -63,8 +60,8 @@ class SL(A):
         """
         Returns a tuple containing the dimension n, used for hashing.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             A tuple containing the dimension n.
         """

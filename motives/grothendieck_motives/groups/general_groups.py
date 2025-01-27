@@ -5,13 +5,13 @@ from itertools import chain
 """
 Set of classes describing the motives of complex algebraic Lie groups
 in terms of their classification in types An, Bn, Cn, Dn, as well as
-classes for the exceptional groups E6, E7, E8, F4 and G2.
+classes for the exceptional groups E6, E7, E8, F4, and G2.
 """
 
 
 class A(SemisimpleG):
     """
-    Represents the Grothendieck motive of a semismple complex algebraic group of type A_n.
+    Represents the Grothendieck motive of a semisimple complex algebraic group of type A_n.
 
     Attributes:
     -----------
@@ -20,15 +20,15 @@ class A(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, n: int, *args, **kwargs) -> 'A':
         Creates a new instance of the A group with the specified rank n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the A group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "A":
         """
         Creates a new instance of the A group with the specified rank n.
 
@@ -49,7 +49,7 @@ class A(SemisimpleG):
         new_sl = SemisimpleG.__new__(cls, list(range(2, n + 2)), n * (n + 1))
         return new_sl
 
-    def __init__(self, n: int, *args, **kwargs):
+    def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes the A class with the specified rank n.
 
@@ -63,12 +63,12 @@ class A(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__(list(range(2, n + 2)), n * (n + 1))
-        self.n = n
+        self.n: int = n
 
 
 class B(SemisimpleG):
     """
-    Represents the Grothendieck motive of a semismple complex algebraic group of type B_n.
+    Represents the Grothendieck motive of a semisimple complex algebraic group of type B_n.
 
     Attributes:
     -----------
@@ -77,15 +77,15 @@ class B(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, n: int, *args, **kwargs) -> 'B':
         Creates a new instance of the B group with the specified rank n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the B group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "B":
         """
         Creates a new instance of the B group with the specified rank n.
 
@@ -107,7 +107,7 @@ class B(SemisimpleG):
         new_sl.n = n
         return new_sl
 
-    def __init__(self, n: int, *args, **kwargs):
+    def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes the B class with the specified rank n.
 
@@ -121,12 +121,12 @@ class B(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__(list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
-        self.n = n
+        self.n: int = n
 
 
 class C(SemisimpleG):
     """
-    Represents the Grothendieck motive of a semismple complex algebraic group of type C_n.
+    Represents the Grothendieck motive of a semisimple complex algebraic group of type C_n.
 
     Attributes:
     -----------
@@ -135,15 +135,15 @@ class C(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, n: int, *args, **kwargs) -> 'C':
         Creates a new instance of the C group with the specified rank n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the C group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "C":
         """
         Creates a new instance of the C group with the specified rank n.
 
@@ -165,7 +165,7 @@ class C(SemisimpleG):
         new_sl.n = n
         return new_sl
 
-    def __init__(self, n: int, *args, **kwargs):
+    def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes the C class with the specified rank n.
 
@@ -179,12 +179,12 @@ class C(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__(list(range(2, 2 * n + 1, 2)), n * (2 * n + 1))
-        self.n = n
+        self.n: int = n
 
 
 class D(SemisimpleG):
     """
-    Represents the Grothendieck motive of a semismple complex algebraic group of type D_n.
+    Represents the Grothendieck motive of a semisimple complex algebraic group of type D_n.
 
     Attributes:
     -----------
@@ -193,15 +193,15 @@ class D(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, n: int, *args, **kwargs) -> 'D':
         Creates a new instance of the D group with the specified rank n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the D group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "D":
         """
         Creates a new instance of the D group with the specified rank n.
 
@@ -225,7 +225,7 @@ class D(SemisimpleG):
         new_sl.n = n
         return new_sl
 
-    def __init__(self, n: int, *args, **kwargs):
+    def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes the D class with the specified rank n.
 
@@ -239,7 +239,7 @@ class D(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__(list(range(2, 2 * n - 1, 2)) + [n], n * (2 * n - 1))
-        self.n = n
+        self.n: int = n
 
 
 class E(SemisimpleG):
@@ -253,15 +253,15 @@ class E(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, n: int, *args, **kwargs) -> 'E':
         Creates a new instance of the E group with the specified rank n.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the E group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int, *args, **kwargs) -> "E":
         """
         Creates a new instance of the E group with the specified rank n.
 
@@ -291,7 +291,7 @@ class E(SemisimpleG):
         new_sl.n = n
         return new_sl
 
-    def __init__(self, n: int, *args, **kwargs):
+    def __init__(self, n: int, *args, **kwargs) -> None:
         """
         Initializes the E class with the specified rank n.
 
@@ -310,7 +310,7 @@ class E(SemisimpleG):
             super().__init__([2, 6, 8, 10, 12, 14, 18], 133)
         elif n == 8:
             super().__init__([2, 8, 12, 14, 18, 20, 24, 30], 248)
-        self.n = n
+        self.n: int = n
 
 
 class F4(SemisimpleG):
@@ -324,15 +324,15 @@ class F4(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
+    __new__(cls, *args, **kwargs) -> 'F4':
         Creates a new instance of the F4 group.
-    __repr__() -> str
+    __repr__(self) -> str:
         Returns a string representation of the F4 group.
-    _hashable_content() -> tuple
+    _hashable_content(self) -> tuple:
         Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "F4":
         """
         Creates a new instance of the F4 group.
 
@@ -352,7 +352,7 @@ class F4(SemisimpleG):
         new_sl.n = 4
         return new_sl
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the F4 class.
 
@@ -364,7 +364,7 @@ class F4(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__([2, 6, 8, 12], 52)
-        self.n = 4
+        self.n: int = 4
 
 
 class G2(SemisimpleG):
@@ -378,17 +378,17 @@ class G2(SemisimpleG):
 
     Methods:
     --------
-    __new__(cls, n: int, *args, **kwargs)
-        Creates a new instance of the F4 group with the specified rank n.
-    __repr__() -> str
-        Returns a string representation of the F4 group.
-    _hashable_content() -> tuple
-        Returns a tuple containing the rank 4, used for hashing.
+    __new__(cls, *args, **kwargs) -> 'G2':
+        Creates a new instance of the G2 group.
+    __repr__(self) -> str:
+        Returns a string representation of the G2 group.
+    _hashable_content(self) -> tuple:
+        Returns a tuple containing the rank n, used for hashing.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "G2":
         """
-        Creates a new instance of the F4 group.
+        Creates a new instance of the G2 group.
 
         Parameters:
         -----------
@@ -406,7 +406,7 @@ class G2(SemisimpleG):
         new_sl.n = 2
         return new_sl
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the G2 class.
 
@@ -418,4 +418,4 @@ class G2(SemisimpleG):
             Additional keyword arguments.
         """
         super().__init__([2, 6], 28)
-        self.n = 2
+        self.n: int = 2
