@@ -70,7 +70,7 @@ class VHS(BundleModuli):
                 return sp.Integer(0)
 
         elif rks == (2, 1):
-            return self._compute_vhs((1, 2), (degs[0] - self.d, -d1))
+            return self._compute_vhs((1, 2), (d1 - self.d, -d1))
 
         elif rks == (1, 1, 1):
             d2 = degs[1]

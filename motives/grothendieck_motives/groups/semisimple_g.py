@@ -92,9 +92,6 @@ class SemisimpleG(Motive, sp.AtomicExpr):
             Additional keyword arguments.
         """
         self.ds = ds
-        print(list(ds))
-        print(list(ds))
-        print(list(ds))
         self.rk = len(list(ds))
         self.dim = 2 * sum(ds, 0) - self.rk
 

@@ -705,6 +705,10 @@ def lambda_(self: sp.Expr, degree: int) -> sp.Expr:
     sp.Expr
         An expression with the lambda operator applied.
     """
+    if degree == 0:
+        return sp.Integer(1)
+    if degree == 1:
+        return self
     return Lambda_(degree, self)
 
 
