@@ -2,27 +2,20 @@ import sympy as sp
 import math
 
 from ...curves.curve import Curve
-
 from .bundle_moduli import BundleModuli
 
 
 class VHS(BundleModuli):
-    def __init__(self, x: Curve, rks: tuple[int], degs: tuple[int], p: int):
+    def __init__(self, x: Curve, rks: tuple, degs: tuple, p: int):
         """
-        Class which computes the Grothendieck motive of the moduli space of
-        L-twisted Variations of Hodge Structure over the given curve x, with a twisting
-        L of degree deg(L)=2g-2+p.
+        Computes the Grothendieck motive of the moduli space of
+        L-twisted Variations of Hodge Structure over the given curve `x`.
 
         Args:
-        -----
-        x : Curve
-            The curve motive used in the formula.
-        rks : tuple(int)
-            The ranks of the components of the VHS.
-        degs : tuple(int)
-            The degrees of the components of the VHS.
-        p: int
-            Twisting, deg(L)=2g-2+p
+            x (Curve): The curve motive used in the formula.
+            rks (tuple): The ranks of the components of the VHS.
+            degs (tuple): The degrees of the components of the VHS.
+            p (int): Twisting parameter, deg(L) = 2g - 2 + p.
         """
         super().__init__(x)
 
@@ -30,7 +23,7 @@ class VHS(BundleModuli):
         self.r = sum(rks)
         if self.r > 3:
             raise NotImplementedError(
-                f"Not implemented yet for total rank greater than 3"
+                "Not implemented yet for total rank greater than 3"
             )
         self.degs = degs
         self.d = sum(degs)
@@ -38,9 +31,16 @@ class VHS(BundleModuli):
 
         self._et_repr = self._compute_vhs(rks, degs)
 
-    def _compute_vhs(self, rks: tuple[int], degs: tuple[int]) -> sp.Expr:
+    def _compute_vhs(self, rks: tuple, degs: tuple) -> sp.Expr:
         """
-        Initiates the VHS for the first few dimensions.
+        Initializes the VHS for the first few dimensions.
+
+        Args:
+            rks (tuple): The ranks of the components of the VHS.
+            degs (tuple): The degrees of the components of the VHS.
+
+        Returns:
+            sp.Expr: The computed VHS expression.
         """
         d1 = degs[0]
 
@@ -85,11 +85,17 @@ class VHS(BundleModuli):
                 )
 
         else:
-            raise NotImplementedError(f"Type not implemented yet")
+            raise NotImplementedError("Type not implemented yet")
 
     def _calculate_vhs(self, n: tuple) -> sp.Expr:
         """
-        Calculates the VHS for the given tuple `n`. Private method.
+        Calculates the VHS for the given tuple `n`. Not implemented.
+
+        Args:
+            n (tuple): The parameters for VHS calculation.
+
+        Raises:
+            NotImplementedError: Always raised as the method is not implemented.
         """
         raise NotImplementedError(
             f"The calculation of the VHS with dimension {n} is not yet implemented."
@@ -98,11 +104,17 @@ class VHS(BundleModuli):
     def get_max_adams_degree(self) -> int:
         """
         Returns the maximum degree of the Adams operator for this VHS.
+
+        Returns:
+            int: The maximum Adams degree.
         """
         return self._et_repr.get_max_adams_degree()
 
     def calculate(self) -> sp.Expr:
         """
-        Calculates the VHS for the given tuple. Public method.
+        Calculates the VHS expression.
+
+        Returns:
+            sp.Expr: The computed VHS.
         """
         return self._et_repr

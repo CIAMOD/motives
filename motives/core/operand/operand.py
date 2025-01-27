@@ -112,7 +112,7 @@ class Operand(LambdaRingExpr):
         self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
     ) -> sp.Expr:
         """
-        Applies the Adams operation of the requesed degree to instances of this operand and any of
+        Applies the Adams operation of the requested degree to instances of this operand and any of
         its Adams operations which appear in the polynomial ph.
 
         If ph=x._apply_adams(i,ph) is called iteratively for each operand x such that either x or some of
@@ -127,6 +127,10 @@ class Operand(LambdaRingExpr):
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which the Adams operator will be applied.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            If True, returns the result as a SymPy Symbol. Otherwise, returns it as an Adams_ object.
 
         Returns:
         --------
@@ -152,12 +156,15 @@ class Operand(LambdaRingExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the context of the conversion.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
 
         Returns:
         --------
         sp.Expr
             The Adams polynomial of degree 1 for this operand.
-
         """
         return self.get_adams_var(1, as_symbol)
 
@@ -178,6 +185,10 @@ class Operand(LambdaRingExpr):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the context of the conversion.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         adams_degree : int, optional
             The sum of the degrees of all Adams operators higher than this node in its branch.
 
@@ -201,6 +212,15 @@ class Operand(LambdaRingExpr):
         -----
         ph : sp.Expr
             The polynomial in which to substitute the Adams operations.
+        max_adams_degree : int
+            The maximum Adams degree in the context of the substitution.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
+
+        Returns:
+        -------
+        sp.Expr
+            The polynomial with Adams operations substituted.
 
         Raises:
         -------

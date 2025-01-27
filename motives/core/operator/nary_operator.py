@@ -59,6 +59,10 @@ def _to_adams_nary(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
 
     Returns:
     --------
@@ -90,8 +94,12 @@ def _to_adams_lambda_nary(
     -----
     operands : set[Operand]
         The set of all operands in the expression tree.
+    max_adams_degree : int
+        The maximum Adams degree in the expression.
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
     adams_degree : int, optional
-        The cumulative Adams degree higher than this node in the expression tree.
+        The cumulative Adams degree higher than this node in the expression tree. Defaults to 1.
 
     Returns:
     --------

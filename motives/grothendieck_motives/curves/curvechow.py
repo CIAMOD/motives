@@ -1,8 +1,7 @@
 from typeguard import typechecked
 import sympy as sp
-from sympy.polys.rings import PolyRing
-from sympy.polys.rings import PolyElement
-import re
+from sympy.polys.rings import PolyRing, PolyElement
+from typing import Union
 
 from ...utils import expr_from_pol, preorder_traversal
 
@@ -16,7 +15,7 @@ class CurveChow(Motive, sp.AtomicExpr):
     """
     Represents a Chow motive for a curve in an expression tree.
 
-    A `CurveChow` object is initialized with a name and genus (g), and it allows the generation
+    A `CurveChow` object is initialized with a name and genus (`g`), and it allows the generation
     of Adams and Lambda variables based on the genus. It supports operations such as applying
     Adams or Lambda operators, generating Adams and Lambda variables, and computing generating functions.
 
@@ -66,7 +65,7 @@ class CurveChow(Motive, sp.AtomicExpr):
         new_chow._assumptions["commutative"] = True
         return new_chow
 
-    def __init__(self, name: str, g: int = 1, *args, **kwargs):
+    def __init__(self, name: str, g: int = 1, *args, **kwargs) -> None:
         """
         Initializes a `CurveChow` instance.
 
@@ -255,6 +254,10 @@ class CurveChow(Motive, sp.AtomicExpr):
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which the Adams operator is applied.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Adams operators as symbols.
 
         Returns:
         --------
@@ -300,6 +303,10 @@ class CurveChow(Motive, sp.AtomicExpr):
         -----
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Lambda operators as symbols.
 
         Returns:
         --------

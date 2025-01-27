@@ -1,8 +1,6 @@
 import sympy as sp
 
 from ..core import LambdaRingContext
-from ..core.operand.operand import Operand
-
 from .motive import Motive
 from .lefschetz import Lefschetz
 
@@ -10,24 +8,22 @@ from .lefschetz import Lefschetz
 class Proj(Motive, sp.AtomicExpr):
     """
     Represents the motivic class of a complex projective space P^n in the Grothendieck lambda-ring of
-    varieties, the Grothendieck rin of Chow motives or in any extension or completion of such rings
-    begin considered.
+    varieties, the Grothendieck ring of Chow motives, or any extension or completion of such rings.
 
     It is equal to the sum
         1 + L + ... + L^n,
-    where L is the Lefschetz motive. This class supports operations related to
-    Adams and lambda operations.
+    where L is the Lefschetz motive. This class supports Adams and lambda operations.
 
     Attributes:
     -----------
     n : int
         The dimension of the projective space.
     lef : Lefschetz
-        The Lefschetz motive used for the equation of the motive of the projective space.
+        The Lefschetz motive used in the motive of the projective space.
     _et_repr : sp.Expr
-        The projective space as a sympy expression.
+        The projective space motive as a SymPy expression.
     _lambda_vars : dict[int, sp.Expr]
-        A dictionary of the lambda variables generated for this projective space.
+        A dictionary of lambda variables generated for this projective space.
     """
 
     def __new__(cls, n: int, *args, **kwargs):
@@ -86,7 +82,7 @@ class Proj(Motive, sp.AtomicExpr):
 
     def get_adams_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
-        Returns the projective space with an Adams operation applied to it.
+        Returns the projective space with an Adams operation applied.
 
         The Adams operation on a projective space is equivalent to summing
         the powers of the Lefschetz motive raised to the i-th power.
@@ -96,8 +92,7 @@ class Proj(Motive, sp.AtomicExpr):
         i : int
             The degree of the Adams operator.
         as_symbol : bool, optional
-            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
-            Adams object.
+            If True, returns the Adams variable as a SymPy Symbol.
 
         Returns:
         --------
@@ -164,7 +159,7 @@ class Proj(Motive, sp.AtomicExpr):
         Raises:
         -------
         Exception
-            Always raised as projective spaces should be decomposed into their components.
+            Raised because projective spaces should be decomposed into their components.
         """
         raise Exception(
             f"There is a projective space in the expression {ph}. "
@@ -175,11 +170,7 @@ class Proj(Motive, sp.AtomicExpr):
         self, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
     ) -> sp.Expr:
         """
-        Substitutes Adams variables of this projective space in the expression
-        with their equivalent Lambda polynomials.
-
-        This method raises an exception because projective spaces should not appear
-        directly in the expression. They should be decomposed into their components.
+        Substitutes Adams variables of this projective space in the expression with Lambda polynomials.
 
         Args:
         -----
@@ -189,7 +180,7 @@ class Proj(Motive, sp.AtomicExpr):
         Raises:
         -------
         Exception
-            Always raised as projective spaces should be decomposed into their components.
+            Raised because projective spaces should be decomposed into their components.
         """
         raise Exception(
             f"There is a projective space in the expression {ph}. "
@@ -199,8 +190,7 @@ class Proj(Motive, sp.AtomicExpr):
     @property
     def free_symbols(self) -> set[sp.Symbol]:
         """
-        Returns the set of free symbols in the projective space, which includes
-        the Lefschetz motive.
+        Returns the set of free symbols in the projective space.
 
         Returns:
         --------

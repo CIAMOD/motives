@@ -5,10 +5,10 @@ from ...groups.sl import SL
 
 class BunDet(BunG):
     """
-    Represents the moduli stack of vector bundles with fixed determinant (SL(n)-bundles) on a smooth complex projective curve.
+    Represents the moduli stack of SL(n)-bundles with fixed determinant on a smooth complex projective curve.
 
-    The `Bun` is a specialized version of `BunG` where the group is specifically SL(n).
-    It supports Adams and Lambda operations, generating functions, and interacts with other motives.
+    Inherits from `BunG` and specializes it for the SL(n) group. Supports Adams and Lambda operations,
+    generating functions, and interacts with other motives.
 
     Attributes:
     -----------
@@ -20,39 +20,46 @@ class BunDet(BunG):
 
     n: int
 
-    def __new__(cls, curve: Curve, n: int, *args, **kwargs):
+    def __new__(cls, curve: Curve, n: int, *args, **kwargs) -> "BunDet":
         """
         Creates a new instance of the `BunDet` class.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         curve : Curve
             The curve for which to create the BunDet.
-        n: int
+        n : int
             The rank of the vector bundles.
 
         Returns:
         --------
-        Bun
-            A new instance of the `Bun` class.
+        BunDet
+            A new instance of the `BunDet` class.
         """
         new_bun = BunG.__new__(cls, curve, SL(n))
         new_bun.n = n
         return new_bun
 
-    def __init__(self, curve: Curve, n: int, *args, **kwargs):
+    def __init__(self, curve: Curve, n: int, *args, **kwargs) -> None:
         """
-        TODO
+        Initializes a `BunDet` instance.
+
+        Parameters:
+        -----------
+        curve : Curve
+            The curve for which the moduli stack is defined.
+        n : int
+            The rank of the vector bundles.
         """
         super().__init__(curve, SL(n))
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the Bun.
+        Returns the string representation of the BunDet.
 
         Returns:
         --------
         str
-            A string representation in the form of "Bun_{curve}_{n}".
+            A string representation in the form "Bun_{curve}_{n}^det".
         """
         return f"Bun_{self.curve}_{self.n}^det"

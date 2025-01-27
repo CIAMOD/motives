@@ -1,23 +1,23 @@
 # node.py
 
 from __future__ import annotations  # For forward references in type hints
-from typing import TypeVar
+from typing import TypeVar, Set
 import sympy as sp
 from typeguard import typechecked
-
 
 Operand = TypeVar("Operand")  # Define Operand as a TypeVar for type hinting
 
 
 class LambdaRingExpr(sp.Expr):
     """
-    Represents a mathematical symbolic expression in some lambda-ring R. The folloing is assumed.
+    Represents a mathematical symbolic expression in a lambda-ring R. The following assumptions are made:
         - R is a unital abelian ring.
         - The ring R has two opposite lambda-ring structures λ and σ.
         - The lambda-structure σ is special.
         - σ has associated Adams operations, denoted by ψ.
-    It can be converted to different polynomial forms such as Adams and Lambda polynomials,
-    or manipulated using various operations like sigma, lambda, and Adams.
+
+    This class supports conversion to different polynomial forms such as Adams and Lambda polynomials,
+    and can be manipulated using various operations like sigma, lambda, and Adams.
 
     Subclasses must implement methods to handle specific types of expressions.
     """
@@ -31,7 +31,7 @@ class LambdaRingExpr(sp.Expr):
         Returns:
         --------
         int
-            The maximum adams degree of this tree once converted to an adams polynomial.
+            The maximum Adams degree of the expression once converted to an Adams polynomial.
 
         Raises:
         -------
@@ -61,14 +61,14 @@ class LambdaRingExpr(sp.Expr):
     def to_adams(self, as_symbol: bool = False) -> sp.Expr:
         """
         Converts this expression into an equivalent Adams polynomial, a polynomial
-        depending only on Adams operations of the leaves of the given expression Tree.
+        depending only on Adams operations of the leaves of the given expression tree.
 
         Returns:
         --------
         sp.Expr
             A polynomial of Adams operators equivalent to this expression.
         """
-        operands: set[Operand] = self.free_symbols
+        operands: Set[Operand] = self.free_symbols
         max_adams_degree = self.get_max_adams_degree()
         return self._to_adams(
             operands, max_adams_degree=max_adams_degree, as_symbol=as_symbol
@@ -77,19 +77,21 @@ class LambdaRingExpr(sp.Expr):
     def to_lambda(self, as_symbol: bool = False, *, optimize: bool = True) -> sp.Expr:
         """
         Converts this expression into an equivalent lambda polynomial, a polynomial
-        depending only on lambda operations of the leaves of the given expression Tree.
+        depending only on lambda operations of the leaves of the given expression tree.
 
         Args:
         -----
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         optimize : bool, optional
-            If True, optimizations are applied during the conversion.
+            If True, optimizations are applied during the conversion. Defaults to True.
 
         Returns:
         --------
         sp.Expr
             A polynomial of Lambda operators equivalent to this expression.
         """
-        operands: set[Operand] = self.free_symbols
+        operands: Set[Operand] = self.free_symbols
         max_adams_degree = self.get_max_adams_degree()
 
         if optimize:
@@ -112,7 +114,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def sigma(self, degree: int) -> sp.Expr:
         """
-        Applies the sigma operation of order n to this expression.
+        Applies the sigma operation of a given degree to this expression.
 
         Args:
         -----
@@ -131,7 +133,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def lambda_(self, degree: int) -> sp.Expr:
         """
-        Applies the lambda operation of order n to this expression.
+        Applies the lambda operation of a given degree to this expression.
 
         Args:
         -----
@@ -155,7 +157,7 @@ class LambdaRingExpr(sp.Expr):
     @typechecked
     def adams(self, degree: int) -> sp.Expr:
         """
-        Applies the Adams operation of order n to this expression.
+        Applies the Adams operation of a given degree to this expression.
 
         Args:
         -----
@@ -177,15 +179,19 @@ class LambdaRingExpr(sp.Expr):
         return Adams(degree, self)
 
     def _to_adams(
-        self, operands: set[Operand], max_adams_degree: int, as_symbol: bool = False
+        self, operands: Set[Operand], max_adams_degree: int, as_symbol: bool = False
     ) -> sp.Expr:
         """
         Converts this expression subtree into an equivalent Adams polynomial.
 
         Args:
         -----
-        operands : set[Operand]
+        operands : Set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
 
         Returns:
         --------
@@ -201,24 +207,28 @@ class LambdaRingExpr(sp.Expr):
 
     def _to_adams_lambda(
         self,
-        operands: set[Operand],
+        operands: Set[Operand],
         max_adams_degree: int,
         as_symbol: bool = False,
         adams_degree: int = 1,
     ) -> sp.Expr:
         """
-        Converts this expression subtree into an equivalent Adams polynomial, with optimizations for lambda conversion,
-        converting only lambda operations into Adams polynomials if needed and letting subexpressions which are already
-        lambda polynomials unnafected if no adams, lambda or sigma operation acts on them.
+        Converts this expression subtree into an equivalent Adams polynomial with optimizations for lambda conversion.
+        It converts only lambda operations into Adams polynomials if needed and leaves subexpressions that are
+        already lambda polynomials unaffected if no Adams, lambda, or sigma operation acts on them.
 
         This method is used when the `optimize` flag is set to True in the `to_lambda` method.
 
         Args:
         -----
-        operands : set[Operand]
+        operands : Set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         adams_degree : int, optional
-            Sum of the degree of all Adams operators higher than this node in its branch.
+            Sum of the degrees of all Adams operators higher than this node in its branch. Defaults to 1.
 
         Returns:
         --------

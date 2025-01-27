@@ -5,7 +5,6 @@ from ..lambda_ring_context import LambdaRingContext
 from ..operand.operand import Operand
 from ..lambda_ring_expr import LambdaRingExpr
 
-import sympy as sp
 from sympy.printing.str import StrPrinter
 
 
@@ -102,10 +101,10 @@ class Sigma(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand]) -> sp.Expr:
+    _to_adams(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False) -> sp.Expr:
         Converts the sigma subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False, adams_degree: int = 1) -> sp.Expr:
         Converts the sigma subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
@@ -166,6 +165,10 @@ class Sigma(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
 
         Returns:
         --------
@@ -214,9 +217,12 @@ class Sigma(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         adams_degree : int, optional
-            The sum of the degree of all Adams operators higher than this node in the expression tree,
-            default is 1.
+            The cumulative Adams degree higher than this node in the expression tree. Defaults to 1.
 
         Returns:
         --------
@@ -286,10 +292,10 @@ class Lambda_(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand]) -> sp.Expr:
+    _to_adams(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False) -> sp.Expr:
         Converts the lambda subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False, adams_degree: int = 1) -> sp.Expr:
         Converts the lambda subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
@@ -350,6 +356,10 @@ class Lambda_(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
 
         Returns:
         --------
@@ -398,9 +408,13 @@ class Lambda_(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         adams_degree : int, optional
-            The sum of the degree of all Adams operators higher than this node in the expression tree,
-            default is 1.
+            The sum of the degree of all Adams operators higher than this node in the expression tree.
+            Defaults to 1.
 
         Returns:
         --------
@@ -464,10 +478,10 @@ class Adams(RingOperator):
         Computes the maximum sigma or lambda degree needed to create a Grothendieck context
         for the expression tree.
 
-    _to_adams(operands: set[Operand]) -> sp.Expr:
+    _to_adams(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False) -> sp.Expr:
         Converts the Adams subtree into an equivalent Adams polynomial.
 
-    _to_adams_lambda(operands: set[Operand], adams_degree: int = 1) -> sp.Expr:
+    _to_adams_lambda(operands: set[Operand], max_adams_degree: int, as_symbol: bool = False, adams_degree: int = 1) -> sp.Expr:
         Converts the Adams subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
@@ -527,6 +541,10 @@ class Adams(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
 
         Returns:
         --------
@@ -567,9 +585,13 @@ class Adams(RingOperator):
         -----
         operands : set[Operand]
             The set of all operands in the expression tree.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            Whether to represent the Adams operators as symbols. Defaults to False.
         adams_degree : int, optional
-            The sum of the degree of all Adams operators higher than this node in the expression tree,
-            default is 1.
+            The sum of the degree of all Adams operators higher than this node in the expression tree.
+            Defaults to 1.
 
         Returns:
         --------
@@ -603,6 +625,11 @@ def to_adams(self: sp.Expr, as_symbol: bool = False) -> sp.Expr:
     The Adams polynomial represents the structure of the current expression in the context of
     Grothendieck rings.
 
+    Args:
+    -----
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
+
     Returns:
     --------
     sp.Expr
@@ -628,6 +655,8 @@ def to_lambda(
 
     Args:
     -----
+    as_symbol : bool, optional
+        Whether to represent the Adams operators as symbols. Defaults to False.
     optimize : bool, optional, default=True
         Whether to optimize the conversion to lambda. If True, the conversion uses an optimized
         pathway by converting Adams operators directly to lambda operators.

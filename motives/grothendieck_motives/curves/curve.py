@@ -1,7 +1,7 @@
 from typeguard import typechecked
 from typing import TypeVar
 
-Jacobian = TypeVar("Jacobian")
+Jacobian = TypeVar("Jacobian")  # Define Jacobian as a TypeVar for type hinting
 
 import sympy as sp
 from sympy.polys.rings import PolyRing
@@ -21,11 +21,11 @@ from .curvechow import CurveChow
 class Curve(Motive, sp.AtomicExpr):
     """
     Represents the motivic class of an abstract smooth complex algebraic curve
-    of genus g in the an expression tree in the Grothendieck ring of varieties or Chow motives
-    (or any extension of completion of them).
+    of genus `g` in an expression tree within the Grothendieck ring of varieties or Chow motives
+    (or any extension or completion).
 
-    The motive of a `Curve` X is represented through its Chow decomposition, as the  sum of a point,
-    the Lefschetz motive and, h^1(X), the `CurveChow` componente of the curve.
+    The motive of a `Curve` X is represented through its Chow decomposition, as the sum of a point,
+    the Lefschetz motive, and `h^1(X)`, the `CurveChow` component of the curve.
     It supports Adams and lambda operations, generating functions,
     and Jacobian calculations.
 
@@ -53,8 +53,8 @@ class Curve(Motive, sp.AtomicExpr):
         """
         Creates a new instance of the `Curve` class.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         name : sp.Symbol
             The name of the curve.
         g : int, optional
@@ -73,8 +73,8 @@ class Curve(Motive, sp.AtomicExpr):
         """
         Initializes a `Curve` instance.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         name : str
             The name of the curve.
         g : int, optional
@@ -99,7 +99,7 @@ class Curve(Motive, sp.AtomicExpr):
         Returns:
         --------
         str
-            A string representation in the form of "C{g}_{name}".
+            A string representation in the form "C{g}_{name}".
         """
         return f"C{self.g}_{self.name}"
 
@@ -120,14 +120,14 @@ class Curve(Motive, sp.AtomicExpr):
 
         Computes the Lambda variables by applying the convolution formula for the Lambda of a sum.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         n : int
             The maximum degree of Lambda needed.
         """
         self.curve_chow._generate_lambda_vars(n)
 
-        if len(self._lambda_vars_pol) == 0:
+        if not self._lambda_vars_pol:
             self._lambda_vars_pol = [self._ring.one]
 
         for i in range(len(self._lambda_vars_pol), n + 1):
@@ -148,8 +148,8 @@ class Curve(Motive, sp.AtomicExpr):
         """
         Returns the curve with an Adams operation applied to it.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         i : int
             The degree of the Adams operator.
         as_symbol : bool, optional
@@ -167,12 +167,12 @@ class Curve(Motive, sp.AtomicExpr):
             + self.point.get_adams_var(i, as_symbol)
         )
 
-    def get_lambda_var(self, i: int, as_symbol: False) -> sp.Expr:
+    def get_lambda_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
         """
         Returns the curve with a Lambda operation applied to it.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         i : int
             The degree of the Lambda operator.
         as_symbol : bool, optional
@@ -203,9 +203,9 @@ class Curve(Motive, sp.AtomicExpr):
         """
         Computes the generating function of the CurveChow motive of the curve.
 
-        Args:
-        -----
-        t : int or sp.Expr
+        Parameters:
+        -----------
+        t : int | sp.Expr
             The variable to use in the generating function.
 
         Returns:
@@ -234,9 +234,9 @@ class Curve(Motive, sp.AtomicExpr):
         """
         Computes the generating function of the curve.
 
-        Args:
-        -----
-        t : int or sp.Expr
+        Parameters:
+        -----------
+        t : int | sp.Expr
             The variable to use in the generating function.
 
         Returns:
@@ -254,17 +254,26 @@ class Curve(Motive, sp.AtomicExpr):
 
         Raises an exception, as curves should be decomposed into their components.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         degree : int
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which to apply the Adams operator.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Adams operators as symbols.
 
         Raises:
         -------
         Exception
             Always raised as curves should not be directly used in the expression.
+
+        Returns:
+        --------
+        sp.Expr
+            Never returns normally as it always raises an exception.
         """
         raise Exception(
             f"There is a curve in the expression {ph}. "
@@ -280,10 +289,14 @@ class Curve(Motive, sp.AtomicExpr):
         This method is called during the `to_lambda` process to replace Adams variables
         that appear after converting the expression tree to an Adams polynomial.
 
-        Args:
-        -----
+        Parameters:
+        -----------
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Lambda operators as symbols.
 
         Returns:
         --------

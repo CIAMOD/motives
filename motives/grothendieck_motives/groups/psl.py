@@ -3,24 +3,22 @@ from .general_groups import A
 
 class PSL(A):
     """
-    TODO docs
+    Represents the Projective Special Linear group PSL(n).
+
+    The PSL(n) group is defined as the quotient of the Special Linear group SL(n) by its center.
     """
 
-    def __new__(cls, n: int, *args, **kwargs):
+    def __new__(cls, n: int) -> "PSL":
         """
         Creates a new instance of the PSL class with the specified dimension n.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n : int
-            The dimension of the symplectic group PSL(n).
-        *args : tuple
-            Additional arguments.
-        **kwargs : dict
-            Additional keyword arguments.
+            The dimension of the Projective Special Linear group PSL(n).
 
-        Returns:
-        --------
+        Returns
+        -------
         PSL
             A new instance of the PSL class.
         """
@@ -32,8 +30,8 @@ class PSL(A):
         """
         Returns a string representation of the PSL group.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             A string representation of the PSL group in the format 'PSL_n'.
         """
@@ -43,8 +41,8 @@ class PSL(A):
         """
         Returns a tuple containing the dimension n, used for hashing.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             A tuple containing the dimension n.
         """

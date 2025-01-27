@@ -116,6 +116,11 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which the Adams operator is applied.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            If True, returns the Adams variable as a SymPy Symbol. Otherwise, returns it as an
+            Adams object.
 
         Returns:
         --------
@@ -138,6 +143,11 @@ class Polynomial1Var(Object1Dim, sp.Symbol):
         -----
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            If True, the polynomial is a polynomial in SymPy symbols. Otherwise, the polynomial is a
+            polynomial in Adams objects.
 
         Returns:
         --------

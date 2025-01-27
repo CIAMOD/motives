@@ -1,4 +1,5 @@
 import sympy as sp
+from typing import Dict
 
 from ..motive import Motive
 from ..lefschetz import Lefschetz
@@ -15,12 +16,12 @@ class Jacobian(Motive, sp.AtomicExpr):
     The `Jacobian` is a motive associated with a `Curve` object. It supports Adams and Lambda operations,
     generating functions, and interacts with other motives like the CurveChow.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     curve : Curve
         The curve for which this Jacobian is defined.
     chow : CurveChow
-        The Chow of the curve.
+        The Chow motive of the curve.
     g : int
         The genus of the curve.
     """
@@ -29,13 +30,13 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Creates a new instance of the `Jacobian` class.
 
-        Args:
-        -----
+        Parameters
+        ----------
         curve : Curve
             The curve for which to create the Jacobian.
 
-        Returns:
-        --------
+        Returns
+        -------
         Jacobian
             A new instance of the `Jacobian` class.
         """
@@ -47,8 +48,8 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Initializes a `Jacobian` instance.
 
-        Args:
-        -----
+        Parameters
+        ----------
         curve : Curve
             The curve for which this Jacobian is defined.
         """
@@ -56,16 +57,16 @@ class Jacobian(Motive, sp.AtomicExpr):
         self.chow: CurveChow = curve.curve_chow
         self.g: int = curve.g
 
-        self._adams_vars: dict[int, sp.Expr] = {}
-        self._lambda_vars: dict[int, sp.Expr] = {}
+        self._adams_vars: Dict[int, sp.Expr] = {}
+        self._lambda_vars: Dict[int, sp.Expr] = {}
 
         l = Lefschetz()
         self._et_repr: sp.Expr = sp.Add(
             *[
                 (
-                    self.chow.lambda_(i)
+                    self.chow.get_lambda_var(i)
                     if i <= self.g
-                    else self.chow.lambda_(2 * self.g - i) * l ** (i - self.g)
+                    else self.chow.get_lambda_var(2 * self.g - i) * l ** (i - self.g)
                 )
                 for i in range(2 * self.g + 1)
             ]
@@ -75,8 +76,8 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the string representation of the Jacobian.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             A string representation in the form of "Jacobian_{curve}".
         """
@@ -86,8 +87,8 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the hashable content of the Jacobian.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             A tuple containing the curve.
         """
@@ -97,8 +98,8 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the maximum degree of the Adams operator for this Jacobian.
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             The maximum degree of the Adams operator.
         """
@@ -108,7 +109,7 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the Jacobian with an Adams operation applied to it.
 
-        Args:
+        Parameters:
         -----
         i : int
             The degree of the Adams operator.
@@ -140,7 +141,7 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the Jacobian with a Lambda operation applied to it.
 
-        Args:
+        Parameters:
         -----
         i : int
             The degree of the Lambda operator.
@@ -171,9 +172,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Returns the set of free symbols in the Jacobian.
 
-        Returns:
-        --------
-        set[sp.Symbol]
+        Returns
+        -------
+        set of sp.Symbol
             The set of free symbols in the Jacobian.
         """
         return {self.chow, Lefschetz()}
@@ -184,18 +185,19 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Applies the Adams operator to any instances of this Jacobian in the expression.
 
-        This method raises an exception because Jacobians should not appear directly
-        in the expression. Instead, they should be decomposed into their components.
-
-        Args:
-        -----
+        Parameters
+        ----------
         degree : int
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which to apply the Adams operator.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Adams operators as symbols.
 
-        Raises:
-        -------
+        Raises
+        ------
         Exception
             Always raised as Jacobians should be decomposed into their components.
         """
@@ -210,18 +212,17 @@ class Jacobian(Motive, sp.AtomicExpr):
         """
         Substitutes Adams variables in the polynomial with equivalent Lambda polynomials.
 
-        Args:
-        -----
+        Parameters
+        ----------
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
+        max_adams_degree : int
+            The maximum degree of Adams operators in the expression.
+        as_symbol : bool, optional
+            If True, represents Lambda operators as symbols.
 
-        Returns:
-        --------
-        sp.Expr
-            The polynomial with Adams variables substituted by Lambda polynomials.
-
-        Raises:
-        -------
+        Raises
+        ------
         Exception
             Always raised as Jacobians should be decomposed into their components.
         """

@@ -132,6 +132,8 @@ class Free(Operand, sp.Symbol):
             The degree of the Adams operator to apply.
         ph : sp.Expr
             The polynomial in which to apply the Adams operator.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
         as_symbol : bool, optional
             If True, ph is a polynomial in SymPy symbols. Otherwise, ph is a polynomial in
             Adams_ objects.
@@ -163,6 +165,11 @@ class Free(Operand, sp.Symbol):
         -----
         ph : sp.Expr
             The polynomial in which to substitute the Adams variables.
+        max_adams_degree : int
+            The maximum Adams degree in the expression.
+        as_symbol : bool, optional
+            If True, ph is a polynomial in SymPy symbols. Otherwise, ph is a polynomial in
+            Adams_ objects.
 
         Returns:
         --------

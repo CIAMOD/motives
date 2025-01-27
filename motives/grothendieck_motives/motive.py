@@ -9,7 +9,7 @@ class Motive(Operand):
     Chow motives or in any extension or completion of such rings begin considered.
     """
 
-    def Sym(self,n:int) -> sp.Expr:
+    def Sym(self, n: int) -> sp.Expr:
         """
         Computes the n-th symmetric product of the motive.
 
@@ -19,9 +19,8 @@ class Motive(Operand):
             Expression representing the n-th symmetric product of the motive.
         """
         return self.lambda_(n)
-    
 
-    def Alt(self,n:int) -> sp.Expr:
+    def Alt(self, n: int) -> sp.Expr:
         """
         Computes the n-th alternating product of the motive.
 
