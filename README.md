@@ -1,4 +1,4 @@
-# Motives 0.2.0
+# Motives 0.3.1
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/aa6f0c16-2ae5-4d86-92f7-86d47ac6596f" />
@@ -128,3 +128,4 @@ Special thanks to everyone who contributed to the project:
 - [Sánchez '14] Jonathan S´anchez. Motives of moduli spaces of pairs and applications. _PhD thesis, Universidad Complutense de Madrid_, Madrid, 2014.
 - [Sanchez, Alfaya and Pizarroso '24] Daniel Sanchez, David Alfaya and Jaime Pizarroso. Motives meet SymPy: studying λ-ring expressions in Python. _arXiv:2501.00563_, 2025.
 - [Mozgovoy '12] Sergey Mozgovoy. Solutions of the motivic ADHM recursion formula. _Int. Math. Res. Not. IMRN_, 2012(18):4218–4244, 2012.
+- [Chuang, Diaconescu, Pan 2011] CHUANG, Wu-yen; DIACONESCU, Duiliu-Emanuel; PAN, Guang. Wallcrossing and cohomology of the moduli space of Hitchin pairs. arXiv preprint arXiv:1004.4195, 2010.

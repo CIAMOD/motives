@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "motives"
-version = "0.3.0"
+version = "0.3.1"
 description = "Software package that allows efficient manipulation and comparison of Grothendieck motives in lambda-rings."
 authors = ["Daniel Sánchez Sánchez <danielsanchezs1905@gmail.com>", "David Alfaya Sánchez <dalfaya@icai.comillas.edu>", "Jaime Pizarroso <jpizarroso@comillas.edu>"]
 readme = "README.md"
