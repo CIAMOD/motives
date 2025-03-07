@@ -49,13 +49,16 @@ class Curve(Motive, sp.AtomicExpr):
         A list storing the polynomial representations of Lambda variables.
     """
 
-    def __new__(cls, name: sp.Symbol, g: int = 1, *args, **kwargs):
+    is_commutative = True
+    is_real = True
+
+    def __new__(cls, name: str, g: int = 1, *args, **kwargs):
         """
         Creates a new instance of the `Curve` class.
 
         Parameters:
         -----------
-        name : sp.Symbol
+        name : str
             The name of the curve.
         g : int, optional
             The genus of the curve, default is 1.
@@ -66,7 +69,6 @@ class Curve(Motive, sp.AtomicExpr):
             A new instance of the `Curve` class.
         """
         new_curve = sp.AtomicExpr.__new__(cls)
-        new_curve._assumptions["commutative"] = True
         return new_curve
 
     def __init__(self, name: str, g: int = 1, *args, **kwargs) -> None:
@@ -101,7 +103,7 @@ class Curve(Motive, sp.AtomicExpr):
         str
             A string representation in the form "C{g}_{name}".
         """
-        return f"C{self.g}_{self.name}"
+        return self.name
 
     def _hashable_content(self) -> tuple:
         """

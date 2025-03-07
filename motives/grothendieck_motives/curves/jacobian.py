@@ -26,6 +26,9 @@ class Jacobian(Motive, sp.AtomicExpr):
         The genus of the curve.
     """
 
+    is_commutative = True
+    is_real = True
+
     def __new__(cls, curve: Curve, *args, **kwargs):
         """
         Creates a new instance of the `Jacobian` class.
@@ -41,7 +44,6 @@ class Jacobian(Motive, sp.AtomicExpr):
             A new instance of the `Jacobian` class.
         """
         new_jacobian = sp.AtomicExpr.__new__(cls)
-        new_jacobian._assumptions["commutative"] = True
         return new_jacobian
 
     def __init__(self, curve: Curve, *args, **kwargs) -> None:

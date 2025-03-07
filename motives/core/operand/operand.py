@@ -34,6 +34,22 @@ class Operand(LambdaRingExpr):
         """
         return self.__repr__()
 
+    def _latex(self, printer: StrPrinter) -> str:
+        """
+        Provides a LaTeX representation of the operand for SymPy printing.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The SymPy printer used for formatting the LaTeX representation.
+
+        Returns:
+        --------
+        str
+            The LaTeX representation of the operand.
+        """
+        return self.__repr__()
+
     def get_max_adams_degree(self) -> int:
         """
         Computes the maximum Adams degree of this operand.

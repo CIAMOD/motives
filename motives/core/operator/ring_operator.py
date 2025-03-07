@@ -33,6 +33,19 @@ class RingOperator(LambdaRingExpr, sp.Function):
 
     args: tuple[sp.Integer, LambdaRingExpr]
 
+    def _eval_is_real(self) -> bool:
+        """
+        Returns whether the ring operator is a real number.
+
+        The ring operator is considered real if the child expression is real.
+
+        Returns:
+        --------
+        bool
+            Whether the ring operator is a real number.
+        """
+        return self.child.is_real
+
     @property
     def degree(self) -> int:
         """
@@ -135,6 +148,22 @@ class Sigma(RingOperator):
             The string representation of the sigma operator in the form "σ{degree}(child)".
         """
         return f"σ{self.degree}({printer._print(self.child)})"
+
+    def _latex(self, printer: StrPrinter) -> str:
+        """
+        Returns the LaTeX representation of the ring operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The printer used to generate the LaTeX representation.
+
+        Returns:
+        --------
+        str
+            The LaTeX representation of the ring operator.
+        """
+        return f"σ^{{{self.degree}}}({printer._print(self.child)})"
 
     def get_max_groth_degree(self) -> int:
         """
@@ -299,6 +328,22 @@ class Lambda_(RingOperator):
         Converts the lambda subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
+
+    def _latex(self, printer: StrPrinter) -> str:
+        """
+        Returns the LaTeX representation of the ring operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The printer used to generate the LaTeX representation.
+
+        Returns:
+        --------
+        str
+            The LaTeX representation of the ring operator.
+        """
+        return f"λ^{{{self.degree}}}({printer._print(self.child)})"
 
     def __repr__(self) -> str:
         """
@@ -485,6 +530,22 @@ class Adams(RingOperator):
         Converts the Adams subtree into an equivalent Adams polynomial, optimized when called
         from `to_lambda`.
     """
+
+    def _latex(self, printer: StrPrinter) -> str:
+        """
+        Returns the LaTeX representation of the ring operator.
+
+        Args:
+        -----
+        printer : StrPrinter
+            The printer used to generate the LaTeX representation.
+
+        Returns:
+        --------
+        str
+            The LaTeX representation of the ring operator.
+        """
+        return f"ψ^{{{self.degree}}}({printer._print(self.child)})"
 
     def __repr__(self) -> str:
         """

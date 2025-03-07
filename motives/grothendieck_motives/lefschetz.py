@@ -15,6 +15,8 @@ class Lefschetz(Polynomial1Var, metaclass=SingletonMeta):
     of the Lefschetz motive exists throughout the program.
     """
 
+    is_real = True
+
     def __new__(cls) -> Lefschetz:
         """
         Creates and returns the singleton instance of the Lefschetz motive.

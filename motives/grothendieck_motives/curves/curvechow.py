@@ -45,6 +45,9 @@ class CurveChow(Motive, sp.AtomicExpr):
         The list of expressions for converting Lambda to Adams variables.
     """
 
+    is_commutative = True
+    is_real = True
+
     def __new__(cls, name: str, g: int = 1, *args, **kwargs):
         """
         Creates a new instance of `CurveChow`.
