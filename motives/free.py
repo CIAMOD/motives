@@ -113,6 +113,10 @@ class Free(Operand, sp.Symbol):
         sp.Expr
             The lambda variable for degree `i`.
         """
+        if i == 0:
+            return 1
+        if i == 1:
+            return self
         if as_symbol is False:
             return self.lambda_(i)
         return sp.Symbol(f"λ{i}({self})")
