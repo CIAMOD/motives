@@ -1,4 +1,4 @@
-# Motives 0.3.2
+# Motives 0.3.3
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/aa6f0c16-2ae5-4d86-92f7-86d47ac6596f" />
