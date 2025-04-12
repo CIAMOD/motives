@@ -126,7 +126,7 @@ class CurveChow(Motive, sp.AtomicExpr):
         str
             A string representation in the form of "h{g}_{name}".
         """
-        return f"h{self.g}_{self.name}"
+        return f"h1_{self.name}"
 
     def _hashable_content(self) -> tuple:
         """

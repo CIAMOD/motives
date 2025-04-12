@@ -74,7 +74,7 @@ class BunG(Motive, sp.AtomicExpr):
         str
             A string representation in the form of "BunG_{curve}_{group}".
         """
-        return f"BunG_{self.curve}_{self.group}"
+        return f"Bun{self.group}_{self.curve}"
 
     def _hashable_content(self) -> tuple:
         """

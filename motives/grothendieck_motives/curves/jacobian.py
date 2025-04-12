@@ -83,7 +83,7 @@ class Jacobian(Motive, sp.AtomicExpr):
         str
             A string representation in the form of "Jacobian_{curve}".
         """
-        return f"Jacobian_{self.curve}"
+        return f"Jac_{self.curve}"
 
     def _hashable_content(self) -> tuple:
         """
