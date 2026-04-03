@@ -2,22 +2,19 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path.cwd().parent))
 
-import sympy as sp
-import pickle
 import os
+import pickle
 from tqdm import tqdm
+import sympy as sp
 
 from motives.core.lambda_ring_expr import LambdaRingExpr
 from motives.grothendieck_motives import Lefschetz
-from motives.grothendieck_motives.curves import Curve, CurveChow, Jacobian
+from motives.grothendieck_motives.curves import Curve, Jacobian
 from motives.grothendieck_motives.moduli.scheme import VectorBundleModuli
 
 
 L = Lefschetz()
-EXPR_DIR = "expressions"
-
-
-# non symbolic h1(X) means motive library's standard h1(X), as opposed to sym_lambda_chow, so as to have distinct λ powers be distinct free symbols
+EXPR_DIR = "developing/expressions"
 
 
 def compare(m1: LambdaRingExpr, m2: LambdaRingExpr) -> bool:
@@ -39,26 +36,6 @@ def sym_lambda(X: Curve, k: int) -> sp.Symbol:
         return 1
     return sp.Symbol(f"λ{k}({X.name})")
 
-def sym_lambda_chow(H: CurveChow, k: int) -> sp.Symbol:
-    """
-    returns λk(h1(X)) symbolically
-    """
-    g = H.g
-    if k < 0 or k > 2*g:
-        return 0
-    elif k == 0:
-        return 1
-    elif k <= g:
-        return sp.Symbol(f"λ{k}(h1_{H.name})")
-    return L**(k-g)*sp.Symbol(f"λ{2*g-k}(h1_{H.name})")  #no debería entrar aquí en lo que voy a usar
-
-def sym_lambda_in_chow(X: Curve, k: int) -> LambdaRingExpr:
-    """
-    returns λk(X) in terms of h1(X) symbolically
-    """
-    H = X.curve_chow
-    return X.get_lambda_var(k).subs({H.get_lambda_var(i): sym_lambda_chow(H, i) for i in range(1, H.g+1)})
-
 def sym_lambda_chow_in_curve(X: Curve, k: int) -> LambdaRingExpr:
     """
     returns λk(h1(X)) in terms of X symbolically
@@ -76,65 +53,72 @@ def sym_lambda_monomial(X: Curve, exps: list[int]) -> LambdaRingExpr:
 
 def sym_lambda_in_chow_monomial(X: Curve, exps: list[int]) -> LambdaRingExpr:
     """
-    returns monomial in X in terms of h1(X) symbolically
+    returns monomial in X in terms of h1(X)
     """
-    return sp.prod(sym_lambda_in_chow(X, k) for k in exps)
+    return sp.prod(X.get_lambda_var(k) for k in exps)
 
-def subs_curve(motive: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
+def subs_chow_into_curve(expr: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     """
-    returns X into polynomial in h1(X) (input not symbolic in h1(X))
-    """
-    H = X.curve_chow
-    subs = {H.get_lambda_var(k): sym_lambda_chow(X, k) for k in range(2*X.g+1)}
-    return motive.subs(subs).expand()
-
-def subs_chow(motive: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
-    """
-    returns h1(X) into polynomial in X (output not symbolic in h1(X))
+    returns expr in terms of h1(X)
     """
     subs = {sym_lambda(X, k): X.get_lambda_var(k) for k in range(1, 2*X.g+1)}
-    return motive.subs(subs).expand()
+    return expr.subs(subs).expand()
 
-def save_expr(expr: LambdaRingExpr, file_name: str) -> None:
+def symbolize_chow(expr: LambdaRingExpr, X: Curve):
     """
-    Saves expr to a file, substituting Lefschetz by string symbol due to class issue
+    returns expression with symbolyzed h1(X)
     """
+    H = X.curve_chow
+    return expr.subs({H.get_lambda_var(k): sp.Symbol(f"λ{k}(h1_{H.name})") for k in range(1, X.g+1)})
+
+def desymbolize_chow(expr: LambdaRingExpr, X: Curve):
+    """
+    returns expression with desymbolyzed h1(X)
+    """
+    H = X.curve_chow
+    return expr.subs({sp.Symbol(f"λ{k}(h1_{H.name})"): H.get_lambda_var(k) for k in range(1, X.g+1)})
+
+def save_expr(expr: LambdaRingExpr, X: Curve, file_name: str) -> None:
+    """
+    saves expr to a file, substituting Lefschetz by string symbol due to class issue
+    """
+    sym_expr = symbolize_chow(expr, X).subs(L, sp.Symbol("L"))
     with open(f"{EXPR_DIR}/{file_name}.pkl", "wb") as file:
-        pickle.dump(expr.subs(L, sp.Symbol("L")), file)
+        pickle.dump(sym_expr, file)
 
-def load_expr(file_name: str) -> LambdaRingExpr:
+def load_expr(X: Curve, file_name: str) -> LambdaRingExpr:
     """
-    Saves expr to a file, substituting Lefschetz by string symbol due to class issue
+    loads expression
     """
     with open(f"{EXPR_DIR}/{file_name}.pkl", "rb") as file:
-        expr = pickle.load(file)
-    return expr.subs(sp.Symbol("L"), L)
+        sym_expr = pickle.load(file)
+    expr = desymbolize_chow(sym_expr, X).subs(sp.Symbol("L"), L)
+    return expr
 
 def motive_generic(curve: Curve, r: int, d: int) -> LambdaRingExpr:
     """
-    returns the generic epxression of M(r, g), where g is the genus of curve, in terms of h1(X) non symbolically
+    returns the generic epxression of M(r, g), where g is the genus of curve, in terms of h1(X) 
     """
     vector_bundle = VectorBundleModuli(curve, r, d)
     return vector_bundle._compute_motive_rkr(r, d)
 
-def motive_generic_clean(X: Curve, r: int, d: int) -> LambdaRingExpr:
+def motive_generic_divided(X: Curve, r: int, d: int) -> LambdaRingExpr:
     """
-    returns the generic epxression of M(r, g) divided by Jacobian(X), where g is the genus of X, in terms of h1(X) symbolically 
+    returns the generic epxression of M(r, g) divided by Jacobian(X), where g is the genus of X, in terms of h1(X)
     """
-    H = X.curve_chow
     J = Jacobian(X).get_lambda_var(1)
-    return (motive_generic(X, r, d)/J).expand().simplify().subs({H.get_lambda_var(i): sym_lambda_chow(H, i) for i in range(1, H.g+1)})
+    return (motive_generic(X, r, d)/J).expand().simplify()
 
-def get_motive_h1(X: Curve, r: int, d: int) -> LambdaRingExpr:
+def get_motive_chow(X: Curve, r: int, d: int) -> LambdaRingExpr:
     """
-    returns the generic epxression of M(r, g) divided by Jacobian(X), where g is the genus of X, in terms of h1(X) symbolically, with cache
+    returns the generic epxression of M(r, g) divided by Jacobian(X), where g is the genus of X, in terms of h1(X)
     """
     file_name = f"{r}_{X.g}_h1"
     if os.path.exists(f"{EXPR_DIR}/{file_name}.pkl"):
         print("loaded from cache")
-        return load_expr(file_name)
+        return load_expr(X, file_name)
     print("calculating from scratch...")
-    return motive_generic_clean(X, r, d)
+    return motive_generic_divided(X, r, d)
 
 def gl_2(X: Curve) -> LambdaRingExpr:
     """
@@ -154,7 +138,7 @@ def gl_3(X: Curve) -> LambdaRingExpr:
 
 def gl(X: Curve, r: int) -> LambdaRingExpr:
     """
-    returns positive polynomial expression of M(r, g) in X, where g is the genus of curve and r∈{2,3}, symbolically
+    returns positive polynomial expression of M(r, g) in X, where g is the genus of curve and r ∈ {2,3}, symbolically
     """
     if r == 2:
         return gl_2(X)
@@ -194,7 +178,7 @@ def get_small_monomials(X: Curve, r: int) -> dict[int, list[tuple[LambdaRingExpr
     returns high degree monomials of X belonging to conjectured expression generalizing Gomez & Lee
     """
     g = X.g
-    return {k: [(sym_lambda_monomial(X, partition), sym_lambda_in_chow_monomial(X, partition)) for partition in get_partitions(k, min_first=g+1)] for k in range(g+1, (r-1)*(g-1)+1)}
+    return {k: [(sym_lambda_monomial(X, partition), sym_lambda_in_chow_monomial(X, partition)) for partition in get_partitions(k, min_first=g+1)] for k in range(g+1, ((r-1)*g-2)+1)}
 
 def get_coefficients(max_dim: int) -> list[LambdaRingExpr]:
     """
@@ -210,18 +194,18 @@ def find_motive_low(obj: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     """
     if any(term.could_extract_minus_sign() for term in obj.as_ordered_terms()):
         return None
-    v, coef = biggest_term(obj)
+    v, coef = biggest_term(symbolize_chow(obj, X))
     if all(i==0 for i in v):
         return coef
     monom_X = coef*sp.prod(sym_lambda(X, len(v)-k)**v[k] for k in range(len(v)))
-    monom_H = coef*sp.prod(sym_lambda_in_chow(X, len(v)-k)**v[k] for k in range(len(v)))
+    monom_H = coef*sp.prod(X.get_lambda_var(len(v)-k)**v[k] for k in range(len(v)))
     rest = (obj - monom_H).expand()
     rest_result = find_motive_low(rest, X)
     if rest_result != None:
         return monom_X + rest_result
     return None
 
-def find_motive_bfs(obj: LambdaRingExpr, X: Curve, coefs: list[LambdaRingExpr], monoms, n_rounds: int, max_dim: int=-1) -> list[LambdaRingExpr]: 
+def find_motives_bfs(obj: LambdaRingExpr, X: Curve, coefs: list[LambdaRingExpr], monoms, n_rounds: int, max_dim: int=-1) -> set[LambdaRingExpr]: 
     """
     returns all possible motivic decompositions given monomials (high degree) and coefficients
     """
@@ -242,3 +226,9 @@ def find_motive_bfs(obj: LambdaRingExpr, X: Curve, coefs: list[LambdaRingExpr], 
     return motives
 
 # hay un orden mas eficiente? Igual por dimension total con L incluido? probado y parece que no
+
+def get_terms(expr: LambdaRingExpr) -> tuple[tuple, LambdaRingExpr]:
+    lambdas = sorted(expr.free_symbols-{L}, key=lambda x: (len(x.name), x.name), reverse=True)
+    if len(lambdas) == 0:
+        return (0,), expr
+    return sp.Poly(expr, *lambdas).terms()
