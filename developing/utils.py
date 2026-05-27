@@ -232,3 +232,4 @@ def get_terms(expr: LambdaRingExpr) -> tuple[tuple, LambdaRingExpr]:
     if len(lambdas) == 0:
         return (0,), expr
     return sp.Poly(expr, *lambdas).terms()
+

@@ -83,9 +83,10 @@ def dfs(
 if __name__ == "__main__":
     
     d = 1
-    r = 4
-    g = 3
+    r = 2
+    g = 2
     X = Curve("X", g)
+    print(Jacobian(X))
     obj = get_motive_chow(X, r, d)
     monoms = get_small_monomials(X, r)
     monoms_list = [item for sublist in reversed(monoms.values()) for item in sublist]
