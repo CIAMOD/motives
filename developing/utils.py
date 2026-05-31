@@ -9,13 +9,28 @@ import sympy as sp
 
 from motives.core.lambda_ring_expr import LambdaRingExpr
 from motives.grothendieck_motives import Lefschetz
-from motives.grothendieck_motives.curves import Curve, Jacobian
+from motives.grothendieck_motives.curves import Curve, Jacobian, CurveChow
 from motives.grothendieck_motives.moduli.scheme import VectorBundleModuli
 
 
 L = Lefschetz()
 EXPR_DIR = "developing/expressions"
 
+def symbolize_chow(expr: LambdaRingExpr, X: Curve):
+    """
+    returns expression with symbolyzed h1(X)
+    """
+    H = X.curve_chow
+    subs1 = {H.get_lambda_var(k): sp.Symbol(f"λ{k}(h1_{H.name})") for k in range(2, X.g+1)}
+    subs2 = {H.get_lambda_var(1): sp.Symbol(f"λ{1}(h1_{H.name})")}
+    return expr.subs(subs1).subs(subs2)
+
+def desymbolize_chow(expr: LambdaRingExpr, X: Curve):
+    """
+    returns expression with desymbolyzed h1(X)
+    """
+    H = X.curve_chow
+    return expr.subs({sp.Symbol(f"λ{k}(h1_{H.name})"): H.get_lambda_var(k) for k in range(1, X.g+1)})
 
 def compare(m1: LambdaRingExpr, m2: LambdaRingExpr) -> bool:
     """
@@ -36,6 +51,23 @@ def sym_lambda(X: Curve, k: int) -> sp.Symbol:
         return 1
     return sp.Symbol(f"λ{k}({X.name})")
 
+def sym_lambda_in_chow(X: Curve, k: int) -> sp.Symbol:
+    """
+    returns λk(X) in terms of h1(X) symbolically
+    """
+    return symbolize_chow(X.get_lambda_var(k), X)
+
+def sym_lambda_chow_in_chow(X: Curve, k: int) -> sp.Symbol:
+    """
+    returns λk(h1(X)) in terms of h1(X) symbolically
+    """
+    if k <= X.g:
+        return symbolize_chow(X.curve_chow.get_lambda_var(k), X)
+    elif k <= 2*X.g:
+        i = k-X.g
+        return L**i*symbolize_chow(X.curve_chow.get_lambda_var(X.g-i), X)
+    return 0
+
 def sym_lambda_chow_in_curve(X: Curve, k: int) -> LambdaRingExpr:
     """
     returns λk(h1(X)) in terms of X symbolically
@@ -55,7 +87,7 @@ def sym_lambda_in_chow_monomial(X: Curve, exps: list[int]) -> LambdaRingExpr:
     """
     returns monomial in X in terms of h1(X)
     """
-    return sp.prod(X.get_lambda_var(k) for k in exps)
+    return sp.prod(sym_lambda_in_chow(X, k) for k in exps)
 
 def subs_chow_into_curve(expr: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     """
@@ -63,20 +95,6 @@ def subs_chow_into_curve(expr: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     """
     subs = {sym_lambda(X, k): X.get_lambda_var(k) for k in range(1, 2*X.g+1)}
     return expr.subs(subs).expand()
-
-def symbolize_chow(expr: LambdaRingExpr, X: Curve):
-    """
-    returns expression with symbolyzed h1(X)
-    """
-    H = X.curve_chow
-    return expr.subs({H.get_lambda_var(k): sp.Symbol(f"λ{k}(h1_{H.name})") for k in range(1, X.g+1)})
-
-def desymbolize_chow(expr: LambdaRingExpr, X: Curve):
-    """
-    returns expression with desymbolyzed h1(X)
-    """
-    H = X.curve_chow
-    return expr.subs({sp.Symbol(f"λ{k}(h1_{H.name})"): H.get_lambda_var(k) for k in range(1, X.g+1)})
 
 def save_expr(expr: LambdaRingExpr, X: Curve, file_name: str) -> None:
     """
@@ -233,3 +251,10 @@ def get_terms(expr: LambdaRingExpr) -> tuple[tuple, LambdaRingExpr]:
         return (0,), expr
     return sp.Poly(expr, *lambdas).terms()
 
+
+if __name__ == "__main__":
+    g = 3
+    k = 7
+    curve = Curve("X", g)
+    chow = curve.curve_chow
+    print(sym_lambda_chow_in_chow(curve, k))
