@@ -328,9 +328,10 @@ if __name__ == "__main__":
     g = 2
     finder = HodgeFinder(r, g)
     finder.m_hodge.draw_diamond()
-    # t1 = time()
-    # m = finder.find_motive()
-    # t2 = time()
-    # print(m)
-    # print(compare(subs_chow_into_curve(m, finder.curve), get_motive_chow(finder.curve, r, 1)))
-    # print(f"{t2-t1}s")
+
+
+    curve = finder.curve
+    k1, k2, k3 = 2, 2, 2
+    m = sym_lambda_in_chow(curve, k1) * sym_lambda_in_chow(curve, k2) * sym_lambda_in_chow(curve, k3)
+    hodge = HodgePoly.from_chow(m, curve)
+    hodge.draw_diamond()
