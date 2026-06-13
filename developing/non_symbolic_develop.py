@@ -185,7 +185,7 @@ class MotiveFinder:
         return self.ndfs(0, nobj)
     
     def get_motive_chow(self):
-        return get_motive_chow(self.X, self.r, self.d)
+        return symbolize_chow(get_motive_chow(self.X, self.r, self.d), self.X)
     
     def get_coefficients(self):
         return [L**i for i in range(25)][::-1]
@@ -349,6 +349,5 @@ if __name__ == "__main__":
     r = 4
     g = 2
     d = 1
-    finder = ModuliFinder(r,g,d)
-    m_chow = finder.get_motive_chow()
-    print(finder.find_motive(m_chow))
+    finder = MotiveFinder(r,g,d)
+    print(finder.find_motive(finder.get_motive_chow()))

@@ -20,6 +20,8 @@ def symbolize_chow(expr: LambdaRingExpr, X: Curve):
     """
     returns expression with symbolyzed h1(X)
     """
+    if type(expr) == int:
+        return expr
     H = X.curve_chow
     subs1 = {H.get_lambda_var(k): sp.Symbol(f"λ{k}(h1_{H.name})") for k in range(2, X.g+1)}
     subs2 = {H.get_lambda_var(1): sp.Symbol(f"λ{1}(h1_{H.name})")}
@@ -55,7 +57,8 @@ def sym_lambda_in_chow(X: Curve, k: int) -> sp.Symbol:
     """
     returns λk(X) in terms of h1(X) symbolically
     """
-    return symbolize_chow(X.get_lambda_var(k), X)
+    res = symbolize_chow(X.get_lambda_var(k), X)
+    return res
 
 def sym_lambda_chow_in_chow(X: Curve, k: int) -> sp.Symbol:
     """
@@ -93,7 +96,9 @@ def subs_chow_into_curve(expr: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     """
     returns expr in terms of h1(X)
     """
-    subs = {sym_lambda(X, k): X.get_lambda_var(k) for k in range(1, 2*X.g+1)}
+    if type(expr) == int:
+        return expr
+    subs = {sym_lambda(X, k): X.get_lambda_var(k) for k in range(1, 2*X.g+10)} #esto hay que hacerlo bien asap, la sustitucion debe llegar a grados altos, supongo que la cota debe ser algo dependiendo de r tambien
     return expr.subs(subs).expand()
 
 def save_expr(expr: LambdaRingExpr, X: Curve, file_name: str) -> None:
@@ -196,7 +201,7 @@ def get_small_monomials(X: Curve, r: int) -> dict[int, list[tuple[LambdaRingExpr
     returns high degree monomials of X belonging to conjectured expression generalizing Gomez & Lee
     """
     g = X.g
-    return {k: [(sym_lambda_monomial(X, partition), sym_lambda_in_chow_monomial(X, partition)) for partition in get_partitions(k, min_first=g+1)] for k in range(g+1, ((r-1)*g-2)+1)}
+    return {k: [(sym_lambda_monomial(X, partition), sym_lambda_in_chow_monomial(X, partition)) for partition in get_partitions(k, min_first=g+1)] for k in range(g+1, max(((r-1)*g-2), g)+1)}
 
 def get_coefficients(max_dim: int) -> list[LambdaRingExpr]:
     """
@@ -216,29 +221,29 @@ def find_motive_low(obj: LambdaRingExpr, X: Curve) -> LambdaRingExpr:
     if all(i==0 for i in v):
         return coef
     monom_X = coef*sp.prod(sym_lambda(X, len(v)-k)**v[k] for k in range(len(v)))
-    monom_H = coef*sp.prod(X.get_lambda_var(len(v)-k)**v[k] for k in range(len(v)))
+    monom_H = coef*sp.prod(sym_lambda_in_chow(X, len(v)-k)**v[k] for k in range(len(v)))
     rest = (obj - monom_H).expand()
     rest_result = find_motive_low(rest, X)
     if rest_result != None:
         return monom_X + rest_result
     return None
 
-def find_motives_bfs(obj: LambdaRingExpr, X: Curve, coefs: list[LambdaRingExpr], monoms, n_rounds: int, max_dim: int=-1) -> set[LambdaRingExpr]: 
+def find_motives_bfs(obj: LambdaRingExpr, X: Curve, coefs: list[LambdaRingExpr], monoms, n_rounds: int) -> set[LambdaRingExpr]: 
     """
     returns all possible motivic decompositions given monomials (high degree) and coefficients
     """
     candidates = {(obj, 0)}
     for degree in sorted(monoms.keys(), reverse=True):
-        highest_coef_degree = len(coefs) if max_dim == -1 else max(max_dim-degree+1, 0) # cut coefs (revisar?)
-        for monom_X, monom_H in tqdm(monoms[degree]):
-            for i in range(n_rounds):
-                # print(f"{degree} degree monomial, {i+1} round, {len(candidates)} candidates")
+        for monom_X_pure, monom_H_pure in monoms[degree]:
+            for _ in range(n_rounds):
                 new_candidates = set()
-                for candidate, big_part in candidates:
-                    for coef in coefs[:highest_coef_degree]:   # cut coefs 
-                        m = (candidate - coef*monom_H).expand()
+                for candidate, big_part in tqdm(candidates):
+                    for coef in coefs:   # cut coefs 
+                        monom_X = coef*monom_X_pure
+                        monom_H = coef*monom_H_pure
+                        m = (candidate - monom_H).expand()
                         if not any(term.could_extract_minus_sign() for term in m.as_ordered_terms()):
-                            new_candidates.add((m, big_part+coef*monom_X))    # revisar unicidad de motivos
+                            new_candidates.add((m, big_part+monom_X))    # revisar unicidad de motivos
                 candidates = candidates.union(new_candidates)
     motives = {(big_part + m).expand() for candidate, big_part in tqdm(candidates) if (m := find_motive_low(candidate, X)) is not None}
     return motives
@@ -253,8 +258,12 @@ def get_terms(expr: LambdaRingExpr) -> tuple[tuple, LambdaRingExpr]:
 
 
 if __name__ == "__main__":
+    r = 3
     g = 3
-    k = 7
-    curve = Curve("X", g)
-    chow = curve.curve_chow
-    print(sym_lambda_chow_in_chow(curve, k))
+    d = 1
+    X = Curve("X", g)
+    m = symbolize_chow(get_motive_chow(X, r, d), X)
+    coefs = get_coefficients((r**2-3)*g - (r**2+1))
+    monoms = get_small_monomials(X, r)
+    print(find_motives_bfs(m, X, coefs, monoms, 2))
+    

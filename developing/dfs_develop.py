@@ -87,7 +87,7 @@ if __name__ == "__main__":
     g = 2
     X = Curve("X", g)
     print(Jacobian(X))
-    obj = get_motive_chow(X, r, d)
+    obj = symbolize_chow(get_motive_chow(X, r, d), C)
     monoms = get_small_monomials(X, r)
     monoms_list = [item for sublist in reversed(monoms.values()) for item in sublist]
     coefs = get_coefficients((r**2-3)*g - (r**2+1))
