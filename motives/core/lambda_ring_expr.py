@@ -110,6 +110,29 @@ class LambdaRingExpr(sp.Expr):
             adams_pol = operand._subs_adams(adams_pol, max_adams_degree, as_symbol)
 
         return adams_pol
+    
+    def to_sigma(self, as_symbol: bool = False) -> sp.Expr:
+        """
+        Converts this expression into an equivalent sigma polynomial.
+
+        The conversion is done in two steps:
+            1. Convert the expression into an Adams polynomial.
+            2. Substitute Adams operations by their sigma polynomial expressions.
+        """
+        operands: Set[Operand] = self.free_symbols
+        max_adams_degree = self.get_max_adams_degree()
+
+        adams_pol = self._to_adams(
+            operands,max_adams_degree=max_adams_degree,as_symbol=as_symbol
+        )
+
+        if isinstance(adams_pol, (sp.Integer, int)):
+            return adams_pol
+
+        for operand in operands:
+            adams_pol = operand._subs_adams_sigma(adams_pol,max_adams_degree,as_symbol)
+
+        return adams_pol
 
     @typechecked
     def sigma(self, degree: int) -> sp.Expr:

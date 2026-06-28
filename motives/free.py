@@ -120,6 +120,18 @@ class Free(Operand, sp.Symbol):
         if as_symbol is False:
             return self.lambda_(i)
         return sp.Symbol(f"λ{i}({self})")
+    
+    def get_sigma_var(self, i: int, as_symbol: bool = False) -> sp.Expr:
+        """
+        Returns the sigma variable of this variable for a given degree i.
+        """
+        if i == 0:
+            return 1
+        if i == 1:
+            return self
+        if as_symbol is False:
+            return self.sigma(i)
+        return sp.Symbol(f"σ{i}({self})")
 
     def _apply_adams(
         self, degree: int, ph: sp.Expr, max_adams_degree: int, as_symbol: bool = False
@@ -197,4 +209,32 @@ class Free(Operand, sp.Symbol):
                 for i in range(1, len(lrc.lambda_vars))
             }
         )
+        return ph
+
+    def _subs_adams_sigma(
+        self,
+        ph: sp.Expr,
+        max_adams_degree: int,
+        as_symbol: bool = False,
+    ) -> sp.Expr:
+        """
+        Given a polynomial ph, substitutes all the appearances of Adams variables
+        of this variable by the corresponding polynomials in sigma operations.
+        """
+        lrc = LambdaRingContext()
+
+        ph = ph.xreplace(
+            {
+                self.get_adams_var(i, as_symbol=as_symbol): lrc.get_sigma_2_adams_pol(i)
+                for i in range(1, max_adams_degree + 1)
+            }
+        )
+
+        ph = ph.xreplace(
+            {
+                lrc.sigma_vars[i]: self.get_sigma_var(i, as_symbol=as_symbol)
+                for i in range(1, len(lrc.sigma_vars))
+            }
+        )
+
         return ph

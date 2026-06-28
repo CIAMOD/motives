@@ -16,6 +16,7 @@ from .ring_operator import (
     adams,
     to_adams,
     to_lambda,
+    to_sigma,
     Lambda_,
     Sigma,
     Adams,
@@ -41,18 +42,21 @@ sympy.core.power.Pow._to_adams_lambda = _to_adams_lambda_pow
 
 sympy.core.add.Add.to_adams = to_adams
 sympy.core.add.Add.to_lambda = to_lambda
+sympy.core.add.Add.to_sigma = to_sigma
 sympy.core.add.Add.sigma = sigma
 sympy.core.add.Add.lambda_ = lambda_
 sympy.core.add.Add.adams = adams
 
 sympy.core.mul.Mul.to_adams = to_adams
 sympy.core.mul.Mul.to_lambda = to_lambda
+sympy.core.mul.Mul.to_sigma = to_sigma
 sympy.core.mul.Mul.sigma = sigma
 sympy.core.mul.Mul.lambda_ = lambda_
 sympy.core.mul.Mul.adams = adams
 
 sympy.core.power.Pow.to_adams = to_adams
 sympy.core.power.Pow.to_lambda = to_lambda
+sympy.core.power.Pow.to_sigma = to_sigma
 sympy.core.power.Pow.sigma = sigma
 sympy.core.power.Pow.lambda_ = lambda_
 sympy.core.power.Pow.adams = adams
