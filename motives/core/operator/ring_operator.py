@@ -761,7 +761,7 @@ def to_sigma(self: sp.Expr, as_symbol: bool = False) -> sp.Expr:
             1. Convert the expression into an Adams polynomial.
             2. Substitute Adams operations by their sigma polynomial expressions.
         """
-        operands: Set[Operand] = self.free_symbols
+        operands: set[Operand] = self.free_symbols
         max_adams_degree = self.get_max_adams_degree()
 
         adams_pol = self._to_adams(
