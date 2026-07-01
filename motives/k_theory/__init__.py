@@ -8,7 +8,7 @@ from .scheme import Scheme, Curve
 from .vector_bundle import VectorBundle
 from .operations import to_wedge, to_sym, wedge, sym
 from .power_operations import Wedge, SymPower
-
+from .chern_character import chern_character
 
 LambdaRingExpr.to_wedge = to_wedge
 LambdaRingExpr.to_sym = to_sym
