@@ -9,6 +9,7 @@ from .vector_bundle import VectorBundle
 from .operations import to_wedge, to_sym, wedge, sym
 from .power_operations import Wedge, SymPower
 from .chern_character import chern_character
+from .chern_class import chern_class
 
 LambdaRingExpr.to_wedge = to_wedge
 LambdaRingExpr.to_sym = to_sym
