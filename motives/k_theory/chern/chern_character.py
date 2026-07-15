@@ -4,8 +4,8 @@ from typing import Optional
 
 import sympy as sp
 
-from .vector_bundle import VectorBundle
-from .power_operations import SymPower, Wedge
+from ..objects.vector_bundle import VectorBundle
+from ..operations.power_operations import SymPower, Wedge
 
 
 def _component(ch: tuple[sp.Expr, ...], i: int) -> sp.Expr:

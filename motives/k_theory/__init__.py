@@ -4,12 +4,10 @@ from sympy.core.power import Pow
 
 from motives.core.lambda_ring_expr import LambdaRingExpr
 
-from .scheme import Scheme, Curve
-from .vector_bundle import VectorBundle
-from .operations import to_wedge, to_sym, wedge, sym
-from .power_operations import Wedge, SymPower
-from .chern_character import chern_character
-from .chern_class import chern_class
+from .chern import chern_character, chern_class
+from .objects import Curve, Scheme, VectorBundle
+from .operations import SymPower, Wedge, sym, to_sym, to_wedge, wedge
+from .relations import long_exact_sequence
 
 LambdaRingExpr.to_wedge = to_wedge
 LambdaRingExpr.to_sym = to_sym

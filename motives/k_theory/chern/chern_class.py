@@ -4,7 +4,7 @@ from typing import Optional
 
 import sympy as sp
 
-from .vector_bundle import VectorBundle
+from ..objects.vector_bundle import VectorBundle
 from .chern_character import (
     chern_character,
     _component,
