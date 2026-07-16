@@ -5,6 +5,7 @@ from typing import Optional
 import sympy as sp
 
 from ..objects.vector_bundle import VectorBundle
+from ..operations.bundle_operations import Dual
 from ..operations.power_operations import SymPower, Wedge
 
 
@@ -135,6 +136,34 @@ def _ch_scalar_mul(A: tuple[sp.Expr, ...], scalar: sp.Expr, max_chern_degree: in
         scalar * _component(A, i)
         for i in range(max_chern_degree + 1)
     )
+
+
+def _ch_dual(A: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
+    """
+    Compute the Chern character of a dual vector-bundle expression.
+
+    If ``A`` represents ``ch(E)``, the returned tuple represents
+    ``ch(E^∨)``. Dualization changes every Chern root ``x_j`` into ``-x_j``
+    and therefore acts on each homogeneous component according to
+
+    ``ch_i(E^∨) = (-1)^i ch_i(E)``.
+
+    Thus, even-degree components remain unchanged and odd-degree components
+    change sign.
+
+    Parameters
+    ----------
+    A
+        Tuple representing ``ch(E)``.
+    max_chern_degree : int
+        Maximum homogeneous degree to compute.
+
+    Returns
+    -------
+    tuple[sympy.Expr, ...]
+        Tuple representing ``ch(E^∨)``.
+    """
+    return tuple(sp.Integer(-1) ** i * _component(A, i) for i in range(max_chern_degree + 1))
 
 
 def _ch_mul(A: tuple[sp.Expr, ...], B: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
@@ -495,11 +524,12 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
     following K-theoretic interpretation:
 
     - ``VectorBundle``: use its stored Chern-character components.
+    - ``Dual``: compute the character of the operand and apply ``ch_i(E^∨) = (-1)^i ch_i(E)``.
     - ``Add``: interpret addition as direct sum and add characters.
     - ``Mul``: interpret multiplication as tensor product and multiply the
-      characters as graded series.
+    characters as graded series.
     - ``Pow``: interpret a non-negative integer power as repeated tensor
-      product.
+    product.
     - ``SymPower``: use the Adams-operation recurrence for symmetric powers.
     - ``Wedge``: use the Adams-operation recurrence for exterior powers.
     - Scalar expression: place the scalar in degree zero.
@@ -524,10 +554,11 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
     """
     if isinstance(expr, VectorBundle):
         stored = expr.chern_character
-        return tuple(
-            _component(stored, i)
-            for i in range(max_chern_degree + 1)
-        )
+        return tuple(_component(stored, i) for i in range(max_chern_degree + 1))
+    
+    if isinstance(expr, Dual):
+        inner_ch = _compute_chern_character(expr.child, max_chern_degree)
+        return _ch_dual(inner_ch, max_chern_degree)
 
     if isinstance(expr, SymPower):
         inner_expr = expr.child
@@ -596,32 +627,38 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
 
 def chern_character(expr: sp.Expr, component: Optional[int] = None, *, max_chern_degree: Optional[int] = None) -> tuple[sp.Expr, ...] | sp.Expr:
     """
-    Compute the Chern character of a symbolic K-theory expression.
+    Compute the Chern character of an expression of vector bundles.
 
-    The expression is interpreted using
+    If ``component`` is ``None``, return the full tuple
+    ``(ch_0, ch_1, ..., ch_max_chern_degree)``. If ``component`` is provided,
+    return only that homogeneous component.
 
-    ``E + F`` as the direct sum ``E ⊕ F``,
+    The expression is interpreted using the K-theoretic rules:
 
-    ``E * F`` as the tensor product ``E ⊗ F``,
+    ``E + F`` -> direct sum
 
-    and ``E ** n`` as an n-fold tensor product.
+    ``E * F`` -> tensor product
 
-    The fundamental identities are
+    ``E ** n`` -> repeated tensor product
 
-    ``ch(E ⊕ F) = ch(E) + ch(F)``
+    ``Dual(E)`` -> dual vector bundle
 
-    and
+    ``Hom(E, F)`` -> ``E^∨ ⊗ F``
 
-    ``ch(E ⊗ F) = ch(E) · ch(F)``.
+    ``End(E)`` -> ``E^∨ ⊗ E``
 
-    Exterior and symmetric powers are evaluated using Adams operations.
+    ``Det(E)`` -> ``Λ^rank(E)(E)``
+
+    ``SymPower(E, n)`` -> n-th symmetric power
+
+    ``Wedge(E, n)`` -> n-th exterior power
 
     Parameters
     ----------
     expr : sympy.Expr
-        Expression built from vector bundles, scalars, sums, products,
-        non-negative integer powers, ``Wedge`` objects, and ``SymPower``
-        objects.
+        Expression built from vector bundles using sums, tensor products,
+        powers, duals, homomorphism bundles, endomorphism bundles,
+        determinants, symmetric powers, and exterior powers.
     component : int, optional
         Homogeneous degree to return. If omitted, the full tuple is returned.
     max_chern_degree : int, optional

@@ -254,8 +254,9 @@ def chern_class(expr: sp.Expr, component: Optional[int] = None, *, max_chern_deg
     Parameters
     ----------
     expr : sympy.Expr
-        Expression built from vector bundles, sums, products, non-negative
-        integer powers, symmetric powers, and exterior powers.
+        Expression built from vector bundles using sums, tensor products,
+        powers, duals, homomorphism bundles, endomorphism bundles,
+        determinants, symmetric powers, and exterior powers.
     component : int, optional
         Degree of the Chern class to return. If omitted, all components through
         ``max_chern_degree`` are returned.
