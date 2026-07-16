@@ -1,79 +1,258 @@
-from motives.core.operator.ring_operator import Sigma, Lambda_
+import sympy as sp
+
+from motives.core.operator.ring_operator import Lambda_, Sigma
+
+from ..objects.power_bundles import Wedge, SymPower
 
 
-class Wedge(Sigma):
+def wedge(self, n: int):
     """
-    Formal exterior-power expression.
+    Construct the formal n-th exterior power of an expression.
 
-    ``Wedge(n, E)`` represents the n-th exterior power ``Λⁿ(E)``.
+    This method creates a ``Wedge`` node representing
 
-    The class inherits from ``Sigma`` because the current conversion machinery
-    uses ``Sigma`` nodes as the internal backend for exterior-power expansions.
-    This inheritance is an implementation detail and should not be interpreted
-    as a mathematical identification of exterior powers with the usual sigma
+    ``Λⁿ(self)``
+
+    without expanding it using lambda-ring identities.
+
+    Parameters
+    ----------
+    n : int
+        Exterior-power degree.
+
+    Returns
+    -------
+    sympy.Expr
+        ``1`` when ``n = 0``, ``self`` when ``n = 1``, and a formal
+        ``Wedge`` object otherwise.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
+
+    Notes
+    -----
+    This method does not use bundle ranks and therefore does not automatically
+    impose relations such as ``Λⁿ(E) = 0`` when ``n > rank(E)``.
+
+    Use ``to_wedge`` when an expansion in terms of exterior powers of the
+    atomic expressions is required.
+    """
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    if n == 0:
+        return sp.Integer(1)
+    if n == 1:
+        return self
+
+    return Wedge(n, self)
+
+
+def to_wedge(self, n: int | None = None):
+    """
+    Expand an exterior power using the lambda-ring conversion machinery.
+
+    When ``n`` is supplied, this method expands ``Λⁿ(self)``. When ``n`` is
+    omitted and ``self`` is already a ``Wedge`` object, it expands that formal
     operation.
 
+    For example, the second exterior power of a direct sum satisfies
+
+    ``Λ²(E ⊕ F) = Λ²(E) ⊕ (E ⊗ F) ⊕ Λ²(F)``.
+
     Parameters
     ----------
-    degree
-        Exterior-power degree.
-    child
-        Expression to which the exterior power is applied.
+    n : int or None, optional
+        Exterior-power degree. If omitted, ``self`` must already be a
+        ``Wedge`` object in order for an expansion to occur.
+
+    Returns
+    -------
+    sympy.Expr
+        Expanded expression whose remaining formal exterior-power atoms are
+        represented by ``Wedge`` objects. If ``n`` is omitted and ``self`` is
+        not a ``Wedge`` object, ``self`` is returned unchanged.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
 
     Notes
     -----
-    The arguments are stored using the underlying ring-operator convention and
-    can be accessed through ``degree`` and ``child``.
+    The expansion is computed through the package's internal ``Sigma``
+    representation and then relabelled using ``Wedge`` nodes. The relabelling
+    changes the representation and printing, not the algebraic expression.
     """
+    if n is None:
+        if not isinstance(self, Wedge):
+            return self
 
-    def _sympystr(self, printer):
-        """Return the plain-text representation ``∧n(operand)``."""
-        degree, operand = self.args
-        return f"∧{printer.doprint(degree)}({printer.doprint(operand)})"
+        expr = sp.expand(self.to_sigma())
+        return _replace_sigma_by_wedge(expr)
 
-    def _latex(self, printer):
-        """Return the LaTeX representation of the exterior-power expression."""
-        degree, operand = self.args
-        return (
-            r"\wedge^{%s}\left(%s\right)"
-            % (printer._print(degree), printer._print(operand))
-        )
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    if n == 0:
+        return sp.Integer(1)
+    if n == 1:
+        return self
+
+    expr = sp.expand(self.sigma(n).to_sigma())
+    return _replace_sigma_by_wedge(expr)
 
 
-class SymPower(Lambda_):
+def _replace_sigma_by_wedge(expr):
     """
-    Formal symmetric-power expression.
-
-    ``SymPower(n, E)`` represents the n-th symmetric power ``Symⁿ(E)``.
-
-    The class inherits from ``Lambda_`` because the current conversion
-    machinery uses ``Lambda_`` nodes as the internal backend for
-    symmetric-power expansions. This inheritance is an implementation detail,
-    not a mathematical identification with the usual exterior-power
-    lambda operation.
+    Relabel internal ``Sigma`` nodes as ``Wedge`` nodes.
 
     Parameters
     ----------
-    degree
+    expr : sympy.Expr
+        Expression produced by the sigma-expansion backend.
+
+    Returns
+    -------
+    sympy.Expr
+        Expression in which each ordinary ``Sigma`` node has been replaced by
+        a ``Wedge`` node with the same arguments.
+
+    Notes
+    -----
+    This is a representation-level transformation:
+
+    ``Sigma(n, E) -> Wedge(n, E)``.
+
+    It does not perform an additional mathematical expansion or simplification.
+    Existing ``Wedge`` instances are left unchanged.
+    """
+    return expr.replace(
+        lambda x: isinstance(x, Sigma) and not isinstance(x, Wedge),
+        lambda x: Wedge(*x.args)
+    )
+
+
+def sym(self, n: int):
+    """
+    Construct the formal n-th symmetric power of an expression.
+
+    This method creates a ``SymPower`` node representing
+
+    ``Symⁿ(self)``
+
+    without expanding it using lambda-ring identities.
+
+    Parameters
+    ----------
+    n : int
         Symmetric-power degree.
-    child
-        Expression to which the symmetric power is applied.
+
+    Returns
+    -------
+    sympy.Expr
+        ``1`` when ``n = 0``, ``self`` when ``n = 1``, and a formal
+        ``SymPower`` object otherwise.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
 
     Notes
     -----
-    The arguments are stored using the underlying ring-operator convention and
-    can be accessed through ``degree`` and ``child``.
+    Use ``to_sym`` when an expansion in terms of symmetric powers of the
+    atomic expressions is required.
     """
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    if n == 0:
+        return sp.Integer(1)
+    if n == 1:
+        return self
 
-    def _sympystr(self, printer):
-        """Return the plain-text representation ``Symn(operand)``."""
-        degree, operand = self.args
-        return f"Sym{printer.doprint(degree)}({printer.doprint(operand)})"
+    return SymPower(n, self)
 
-    def _sympystr(self, printer):
-        """Return the plain-text representation ``Symn(operand)``."""
-        degree, operand = self.args
-        return (
-            r"\operatorname{Sym}^{%s}\left(%s\right)"
-            % (printer._print(degree), printer._print(operand))
-        )
+
+def to_sym(self, n: int | None = None):
+    """
+    Expand a symmetric power using the lambda-ring conversion machinery.
+
+    When ``n`` is supplied, this method expands ``Symⁿ(self)``. When ``n`` is
+    omitted and ``self`` is already a ``SymPower`` object, it expands that
+    formal operation.
+
+    For example,
+
+    ``Sym²(E ⊕ F) = Sym²(E) ⊕ (E ⊗ F) ⊕ Sym²(F)``.
+
+    Parameters
+    ----------
+    n : int or None, optional
+        Symmetric-power degree. If omitted, ``self`` must already be a
+        ``SymPower`` object in order for an expansion to occur.
+
+    Returns
+    -------
+    sympy.Expr
+        Expanded expression whose remaining formal symmetric-power atoms are
+        represented by ``SymPower`` objects. If ``n`` is omitted and ``self``
+        is not a ``SymPower`` object, ``self`` is returned unchanged.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
+
+    Notes
+    -----
+    The expansion is computed through the package's internal ``Lambda_``
+    representation and then relabelled using ``SymPower`` nodes. This is an
+    internal implementation convention.
+    """
+    if n is None:
+        if not isinstance(self, SymPower):
+            return self
+
+        expr = sp.expand(self.to_lambda())
+        return _replace_lambda_by_sym(expr)
+
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    if n == 0:
+        return sp.Integer(1)
+    if n == 1:
+        return self
+
+    expr = sp.expand(self.lambda_(n).to_lambda())
+    return _replace_lambda_by_sym(expr)
+
+
+def _replace_lambda_by_sym(expr):
+    """
+    Relabel internal ``Lambda_`` nodes as ``SymPower`` nodes.
+
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression produced by the lambda-expansion backend.
+
+    Returns
+    -------
+    sympy.Expr
+        Expression in which each ordinary ``Lambda_`` node has been replaced
+        by a ``SymPower`` node with the same arguments.
+
+    Notes
+    -----
+    This transformation only changes the node type used for representation:
+
+    ``Lambda_(n, E) -> SymPower(n, E)``.
+
+    It does not perform an additional algebraic operation. Existing
+    ``SymPower`` instances are left unchanged.
+    """
+    return expr.replace(
+        lambda x: isinstance(x, Lambda_) and not isinstance(x, SymPower),
+        lambda x: SymPower(*x.args)
+    )

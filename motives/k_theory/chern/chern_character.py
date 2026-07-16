@@ -6,7 +6,7 @@ import sympy as sp
 
 from ..objects.vector_bundle import VectorBundle
 from ..operations.bundle_operations import Dual
-from ..operations.power_operations import SymPower, Wedge
+from ..objects.power_bundles import SymPower, Wedge
 
 
 def _component(ch: tuple[sp.Expr, ...], i: int) -> sp.Expr:

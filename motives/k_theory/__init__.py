@@ -5,9 +5,8 @@ from sympy.core.power import Pow
 from motives.core.lambda_ring_expr import LambdaRingExpr
 
 from .chern import chern_character, chern_class
-from .objects import Curve, Scheme, VectorBundle
-from .operations import Det, Dual, End, Hom, SymPower, Wedge, sym, to_sym, to_wedge, wedge
-from .relations import long_exact_sequence, solve_exact_sequence
+from .objects import Curve, Scheme, VectorBundle, Wedge, SymPower, DeterminantBundle, Dual
+from .operations import Det, End, Hom, sym, to_sym, to_wedge, wedge, long_exact_sequence, solve_exact_sequence
 
 LambdaRingExpr.to_wedge = to_wedge
 LambdaRingExpr.to_sym = to_sym

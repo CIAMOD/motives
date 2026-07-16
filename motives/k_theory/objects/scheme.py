@@ -1,159 +1,145 @@
+"""Classes representing schemes and their naturally associated vector bundles."""
+
 import sympy as sp
+
+from .vector_bundle import VectorBundle
+from ..operations.determinant import Determinant
+from ..operations.dual import Dual
 
 
 class Scheme:
-    """
-    Symbolic scheme with dimension and Betti-number metadata.
+    """Represent a scheme and its main geometric invariants.
 
-    A ``Scheme`` acts as the base space of symbolic vector bundles. Its
-    dimension determines the default truncation degree used for characteristic
-    classes and, when the dimension is an integer, the range of Betti numbers.
+    Each scheme is determined by a name, a non-negative integer dimension and
+    a collection of Betti numbers. Its dimension must be explicitly known and
+    cannot be symbolic.
+
+    If the scheme has complex dimension d, its Betti numbers are stored from
+    degree 0 to degree 2d. Therefore, exactly 2d + 1 Betti numbers are required.
+    When they are not provided, symbolic values are created automatically.
+
+    The following standard vector bundles are also created:
+
+    - Ox: structure sheaf O_X, a trivial line bundle.
+    - Tx: tangent bundle T_X, with rank equal to dim(X).
+    - Tx_dual: cotangent bundle T_X^∨ = Dual(T_X).
+    - Kx: canonical bundle K_X = det(T_X^∨).
+
+    Since O_X is trivial, its Chern invariants are fixed as
+
+        c(O_X) = (1, 0, ..., 0),
+        ch(O_X) = (1, 0, ..., 0).
 
     Parameters
     ----------
     name : str
-        Name used to display the scheme and to construct default symbolic
-        Betti numbers.
-    dimension : int or sympy.Expr
-        Dimension of the scheme. If it is an integer ``d``, Betti numbers are
-        stored through cohomological degree ``2d``. A symbolic expression may
-        also be used.
-    betti_numbers : iterable, optional
-        Explicit Betti numbers ordered by cohomological degree. If omitted,
-        symbols
+        Name used to identify and display the scheme.
+    dimension : int
+        Non-negative complex dimension of the scheme.
+    betti_numbers : list, tuple or None, optional
+        Betti numbers from degree 0 to degree 2 * dimension. If omitted,
+        symbolic Betti numbers are created.
 
-        ``b0_<name>, b1_<name>, ..., bN_<name>``
-
-        are generated automatically.
-    max_betti_degree : int, default=10
-        Maximum degree used for default symbolic Betti numbers when
-        ``dimension`` is not an integer.
-
-    Attributes
-    ----------
-    name : str
-        Name of the scheme.
-    dimension : sympy.Expr
-        SymPy representation of the scheme dimension.
-    max_betti_degree : int
-        Highest stored Betti-number degree.
-    betti_numbers : tuple of sympy.Expr
-        Betti numbers indexed by cohomological degree.
-
-    Notes
-    -----
-    When ``dimension = d`` is an integer, the maximum Betti degree is
-
-    ``max_betti_degree = 2d``.
-
-    This follows the standard cohomological grading of a complex
-    ``d``-dimensional variety.
+    Raises
+    ------
+    TypeError
+        If ``dimension`` is not an integer.
+    ValueError
+        If ``dimension`` is negative or the number of supplied Betti numbers
+        is not equal to ``2 * dimension + 1``.
     """
 
-    def __init__(self, name: str, dimension, betti_numbers=None, max_betti_degree: int = 10):
-        """
-        Initialize the scheme and its Betti-number data.
+    def __init__(self, name: str, dimension: int, betti_numbers=None):
+        """Initialize the scheme, its Betti numbers and its standard bundles."""
+        if isinstance(dimension, bool) or not isinstance(dimension, (int, sp.Integer)):
+            raise TypeError("dimension must be an integer.")
 
-        If ``dimension`` is an integer ``d``, ``max_betti_degree`` is replaced by
-        ``2d``. Otherwise, the explicitly supplied fallback value is used.
+        if dimension < 0:
+            raise ValueError("dimension must be non-negative.")
 
-        Parameters
-        ----------
-        name : str
-            Name of the scheme.
-        dimension : int or sympy.Expr
-            Dimension of the scheme.
-        betti_numbers : iterable, optional
-            Explicit Betti numbers. When omitted, symbolic components are
-            generated from degree zero through ``max_betti_degree``.
-        max_betti_degree : int, default=10
-            Fallback maximum Betti degree for schemes of symbolic dimension.
-        """
         self.name = name
-        self.dimension = sp.sympify(dimension)
-
-        if isinstance(self.dimension, (int, sp.Integer)):
-            self.max_betti_degree = 2 * int(self.dimension)
-        else:
-            self.max_betti_degree = max_betti_degree
+        self.dimension = int(dimension)
+        self.max_betti_degree = 2 * self.dimension
 
         if betti_numbers is None:
-            self.betti_numbers = tuple(
-                sp.Symbol(f"b{i}_{name}")
-                for i in range(self.max_betti_degree + 1)
-            )
+            self.betti_numbers = tuple(sp.Symbol(f"b{i}_{name}") for i in range(self.max_betti_degree + 1))
         else:
-            self.betti_numbers = tuple(sp.sympify(b) for b in betti_numbers)
+            if len(betti_numbers) != self.max_betti_degree + 1:
+                raise ValueError(f"betti_numbers must contain exactly {self.max_betti_degree + 1} components.")
+
+            self.betti_numbers = tuple(sp.sympify(value) for value in betti_numbers)
+
+        self._initialize_standard_bundles()
+
+    def _initialize_standard_bundles(self) -> None:
+        """Create the standard vector bundles naturally associated with the scheme.
+
+        The structure sheaf O_X is initialized as a trivial line bundle, so it
+        has rank one and all its positive-degree Chern components vanish.
+
+        The tangent bundle T_X has rank equal to the dimension of X. The
+        cotangent and canonical bundles are then constructed as
+
+            T_X^∨ = Dual(T_X),
+            K_X = det(T_X^∨).
+        """
+        trivial_invariants = (sp.Integer(1),) + (sp.Integer(0),) * self.dimension
+
+        self.Ox = VectorBundle(
+            f"O_{self.name}",
+            self,
+            rank=1,
+            chern_classes=trivial_invariants,
+            chern_character=trivial_invariants
+        )
+        self.Tx = VectorBundle(f"T_{self.name}", self, rank=self.dimension)
+        self.Tx_dual = Dual(self.Tx)
+        self.Kx = Determinant(self.Tx_dual)
 
     def __repr__(self) -> str:
-        """Return the scheme name as its representation."""
+        """Return the name of the scheme as its developer representation."""
         return self.name
 
     def __str__(self) -> str:
-        """Return the scheme name as a string."""
+        """Return the name of the scheme as its readable representation."""
         return self.name
 
 
 class Curve(Scheme):
-    """
-    Symbolic smooth connected projective curve.
+    """Represent a smooth curve and its geometric invariants.
 
-    A curve is represented as a one-dimensional scheme together with its
-    genus and Betti numbers.
+    A curve has complex dimension one. Its default Betti numbers are determined
+    by its genus g:
+
+        b0 = 1,
+        b1 = 2g,
+        b2 = 1.
+
+    The structure sheaf, tangent bundle, cotangent bundle and canonical bundle
+    are created by the parent ``Scheme`` class.
 
     Parameters
     ----------
     name : str
-        Name of the curve.
-    genus : int or sympy.Expr, optional
-        Genus of the curve. If omitted, the symbolic variable ``g`` is used.
-    betti_numbers : iterable, optional
-        Explicit Betti numbers. If omitted, the standard Betti numbers of a
-        smooth connected projective curve are used:
+        Name used to identify and display the curve.
+    genus : int, sympy.Expr or None, optional
+        Genus of the curve. If omitted, a symbolic genus is created.
+    betti_numbers : list, tuple or None, optional
+        Custom Betti numbers ``(b0, b1, b2)``. If omitted, ``(1, 2g, 1)`` is
+        used.
 
-        ``(b_0, b_1, b_2) = (1, 2g, 1)``.
-
-    Attributes
-    ----------
-    genus : sympy.Expr
-        Genus of the curve.
-
-    Notes
-    -----
-    The default Betti numbers encode
-
-    ``dim H⁰ = 1``,
-    ``dim H¹ = 2g``,
-    ``dim H² = 1``.
+    Raises
+    ------
+    ValueError
+        If custom Betti numbers are provided but do not contain exactly three
+        components.
     """
 
     def __init__(self, name: str, genus=None, betti_numbers=None):
-        """
-        Initialize a symbolic curve.
-
-        The dimension is fixed to one. When no explicit Betti numbers are
-        supplied, the tuple ``(1, 2g, 1)`` is used.
-
-        Parameters
-        ----------
-        name : str
-            Name of the curve.
-        genus : int or sympy.Expr, optional
-            Genus of the curve. Defaults to the symbolic variable ``g``.
-        betti_numbers : iterable, optional
-            Explicit Betti numbers ordered as ``(b_0, b_1, b_2)``.
-        """
-        self.genus = sp.sympify(genus) if genus is not None else sp.Symbol("g")
+        """Initialize the curve using dimension one and its genus."""
+        self.genus = sp.Symbol(f"g_{name}") if genus is None else sp.sympify(genus)
 
         if betti_numbers is None:
-            betti_numbers = (
-                sp.Integer(1),
-                2 * self.genus,
-                sp.Integer(1),
-            )
+            betti_numbers = (sp.Integer(1), 2 * self.genus, sp.Integer(1))
 
-        super().__init__(
-            name=name,
-            dimension=1,
-            betti_numbers=betti_numbers,
-        )
+        super().__init__(name, dimension=1, betti_numbers=betti_numbers)
