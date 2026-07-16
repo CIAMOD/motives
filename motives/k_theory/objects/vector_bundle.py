@@ -364,6 +364,13 @@ class VectorBundle(Free):
         TypeError
             If the input has an unsupported type.
         """
+        default = self._default_chern_character()
+
+        self._chern_character = self._update_tuple_attribute(
+            current=self._chern_character,
+            value=value,
+            default=default
+        )
 
 
     def _select_tuple_components(self, values, index):
