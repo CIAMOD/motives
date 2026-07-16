@@ -10,10 +10,25 @@ from ..operations.power_operations import SymPower, Wedge
 
 def _component(ch: tuple[sp.Expr, ...], i: int) -> sp.Expr:
     """
-    Return the i-th homogeneous component of a Chern character.
+    Return a homogeneous component of a truncated Chern character.
 
-    If the requested component is outside the stored range, return 0. This lets
-    computations safely combine Chern characters stored up to different degrees.
+    Parameters
+    ----------
+    ch : tuple of sympy.Expr
+        Chern-character components indexed by degree.
+    i : int
+        Requested degree.
+
+    Returns
+    -------
+    sympy.Expr
+        ``ch[i]`` when the degree is stored, and zero otherwise.
+
+    Notes
+    -----
+    Returning zero outside the stored range treats the tuple as a truncated
+    graded series and allows tuples with different truncation degrees to be
+    combined safely.
     """
     if 0 <= i < len(ch):
         return sp.sympify(ch[i])
@@ -22,20 +37,40 @@ def _component(ch: tuple[sp.Expr, ...], i: int) -> sp.Expr:
 
 def _zero_ch(max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Return the Chern character of the zero object.
+    Return the Chern character of the additive zero object.
 
-    The result is the tuple (0, ..., 0) with components from degree 0 up to
-    max_chern_degree.
+    Parameters
+    ----------
+    max_chern_degree : int
+        Highest degree to include.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Tuple ``(0, 0, ..., 0)`` containing
+        ``max_chern_degree + 1`` components.
     """
     return tuple(sp.Integer(0) for _ in range(max_chern_degree + 1))
 
 
 def _one_ch(max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Return the Chern character of the trivial line bundle.
+    Return the multiplicative identity Chern character.
 
-    The result is (1, 0, ..., 0), which is the multiplicative identity for
-    tensor-product computations.
+    Parameters
+    ----------
+    max_chern_degree : int
+        Highest degree to include.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Tuple ``(1, 0, ..., 0)``.
+
+    Notes
+    -----
+    This is the Chern character of the trivial line bundle and is the identity
+    for the graded product used to model tensor products.
     """
     return tuple(
         [sp.Integer(1)]
@@ -45,10 +80,27 @@ def _one_ch(max_chern_degree: int) -> tuple[sp.Expr, ...]:
 
 def _ch_add(A: tuple[sp.Expr, ...], B: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Add two Chern characters componentwise.
+    Add two Chern characters component by component.
 
-    This implements the identity ch(E + F) = ch(E) + ch(F), where + denotes
-    direct sum in K-theory.
+    This implements additivity under direct sums:
+
+    ``ch(E ⊕ F) = ch(E) + ch(F)``.
+
+    Equivalently, for every degree ``k``,
+
+    ``ch_k(E ⊕ F) = ch_k(E) + ch_k(F)``.
+
+    Parameters
+    ----------
+    A, B : tuple of sympy.Expr
+        Chern-character components of the two operands.
+    max_chern_degree : int
+        Highest degree retained in the result.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Componentwise sum truncated through ``max_chern_degree``.
     """
     return tuple(
         _component(A, i) + _component(B, i)
@@ -58,10 +110,25 @@ def _ch_add(A: tuple[sp.Expr, ...], B: tuple[sp.Expr, ...], max_chern_degree: in
 
 def _ch_scalar_mul(A: tuple[sp.Expr, ...], scalar: sp.Expr, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Multiply every component of a Chern character by a scalar.
+    Multiply every Chern-character component by a scalar.
 
-    This is used for scalar multiples such as nE and for rational coefficients
-    appearing in the symmetric and exterior power recurrences.
+    For a scalar ``a`` and a K-theory class ``E``, this implements
+
+    ``ch(aE) = a · ch(E)``.
+
+    Parameters
+    ----------
+    A : tuple of sympy.Expr
+        Input Chern-character components.
+    scalar : sympy.Expr
+        Scalar multiplier.
+    max_chern_degree : int
+        Highest degree retained in the result.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Scaled Chern-character components.
     """
     scalar = sp.sympify(scalar)
     return tuple(
@@ -74,10 +141,27 @@ def _ch_mul(A: tuple[sp.Expr, ...], B: tuple[sp.Expr, ...], max_chern_degree: in
     """
     Multiply two Chern characters as truncated graded series.
 
-    This implements ch(E * F) = ch(E) ch(F), where * denotes tensor product.
-    The k-th component is the convolution sum
+    This implements multiplicativity under tensor products:
 
-        sum(A_i * B_{k-i} for i = 0, ..., k).
+    ``ch(E ⊗ F) = ch(E) · ch(F)``.
+
+    If ``A_i = ch_i(E)`` and ``B_j = ch_j(F)``, the homogeneous component of
+    degree ``k`` is
+
+    ``ch_k(E ⊗ F) = Σ_{i=0}^k A_i B_{k-i}``.
+
+    Parameters
+    ----------
+    A, B : tuple of sympy.Expr
+        Chern-character components of the operands.
+    max_chern_degree : int
+        Highest total degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Graded convolution product truncated through
+        ``max_chern_degree``.
     """
     return tuple(
         sum(
@@ -93,14 +177,34 @@ def _ch_mul(A: tuple[sp.Expr, ...], B: tuple[sp.Expr, ...], max_chern_degree: in
 
 def _adams_chern(A: tuple[sp.Expr, ...], k: int, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Apply the k-th Adams operation to a Chern character.
+    Apply the k-th Adams operation to Chern-character components.
 
-    On Chern character components, the Adams operation acts by
+    If ``A_i = ch_i(E)``, the Adams operation satisfies
 
-        psi^k(ch_i) = k^i ch_i.
+    ``ch_i(ψᵏ(E)) = kⁱ ch_i(E)``.
 
-    Thus degree 0 is unchanged, degree 1 is multiplied by k, degree 2 by k^2,
-    and so on.
+    Therefore,
+
+    ``ψᵏ(A) = (A_0, k A_1, k² A_2, ..., kᴺ A_N)``.
+
+    Parameters
+    ----------
+    A : tuple of sympy.Expr
+        Chern-character components.
+    k : int
+        Positive Adams-operation index.
+    max_chern_degree : int
+        Highest degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Components of the Adams-transformed Chern character.
+
+    Raises
+    ------
+    ValueError
+        If ``k < 1``.
     """
     if k < 1:
         raise ValueError("Adams operations require k >= 1.")
@@ -113,14 +217,45 @@ def _adams_chern(A: tuple[sp.Expr, ...], k: int, max_chern_degree: int) -> tuple
 
 def _ch_sym_power(A: tuple[sp.Expr, ...], n: int, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Compute the Chern character of the n-th symmetric power.
+    Compute the Chern character of an n-th symmetric power.
 
-    The input A represents ch(E). The function returns ch(Sym^n(E)) using the
-    recurrence for complete symmetric functions:
+    Let
 
-        m h_m = sum(psi^i(E) h_{m-i}, i = 1, ..., m),
+    ``h_m = ch(Symᵐ(E))``
 
-    with h_0 = 1 and h_m = ch(Sym^m(E)).
+    and ``h_0 = 1``. The complete-symmetric-function generating series is
+
+    ``Σ_{m>=0} h_m t^m = exp(Σ_{i>=1} ψⁱ(ch(E)) tⁱ / i)``.
+
+    Differentiating this identity gives the recurrence implemented here:
+
+    ``m h_m = Σ_{i=1}^m ψⁱ(ch(E)) · h_{m-i}``.
+
+    Thus,
+
+    ``h_m = (1/m) Σ_{i=1}^m ψⁱ(ch(E)) · h_{m-i}``.
+
+    Products in this formula are graded Chern-character products and are
+    truncated through ``max_chern_degree``.
+
+    Parameters
+    ----------
+    A : tuple of sympy.Expr
+        Chern character ``ch(E)``.
+    n : int
+        Symmetric-power degree.
+    max_chern_degree : int
+        Highest homogeneous Chern degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Truncated Chern character ``ch(Symⁿ(E))``.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
     """
     if n < 0:
         raise ValueError("Symmetric powers require n >= 0.")
@@ -143,14 +278,45 @@ def _ch_sym_power(A: tuple[sp.Expr, ...], n: int, max_chern_degree: int) -> tupl
 
 def _ch_wedge_power(A: tuple[sp.Expr, ...], n: int, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Compute the Chern character of the n-th exterior power.
+    Compute the Chern character of an n-th exterior power.
 
-    The input A represents ch(E). The function returns ch(Λ^n(E)) using the
-    recurrence for elementary symmetric functions:
+    Let
 
-        m e_m = sum((-1)^(i-1) psi^i(E) e_{m-i}, i = 1, ..., m),
+    ``e_m = ch(Λᵐ(E))``
 
-    with e_0 = 1 and e_m = ch(Λ^m(E)).
+    and ``e_0 = 1``. The elementary-symmetric-function generating series is
+
+    ``Σ_{m>=0} e_m t^m =
+    exp(Σ_{i>=1} (-1)^(i-1) ψⁱ(ch(E)) tⁱ / i)``.
+
+    This gives the Newton recurrence
+
+    ``m e_m =
+    Σ_{i=1}^m (-1)^(i-1) ψⁱ(ch(E)) · e_{m-i}``.
+
+    Therefore,
+
+    ``e_m =
+    (1/m) Σ_{i=1}^m (-1)^(i-1) ψⁱ(ch(E)) · e_{m-i}``.
+
+    Parameters
+    ----------
+    A : tuple of sympy.Expr
+        Chern character ``ch(E)``.
+    n : int
+        Exterior-power degree.
+    max_chern_degree : int
+        Highest homogeneous Chern degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Truncated Chern character ``ch(Λⁿ(E))``.
+
+    Raises
+    ------
+    ValueError
+        If ``n`` is negative.
     """
     if n < 0:
         raise ValueError("Exterior powers require n >= 0.")
@@ -178,10 +344,19 @@ def _ch_wedge_power(A: tuple[sp.Expr, ...], n: int, max_chern_degree: int) -> tu
 
 def _vector_bundles(expr: sp.Expr) -> tuple[VectorBundle, ...]:
     """
-    Return all VectorBundle atoms appearing in an expression.
+    Return all vector-bundle atoms contained in an expression.
 
-    If expr itself is a VectorBundle, return it directly. Otherwise, use SymPy's
-    atom search. Non-SymPy objects return an empty tuple.
+    Parameters
+    ----------
+    expr
+        Expression to inspect.
+
+    Returns
+    -------
+    tuple of VectorBundle
+        Vector bundles occurring as atoms of ``expr``. If ``expr`` is itself a
+        vector bundle, a one-element tuple is returned. Objects without SymPy's
+        atom interface produce an empty tuple.
     """
     if isinstance(expr, VectorBundle):
         return (expr,)
@@ -194,11 +369,23 @@ def _vector_bundles(expr: sp.Expr) -> tuple[VectorBundle, ...]:
 
 def _validate_same_scheme(expr: sp.Expr) -> None:
     """
-    Validate that all explicit vector bundles live over the same scheme.
+    Validate that all explicit bundles share the same base scheme.
 
-    Bundles with scheme=None are treated as formal symbols and ignored. If two
-    explicit, non-None schemes differ, the expression is considered geometrically
-    invalid and a ValueError is raised.
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression containing vector bundles.
+
+    Raises
+    ------
+    ValueError
+        If two vector bundles with explicit, non-``None`` schemes are defined
+        over different schemes.
+
+    Notes
+    -----
+    Bundles whose scheme is ``None`` are treated as purely formal symbols and
+    do not participate in the compatibility check.
     """
     bundles = _vector_bundles(expr)
     schemes = [
@@ -222,11 +409,21 @@ def _validate_same_scheme(expr: sp.Expr) -> None:
 
 def _bundle_max_chern_degree(bundle: VectorBundle) -> int:
     """
-    Return the maximum Chern character degree available for a bundle.
+    Determine the maximum available Chern degree for a bundle.
 
-    Prefer the bundle's stored max_degree when available. Otherwise, use the
-    dimension of the base scheme if it is an integer. If neither is available,
-    fall back to 5.
+    The stored ``bundle.max_degree`` is preferred. If it is unavailable, an
+    integer dimension of the base scheme is used. If neither source provides
+    an integer degree, the fallback value five is returned.
+
+    Parameters
+    ----------
+    bundle : VectorBundle
+        Bundle whose available degree is requested.
+
+    Returns
+    -------
+    int
+        Maximum usable Chern degree.
     """
     if hasattr(bundle, "max_degree"):
         return int(bundle.max_degree)
@@ -242,10 +439,23 @@ def _bundle_max_chern_degree(bundle: VectorBundle) -> int:
 
 def _infer_max_chern_degree(expr: sp.Expr) -> int:
     """
-    Infer a truncation degree from the vector bundles in an expression.
+    Infer a common Chern-character truncation degree for an expression.
 
-    The returned value is the minimum available maximum Chern degree among all
-    vector bundles appearing in expr. If no vector bundle is found, return 5.
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression containing zero or more vector bundles.
+
+    Returns
+    -------
+    int
+        Minimum available maximum degree among the bundles in ``expr``.
+        Returns five if no vector bundle is present.
+
+    Notes
+    -----
+    The minimum is used so that every bundle occurring in the computation has
+    data available through the selected degree.
     """
     bundles = _vector_bundles(expr)
 
@@ -257,22 +467,60 @@ def _infer_max_chern_degree(expr: sp.Expr) -> int:
 
 def _is_scalar_expression(expr: sp.Expr) -> bool:
     """
-    Return whether an expression contains no vector bundles.
+    Return whether an expression contains no vector-bundle atoms.
 
-    Such expressions are interpreted as scalar multiples of the trivial bundle,
-    so their Chern character is concentrated in degree 0.
+    Scalar expressions are interpreted as scalar multiples of the
+    multiplicative unit. Consequently, a scalar ``a`` has Chern character
+
+    ``ch(a) = (a, 0, ..., 0)``.
+
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression to inspect.
+
+    Returns
+    -------
+    bool
+        ``True`` when no ``VectorBundle`` occurs in the expression.
     """
     return len(_vector_bundles(expr)) == 0
 
 
 def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Recursively compute the Chern character of an expression.
+    Recursively evaluate the Chern character of an expression tree.
 
-    The expression tree is evaluated bottom-up. VectorBundle nodes provide their
-    stored Chern character. Add nodes are direct sums, Mul nodes are tensor
-    products, Pow nodes are repeated tensor products, and SymPower/Wedge nodes
-    are computed using Adams-operation recurrences.
+    The tree is processed from its leaves to its root according to the
+    following K-theoretic interpretation:
+
+    - ``VectorBundle``: use its stored Chern-character components.
+    - ``Add``: interpret addition as direct sum and add characters.
+    - ``Mul``: interpret multiplication as tensor product and multiply the
+      characters as graded series.
+    - ``Pow``: interpret a non-negative integer power as repeated tensor
+      product.
+    - ``SymPower``: use the Adams-operation recurrence for symmetric powers.
+    - ``Wedge``: use the Adams-operation recurrence for exterior powers.
+    - Scalar expression: place the scalar in degree zero.
+
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression to evaluate.
+    max_chern_degree : int
+        Highest homogeneous degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Chern-character components through ``max_chern_degree``.
+
+    Raises
+    ------
+    NotImplementedError
+        If a power has a non-integer or negative exponent, or if the expression
+        contains an unsupported node type.
     """
     if isinstance(expr, VectorBundle):
         stored = expr.chern_character
@@ -346,36 +594,83 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
     )
 
 
-def chern_character(
-    expr: sp.Expr,
-    component: Optional[int] = None,
-    *,
-    max_chern_degree: Optional[int] = None,
-) -> tuple[sp.Expr, ...] | sp.Expr:
+def chern_character(expr: sp.Expr, component: Optional[int] = None, *, max_chern_degree: Optional[int] = None) -> tuple[sp.Expr, ...] | sp.Expr:
     """
-    Compute the Chern character of an expression of vector bundles.
+    Compute the Chern character of a symbolic K-theory expression.
 
-    If component is None, return the full tuple
+    The expression is interpreted using
 
-        (ch_0, ch_1, ..., ch_max_chern_degree).
+    ``E + F`` as the direct sum ``E ⊕ F``,
 
-    If component is provided, return only that homogeneous component. The
-    expression is interpreted using the K-theoretic rules:
+    ``E * F`` as the tensor product ``E ⊗ F``,
 
-        E + F          -> direct sum
-        E * F          -> tensor product
-        E ** n         -> repeated tensor product
-        SymPower(E, n) -> n-th symmetric power
-        Wedge(E, n)    -> n-th exterior power
+    and ``E ** n`` as an n-fold tensor product.
 
-    All vector bundles with explicit schemes must be defined over the same
-    scheme. Bundles with scheme=None are treated formally.
+    The fundamental identities are
+
+    ``ch(E ⊕ F) = ch(E) + ch(F)``
+
+    and
+
+    ``ch(E ⊗ F) = ch(E) · ch(F)``.
+
+    Exterior and symmetric powers are evaluated using Adams operations.
+
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression built from vector bundles, scalars, sums, products,
+        non-negative integer powers, ``Wedge`` objects, and ``SymPower``
+        objects.
+    component : int, optional
+        Homogeneous degree to return. If omitted, the full tuple is returned.
+    max_chern_degree : int, optional
+        Highest homogeneous degree to compute. If omitted, it is inferred from
+        the bundles in ``expr``. When ``component`` is supplied and no maximum
+        degree is given, computation stops at that component.
+
+    Returns
+    -------
+    tuple of sympy.Expr or sympy.Expr
+        Full tuple
+
+        ``(ch_0(expr), ch_1(expr), ..., ch_N(expr))``
+
+        or the selected homogeneous component.
+
+    Raises
+    ------
+    TypeError
+        If ``component`` is not an integer.
+    ValueError
+        If ``component`` or ``max_chern_degree`` is negative, if
+        ``max_chern_degree < component``, or if the expression contains
+        bundles over incompatible schemes.
+    NotImplementedError
+        If the expression contains an unsupported operation or a power with a
+        negative or non-integer exponent.
+
+    Notes
+    -----
+    The degree-zero component is the virtual rank:
+
+    ``ch_0(E) = rank(E)``.
+
+    All results are truncated after ``max_chern_degree``.
 
     Examples
     --------
-    chern_character(E * F)
-    chern_character(E * F, max_chern_degree=3)
-    chern_character(E * F, component=2)
+    Compute all available components:
+
+    ``chern_character(E * F)``
+
+    Compute through degree three:
+
+    ``chern_character(E * F, max_chern_degree=3)``
+
+    Compute only degree two:
+
+    ``chern_character(E * F, component=2)``
     """
     expr = sp.sympify(expr)
 

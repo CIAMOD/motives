@@ -7,88 +7,131 @@ class VectorBundle(Free):
     """
     Symbolic vector bundle over a scheme.
 
-    A ``VectorBundle`` is represented as a symbolic object, inheriting from
-    ``Free``, together with metadata such as its base scheme, rank, Chern
-    classes, and Chern character components.
+    A ``VectorBundle`` is a SymPy-compatible atomic expression together with
+    geometric metadata and characteristic data. It may therefore appear
+    inside symbolic sums, products, powers, exterior powers, and symmetric
+    powers.
 
-    The Chern classes and Chern character are stored as tuples indexed by
-    degree:
+    The stored characteristic data are indexed by degree:
 
-        c(E)  = (c_0(E), c_1(E), ..., c_max_degree(E))
-        ch(E) = (ch_0(E), ch_1(E), ..., ch_max_degree(E))
+    ``c(E) = (c_0(E), c_1(E), ..., c_N(E))``
 
-    By convention, ``c_0(E) = 1`` and ``ch_0(E) = rank(E)``.
+    and
+
+    ``ch(E) = (ch_0(E), ch_1(E), ..., ch_N(E))``.
+
+    The degree-zero conventions are
+
+    ``c_0(E) = 1``
+
+    and
+
+    ``ch_0(E) = rank(E)``.
 
     Parameters
     ----------
     name : str
-        Name of the vector bundle. It is also used to generate default symbolic
-        names for the rank, Chern classes, and Chern character components.
+        Symbolic name of the bundle. It is also used to generate default
+        symbols for its rank and characteristic classes.
+    scheme : Scheme
+        Base scheme over which the bundle is defined.
+    rank : int or sympy.Expr, optional
+        Rank of the bundle. If omitted, the symbol ``rk_<name>`` is created.
+    max_degree : int, default=5
+        Fallback maximum characteristic degree when the scheme dimension is
+        not an integer.
+    chern_classes : None, list, tuple, or dict, optional
+        Initial Chern classes.
 
-    scheme
-        Base scheme over which the vector bundle is defined. If the scheme has
-        an integer ``dimension`` attribute, that value is used as the maximum
-        degree for Chern classes and Chern character components.
+        - ``None`` creates ``(1, c1_<name>, ..., cN_<name>)``.
+        - A list or tuple replaces all stored components and is padded with
+          zeros when necessary.
+        - A dictionary updates selected components by degree.
+    chern_character : None, list, tuple, or dict, optional
+        Initial homogeneous Chern-character components.
 
-    rank
-        Rank of the vector bundle. If not provided, a symbolic rank
-        ``rk_<name>`` is created.
+        - ``None`` creates ``(rank, ch1_<name>, ..., chN_<name>)``.
+        - A list or tuple replaces all stored components and is padded with
+          zeros when necessary.
+        - A dictionary updates selected components by degree.
+    **assumptions
+        SymPy assumptions passed to the underlying symbolic object.
 
+    Attributes
+    ----------
+    scheme : Scheme
+        Base scheme of the bundle.
+    rank : sympy.Expr
+        Rank of the bundle.
     max_degree : int
-        Fallback maximum degree for Chern classes and Chern character
-        components when the scheme dimension is not available as an integer.
+        Highest stored characteristic degree.
+    chern_classes : tuple of sympy.Expr
+        Chern classes indexed by degree.
+    chern_character : tuple of sympy.Expr
+        Chern-character components indexed by degree.
 
-    chern_classes
-        Optional initial Chern classes. Accepted values are:
+    Notes
+    -----
+    When ``scheme.dimension`` is an integer ``d``, characteristic data are
+    stored through degree ``d``. Otherwise, ``max_degree`` is used.
 
-        - ``None``: use the default tuple ``(1, c1_name, ..., cN_name)``.
-        - ``list`` or ``tuple``: replace the full tuple, padding missing
-          components with zeros.
-        - ``dict``: update selected components by index.
-
-    chern_character
-        Optional initial Chern character components. Accepted values are:
-
-        - ``None``: use the default tuple ``(rank, ch1_name, ..., chN_name)``.
-        - ``list`` or ``tuple``: replace the full tuple, padding missing
-          components with zeros.
-        - ``dict``: update selected components by index.
+    The symbolic identity created by SymPy is determined by ``name`` and the
+    SymPy assumptions. The scheme, rank, and characteristic data are metadata
+    initialized after construction and are not part of the underlying SymPy
+    arguments.
     """
 
-    def __new__(
-        cls,
-        name: str,
-        scheme,
-        rank=None,
-        max_degree: int = 5,
-        chern_classes=None,
-        chern_character=None,
-        **assumptions,
-    ):
+    def __new__(cls, name: str, scheme, rank=None, max_degree: int = 5, chern_classes=None, chern_character=None, **assumptions):
         """
-        Create the symbolic SymPy object.
+        Create the atomic SymPy expression representing the bundle.
 
-        Metadata such as the scheme, rank, Chern classes, and Chern character
-        is initialized later in ``__init__``.
+        Only the symbolic name and SymPy assumptions are used to construct the
+        underlying ``Free`` object. Bundle metadata, including the scheme, rank,
+        and characteristic classes, is initialized later by ``__init__``.
+
+        Parameters
+        ----------
+        name : str
+            Symbolic name of the bundle.
+        scheme
+            Base scheme. This parameter is accepted for constructor consistency
+            but is not included in the underlying SymPy arguments.
+        rank, max_degree, chern_classes, chern_character
+            Metadata parameters initialized by ``__init__``.
+        **assumptions
+            SymPy assumptions associated with the symbolic bundle.
+
+        Returns
+        -------
+        VectorBundle
+            Atomic symbolic vector-bundle expression.
         """
         return Free.__new__(cls, name, **assumptions)
 
 
-    def __init__(
-        self,
-        name: str,
-        scheme,
-        rank=None,
-        max_degree: int = 5,
-        chern_classes=None,
-        chern_character=None,
-        **assumptions,
-    ):
+    def __init__(self, name: str, scheme, rank=None, max_degree: int = 5, chern_classes=None, chern_character=None, **assumptions):
         """
-        Initialize the vector bundle metadata and characteristic data.
+        Initialize the geometric and characteristic data of the bundle.
 
-        The maximum degree is taken from ``scheme.dimension`` when that value is
-        an integer. Otherwise, the provided ``max_degree`` is used.
+        The maximum stored degree is taken from ``scheme.dimension`` when that
+        value is an integer. Otherwise, ``max_degree`` is used.
+
+        Parameters
+        ----------
+        name : str
+            Name of the bundle.
+        scheme : Scheme
+            Base scheme of the bundle.
+        rank : int or sympy.Expr, optional
+            Bundle rank. Defaults to ``rk_<name>``.
+        max_degree : int, default=5
+            Fallback truncation degree.
+        chern_classes : None, list, tuple, or dict, optional
+            Initial Chern-class data.
+        chern_character : None, list, tuple, or dict, optional
+            Initial Chern-character data.
+        **assumptions
+            SymPy assumptions already handled during ``__new__``.
         """
         self.name = name
         self.scheme = scheme
@@ -115,13 +158,22 @@ class VectorBundle(Free):
 
     def _default_chern_classes(self):
         """
-        Build the default tuple of Chern classes.
+        Construct the default tuple of Chern classes.
 
-        The result has the form:
+        Returns
+        -------
+        tuple of sympy.Expr
+            Tuple
 
-            (1, c1_name, c2_name, ..., c_max_degree_name)
+            ``(1, c1_<name>, c2_<name>, ..., cN_<name>)``,
 
-        where the degree zero Chern class is always 1.
+            where ``N = self.max_degree``.
+
+        Notes
+        -----
+        The degree-zero component is fixed by the standard normalization
+
+        ``c_0(E) = 1``.
         """
         return tuple(
             [sp.Integer(1)]
@@ -134,13 +186,22 @@ class VectorBundle(Free):
 
     def _default_chern_character(self):
         """
-        Build the default tuple of Chern character components.
+        Construct the default homogeneous Chern-character components.
 
-        The result has the form:
+        Returns
+        -------
+        tuple of sympy.Expr
+            Tuple
 
-            (rank, ch1_name, ch2_name, ..., ch_max_degree_name)
+            ``(rank(E), ch1_<name>, ch2_<name>, ..., chN_<name>)``,
 
-        where the degree zero component is the rank of the bundle.
+            where ``N = self.max_degree``.
+
+        Notes
+        -----
+        The degree-zero component satisfies
+
+        ``ch_0(E) = rank(E)``.
         """
         return tuple(
             [self.rank]
@@ -153,28 +214,44 @@ class VectorBundle(Free):
 
     def _update_tuple_attribute(self, current, value, default):
         """
-        Create or update tuple-valued characteristic data.
-
-        The accepted input formats are:
-
-        - ``None``: return the default tuple.
-        - ``dict``: update selected components by index, preserving all other
-          current/default components.
-        - ``list`` or ``tuple``: replace the full tuple, padding missing
-          components with zeros up to ``max_degree``.
+        Initialize, replace, or partially update tuple-valued characteristic data.
 
         Parameters
         ----------
-        current
-            Current stored tuple, or ``None`` if no value has been stored yet.
+        current : tuple or None
+            Currently stored components.
+        value : None, list, tuple, or dict
+            Requested update.
 
-        value
-            New value used to initialize, replace, or partially update the
-            tuple.
+            - ``None`` returns the default tuple.
+            - A dictionary replaces only the specified indices.
+            - A list or tuple replaces the entire tuple and is padded on the right
+            with zeros.
+        default : tuple
+            Default components used when ``value`` is ``None`` or when a partial
+            update is applied before any data have been stored.
 
-        default
-            Default tuple used when ``value`` is ``None`` or when updating a
-            tuple that has not been initialized yet.
+        Returns
+        -------
+        tuple of sympy.Expr
+            Updated tuple with exactly ``self.max_degree + 1`` components.
+
+        Raises
+        ------
+        IndexError
+            If a dictionary contains an index outside
+            ``0 <= index <= self.max_degree``.
+        ValueError
+            If a list or tuple contains more than
+            ``self.max_degree + 1`` components.
+        TypeError
+            If ``value`` is not ``None``, a dictionary, a list, or a tuple.
+
+        Notes
+        -----
+        Explicit input is allowed to replace the degree-zero component. Therefore,
+        this helper does not independently enforce ``c_0 = 1`` or
+        ``ch_0 = rank`` after a user-provided update.
         """
         if value is None:
             return default
@@ -216,10 +293,12 @@ class VectorBundle(Free):
     @property
     def chern_classes(self):
         """
-        Tuple of Chern classes of the vector bundle.
+        Return the stored Chern classes.
 
-        The tuple is indexed by degree, so ``chern_classes[i]`` represents
-        ``c_i(E)``.
+        Returns
+        -------
+        tuple of sympy.Expr
+            Tuple indexed by degree, where element ``i`` is ``c_i(E)``.
         """
         return self._chern_classes
 
@@ -227,10 +306,22 @@ class VectorBundle(Free):
     @chern_classes.setter
     def chern_classes(self, value):
         """
-        Set or update the Chern classes.
+        Set or update the stored Chern classes.
 
-        ``None`` restores defaults, a list/tuple replaces the full tuple, and a
-        dictionary updates selected components by index.
+        Parameters
+        ----------
+        value : None, list, tuple, or dict
+            ``None`` restores the default symbolic classes, a list or tuple
+            replaces all components, and a dictionary updates selected degrees.
+
+        Raises
+        ------
+        IndexError
+            If a dictionary index is outside the stored degree range.
+        ValueError
+            If too many components are supplied.
+        TypeError
+            If the input has an unsupported type.
         """
         default = self._default_chern_classes()
 
@@ -244,43 +335,61 @@ class VectorBundle(Free):
     @property
     def chern_character(self):
         """
-        Tuple of Chern character components of the vector bundle.
+        Return the stored homogeneous Chern-character components.
 
-        The tuple is indexed by degree, so ``chern_character[i]`` represents
-        ``ch_i(E)``.
+        Returns
+        -------
+        tuple of sympy.Expr
+            Tuple indexed by degree, where element ``i`` is ``ch_i(E)``.
         """
         return self._chern_character
 
     @chern_character.setter
     def chern_character(self, value):
         """
-        Set or update the Chern character components.
+        Set or update the stored Chern-character components.
 
-        ``None`` restores defaults, a list/tuple replaces the full tuple, and a
-        dictionary updates selected components by index.
+        Parameters
+        ----------
+        value : None, list, tuple, or dict
+            ``None`` restores the default symbolic components, a list or tuple
+            replaces all components, and a dictionary updates selected degrees.
+
+        Raises
+        ------
+        IndexError
+            If a dictionary index is outside the stored degree range.
+        ValueError
+            If too many components are supplied.
+        TypeError
+            If the input has an unsupported type.
         """
-        default = self._default_chern_character()
-
-        self._chern_character = self._update_tuple_attribute(
-            current=self._chern_character,
-            value=value,
-            default=default,
-        )
 
 
     def _select_tuple_components(self, values, index):
         """
-        Select components from a tuple-valued invariant.
+        Select one or more components of a tuple-valued invariant.
 
         Parameters
         ----------
-        values
-            Tuple of stored components.
+        values : tuple
+            Stored invariant components indexed by degree.
+        index : int, list, tuple, or None
+            Component selector.
 
-        index
-            Component selector. If ``None``, the full tuple is returned. If an
-            integer is given, a single component is returned. If a list or tuple
-            is given, the selected components are returned as a tuple.
+            - ``None`` returns the entire tuple.
+            - An integer returns one component.
+            - A list or tuple returns the selected components as a tuple.
+
+        Returns
+        -------
+        sympy.Expr or tuple of sympy.Expr
+            Selected component or components.
+
+        Raises
+        ------
+        IndexError
+            If a requested index lies outside the stored tuple.
         """
         if index is None:
             return values
@@ -293,22 +402,32 @@ class VectorBundle(Free):
 
     def c(self, index=None):
         """
-        Return Chern classes.
+        Return one or more Chern classes of the bundle.
 
         Parameters
         ----------
-        index
-            If ``None``, return the full tuple of Chern classes. If an integer
-            is given, return the corresponding component. If a list or tuple is
-            given, return the selected components.
+        index : int, list, tuple, or None, optional
+            Degree or degrees to select. If omitted, all stored Chern classes are
+            returned.
+
+        Returns
+        -------
+        sympy.Expr or tuple of sympy.Expr
+            Selected Chern class or classes.
 
         Examples
         --------
-        ``E.c()`` returns all Chern classes.
+        Return the complete tuple:
 
-        ``E.c(1)`` returns ``c_1(E)``.
+        ``E.c()``
 
-        ``E.c([1, 2])`` returns ``(c_1(E), c_2(E))``.
+        Return the first Chern class:
+
+        ``E.c(1)``
+
+        Return several components:
+
+        ``E.c([1, 2])``
         """
         return self._select_tuple_components(
             values=self.chern_classes,
@@ -318,22 +437,32 @@ class VectorBundle(Free):
 
     def ch(self, index=None):
         """
-        Return Chern character components.
+        Return one or more homogeneous Chern-character components.
 
         Parameters
         ----------
-        index
-            If ``None``, return the full tuple of Chern character components.
-            If an integer is given, return the corresponding component. If a
-            list or tuple is given, return the selected components.
+        index : int, list, tuple, or None, optional
+            Degree or degrees to select. If omitted, all stored Chern-character
+            components are returned.
+
+        Returns
+        -------
+        sympy.Expr or tuple of sympy.Expr
+            Selected Chern-character component or components.
 
         Examples
         --------
-        ``E.ch()`` returns all Chern character components.
+        Return the complete tuple:
 
-        ``E.ch(1)`` returns ``ch_1(E)``.
+        ``E.ch()``
 
-        ``E.ch([1, 2])`` returns ``(ch_1(E), ch_2(E))``.
+        Return the degree-two component:
+
+        ``E.ch(2)``
+
+        Return several components:
+
+        ``E.ch([1, 2])``
         """
         return self._select_tuple_components(
             values=self.chern_character,

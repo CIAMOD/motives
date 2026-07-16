@@ -13,17 +13,37 @@ from .chern_character import (
 )
 
 
-def _validate_component_and_degree(
-    expr: sp.Expr,
-    component: Optional[int],
-    max_chern_degree: Optional[int],
-) -> tuple[Optional[int], int]:
+def _validate_component_and_degree(expr: sp.Expr, component: Optional[int], max_chern_degree: Optional[int]) -> tuple[Optional[int], int]:
     """
-    Validate the requested component and truncation degree.
+    Validate and normalize the requested component and truncation degree.
 
-    If component is provided and max_chern_degree is not, compute only up to
-    that component. Otherwise, infer the degree from the bundles in the
-    expression.
+    Parameters
+    ----------
+    expr : sympy.Expr
+        Expression whose natural maximum degree may need to be inferred.
+    component : int or None
+        Requested Chern-class degree.
+    max_chern_degree : int or None
+        Explicit truncation degree.
+
+    Returns
+    -------
+    tuple
+        Normalized pair ``(component, max_chern_degree)``.
+
+    Raises
+    ------
+    TypeError
+        If ``component`` is not an integer.
+    ValueError
+        If either degree is negative or if
+        ``max_chern_degree < component``.
+
+    Notes
+    -----
+    If a component is requested without an explicit maximum degree, the
+    computation is truncated exactly at that component. If neither value is
+    given, the degree is inferred from the vector bundles in ``expr``.
     """
     if component is not None:
         if not isinstance(component, (int, sp.Integer)):
@@ -51,21 +71,43 @@ def _validate_component_and_degree(
     return component, max_chern_degree
 
 
-def _chern_character_from_chern_classes(
-    bundle: VectorBundle,
-    max_chern_degree: int,
-) -> tuple[sp.Expr, ...]:
+def _chern_character_from_chern_classes(bundle: VectorBundle, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Compute the Chern character of a vector bundle from its Chern classes.
+    Compute a bundle's Chern character from its Chern classes.
 
-    If c_i are the elementary symmetric functions in the Chern roots and p_i
-    are the power sums, then Newton's identities give:
+    Let ``x_1, ..., x_r`` be the formal Chern roots of a bundle ``E``. Then
 
-        p_k = c_1 p_{k-1} - c_2 p_{k-2} + ... + (-1)^(k-1) k c_k
+    ``c_k(E) = e_k(x_1, ..., x_r)``
 
-    Then:
+    is the k-th elementary symmetric function, while
 
-        ch_k = p_k / k!
+    ``p_k(E) = Σ_j x_j^k``
+
+    is the k-th power sum. The homogeneous Chern-character components are
+
+    ``ch_k(E) = p_k(E) / k!``.
+
+    Newton's identities determine the power sums recursively:
+
+    ``p_k =
+    c_1 p_{k-1} - c_2 p_{k-2} + ... +
+    (-1)^(k-2) c_{k-1} p_1 + (-1)^(k-1) k c_k``.
+
+    Parameters
+    ----------
+    bundle : VectorBundle
+        Bundle whose stored Chern classes are used.
+    max_chern_degree : int
+        Highest Chern-character degree to compute.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Tuple
+
+        ``(rank(E), ch_1(E), ..., ch_N(E))``
+
+        expressed in terms of the stored Chern classes.
     """
     c = bundle.chern_classes
 
@@ -90,17 +132,36 @@ def _chern_character_from_chern_classes(
     return tuple(ch)
 
 
-def _chern_character_using_chern_classes(
-    expr: sp.Expr,
-    max_chern_degree: int,
-) -> tuple[sp.Expr, ...]:
+def _chern_character_using_chern_classes(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Compute ch(expr), but using the Chern classes of the base vector bundles
-    as the primary data.
+    Compute a Chern character using base-bundle Chern classes as input.
 
-    This temporarily replaces the stored Chern character of each VectorBundle
-    by the one induced from its Chern classes, calls the existing
-    chern_character backend, and then restores the original data.
+    For every vector bundle in ``expr``, this function first computes the
+    induced Chern-character components from its stored Chern classes. These
+    temporary components are then passed to the regular ``chern_character``
+    evaluator.
+
+    Parameters
+    ----------
+    expr : sympy.Expr
+        K-theory expression to evaluate.
+    max_chern_degree : int
+        Highest Chern-character degree to compute.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Chern character of ``expr`` expressed in terms of the original
+        bundles' Chern classes.
+
+    Notes
+    -----
+    The stored Chern character of each bundle is temporarily replaced during
+    the computation. A ``finally`` block restores every original value even if
+    evaluation raises an exception.
+
+    Because the function temporarily mutates the bundle objects, concurrent
+    evaluations involving the same instances should be avoided.
     """
     bundles = _vector_bundles(expr)
 
@@ -126,21 +187,38 @@ def _chern_character_using_chern_classes(
             bundle._chern_character = original_chern_character
 
 
-def _chern_classes_from_chern_character(
-    ch: tuple[sp.Expr, ...],
-    max_chern_degree: int,
-) -> tuple[sp.Expr, ...]:
+def _chern_classes_from_chern_character(ch: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
     """
-    Compute Chern classes from the Chern character.
+    Recover Chern classes from homogeneous Chern-character components.
 
-    If p_i = i! ch_i, Newton's identities give:
+    Define the power sums by
 
-        c_0 = 1
+    ``p_i = i! ch_i``.
 
-        c_k = 1/k * sum(
-            (-1)^(i-1) c_{k-i} p_i
-            for i = 1, ..., k
-        )
+    Newton's identities give ``c_0 = 1`` and, for ``k >= 1``,
+
+    ``k c_k =
+    Σ_{i=1}^k (-1)^(i-1) c_{k-i} p_i``.
+
+    Equivalently,
+
+    ``c_k =
+    (1/k) Σ_{i=1}^k
+    (-1)^(i-1) c_{k-i} i! ch_i``.
+
+    Parameters
+    ----------
+    ch : tuple of sympy.Expr
+        Homogeneous Chern-character components.
+    max_chern_degree : int
+        Highest Chern class to compute.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Chern classes
+
+        ``(1, c_1, ..., c_N)``.
     """
     c: list[sp.Expr] = [sp.Integer(1)]
 
@@ -158,49 +236,89 @@ def _chern_classes_from_chern_character(
     return tuple(c)
 
 
-def chern_class(
-    expr: sp.Expr,
-    component: Optional[int] = None,
-    *,
-    max_chern_degree: Optional[int] = None,
-    use_chern_classes: bool = True,
-) -> tuple[sp.Expr, ...] | sp.Expr:
+def chern_class(expr: sp.Expr, component: Optional[int] = None, *, max_chern_degree: Optional[int] = None, use_chern_classes: bool = True) -> tuple[sp.Expr, ...] | sp.Expr:
     """
-    Compute the total Chern class of an expression of vector bundles.
+    Compute the Chern classes of a symbolic K-theory expression.
+
+    The computation proceeds through the Chern character:
+
+    1. Compute ``ch(expr)`` using the K-theoretic rules for direct sums,
+       tensor products, powers, symmetric powers, and exterior powers.
+    2. Recover the Chern classes from ``ch(expr)`` using Newton's identities.
+
+    When ``use_chern_classes=True``, the stored Chern classes of each base
+    bundle are first converted to Chern-character components. Consequently,
+    the final result is expressed in terms of symbols such as ``c1_E`` and
+    ``c2_E``.
 
     Parameters
     ----------
-    expr
-        Expression built from vector bundles using sums, products, powers,
-        symmetric powers, and exterior powers.
+    expr : sympy.Expr
+        Expression built from vector bundles, sums, products, non-negative
+        integer powers, symmetric powers, and exterior powers.
+    component : int, optional
+        Degree of the Chern class to return. If omitted, all components through
+        ``max_chern_degree`` are returned.
+    max_chern_degree : int, optional
+        Highest Chern degree to compute. If omitted, it is inferred from the
+        vector bundles in ``expr``.
+    use_chern_classes : bool, default=True
+        Select the primary characteristic data of the base bundles.
 
-    component
-        If None, return the full tuple:
+        - ``True`` uses their stored Chern classes and expresses the answer in
+          terms of those classes.
+        - ``False`` uses their stored Chern-character components directly.
 
-            (c_0, c_1, ..., c_max_chern_degree)
+    Returns
+    -------
+    tuple of sympy.Expr or sympy.Expr
+        Full tuple
 
-        If an integer is given, return only that component.
+        ``(c_0(expr), c_1(expr), ..., c_N(expr))``
 
-    max_chern_degree
-        Maximum Chern degree to compute. If not provided, it is inferred from
-        the vector bundles in the expression.
+        or the selected Chern class.
 
-    use_chern_classes
-        If True, the Chern classes of the base vector bundles are used as the
-        primary input data. This gives answers in terms of c_i_E, c_i_F, ...
+    Raises
+    ------
+    TypeError
+        If ``component`` is not an integer.
+    ValueError
+        If a degree is negative, if ``max_chern_degree < component``, or if
+        bundles over incompatible schemes occur in the expression.
+    NotImplementedError
+        If the Chern-character backend encounters an unsupported expression.
 
-        If False, the stored Chern character components are used directly.
-        This gives answers in terms of ch_i_E, ch_i_F, ...
+    Notes
+    -----
+    The normalization is
+
+    ``c_0(expr) = 1``.
+
+    For a direct sum, the resulting components satisfy the Whitney product
+    formula
+
+    ``c(E ⊕ F) = c(E) c(F)``.
+
+    Tensor products and power operations are handled by first using the
+    multiplicative Chern character and then converting back to Chern classes.
 
     Examples
     --------
-    chern_class(E + F)
+    Compute all inferred components:
 
-    chern_class(E * F, component=2)
+    ``chern_class(E + F)``
 
-    chern_class(E.sym(2), max_chern_degree=3)
+    Compute only the second Chern class:
 
-    chern_class(E + F, use_chern_classes=False)
+    ``chern_class(E * F, component=2)``
+
+    Compute through degree three:
+
+    ``chern_class(E.sym(2), max_chern_degree=3)``
+
+    Use the stored Chern-character components as input:
+
+    ``chern_class(E + F, use_chern_classes=False)``
     """
     expr = sp.sympify(expr)
 

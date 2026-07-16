@@ -3,19 +3,36 @@ from motives.core.operator.ring_operator import Sigma, Lambda_
 
 class Wedge(Sigma):
     """
-    Exterior power operation.
+    Formal exterior-power expression.
 
-    Internally, it behaves like Sigma, because in the current motives
-    machinery Sigma is the formal operation we want to use for wedge.
+    ``Wedge(n, E)`` represents the n-th exterior power ``Λⁿ(E)``.
 
-    Visually, it prints as ∧.
+    The class inherits from ``Sigma`` because the current conversion machinery
+    uses ``Sigma`` nodes as the internal backend for exterior-power expansions.
+    This inheritance is an implementation detail and should not be interpreted
+    as a mathematical identification of exterior powers with the usual sigma
+    operation.
+
+    Parameters
+    ----------
+    degree
+        Exterior-power degree.
+    child
+        Expression to which the exterior power is applied.
+
+    Notes
+    -----
+    The arguments are stored using the underlying ring-operator convention and
+    can be accessed through ``degree`` and ``child``.
     """
 
     def _sympystr(self, printer):
+        """Return the plain-text representation ``∧n(operand)``."""
         degree, operand = self.args
         return f"∧{printer.doprint(degree)}({printer.doprint(operand)})"
 
     def _latex(self, printer):
+        """Return the LaTeX representation of the exterior-power expression."""
         degree, operand = self.args
         return (
             r"\wedge^{%s}\left(%s\right)"
@@ -25,19 +42,36 @@ class Wedge(Sigma):
 
 class SymPower(Lambda_):
     """
-    Symmetric power operation.
+    Formal symmetric-power expression.
 
-    Internally, it behaves like Lambda_, because the current motives
-    machinery expands Lambda_ in the way we want for symmetric powers.
+    ``SymPower(n, E)`` represents the n-th symmetric power ``Symⁿ(E)``.
 
-    Visually, it prints as Sym.
+    The class inherits from ``Lambda_`` because the current conversion
+    machinery uses ``Lambda_`` nodes as the internal backend for
+    symmetric-power expansions. This inheritance is an implementation detail,
+    not a mathematical identification with the usual exterior-power
+    lambda operation.
+
+    Parameters
+    ----------
+    degree
+        Symmetric-power degree.
+    child
+        Expression to which the symmetric power is applied.
+
+    Notes
+    -----
+    The arguments are stored using the underlying ring-operator convention and
+    can be accessed through ``degree`` and ``child``.
     """
 
     def _sympystr(self, printer):
+        """Return the plain-text representation ``Symn(operand)``."""
         degree, operand = self.args
         return f"Sym{printer.doprint(degree)}({printer.doprint(operand)})"
 
-    def _latex(self, printer):
+    def _sympystr(self, printer):
+        """Return the plain-text representation ``Symn(operand)``."""
         degree, operand = self.args
         return (
             r"\operatorname{Sym}^{%s}\left(%s\right)"
