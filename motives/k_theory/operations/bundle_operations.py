@@ -31,6 +31,9 @@ def Hom(E: sp.Expr, F: sp.Expr) -> sp.Expr:
     E = sp.sympify(E)
     F = sp.sympify(F)
 
+    if E.scheme is not F.scheme:
+        raise ValueError("source and target must be defined over the same scheme.")
+
     return Dual(E) * F
 
 

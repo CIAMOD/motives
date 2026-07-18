@@ -65,13 +65,12 @@ class SymPower(Lambda_):
     can be accessed through ``degree`` and ``child``.
     """
 
-    def _sympystr(self, printer):
+    def _sympystr(self, printer) -> str:
         """Return the plain-text representation ``Symn(operand)``."""
-        degree, operand = self.args
-        return f"Sym{printer.doprint(degree)}({printer.doprint(operand)})"
+        return f"Sym{self.degree}({printer.doprint(self.child)})"
 
-    def _sympystr(self, printer):
-        """Return the plain-text representation ``Symn(operand)``."""
+    def _latex(self, printer) -> str:
+        """Return the LaTeX representation of the sym-power expression."""
         degree, operand = self.args
         return (
             r"\operatorname{Sym}^{%s}\left(%s\right)"

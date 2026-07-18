@@ -3,8 +3,8 @@
 import sympy as sp
 
 from .vector_bundle import VectorBundle
-from ..operations.determinant import Determinant
-from ..operations.dual import Dual
+from .determinant_bundle import DeterminantBundle
+from .dual_bundle import DualBundle
 
 
 class Scheme:
@@ -69,6 +69,9 @@ class Scheme:
 
             self.betti_numbers = tuple(sp.sympify(value) for value in betti_numbers)
 
+        if not isinstance(name, str) or not name:
+            raise ValueError("name must be a non-empty string.")    
+
         self._initialize_standard_bundles()
 
     def _initialize_standard_bundles(self) -> None:
@@ -93,8 +96,8 @@ class Scheme:
             chern_character=trivial_invariants
         )
         self.Tx = VectorBundle(f"T_{self.name}", self, rank=self.dimension)
-        self.Tx_dual = Dual(self.Tx)
-        self.Kx = Determinant(self.Tx_dual)
+        self.Tx_dual = DualBundle(self.Tx)
+        self.Kx = DeterminantBundle(self.Tx_dual)
 
     def __repr__(self) -> str:
         """Return the name of the scheme as its developer representation."""
@@ -141,5 +144,8 @@ class Curve(Scheme):
 
         if betti_numbers is None:
             betti_numbers = (sp.Integer(1), 2 * self.genus, sp.Integer(1))
+
+        if self.genus.is_integer and self.genus.is_number and self.genus < 0:
+            raise ValueError("genus must be non-negative.")
 
         super().__init__(name, dimension=1, betti_numbers=betti_numbers)

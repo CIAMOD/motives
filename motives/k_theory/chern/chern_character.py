@@ -5,7 +5,7 @@ from typing import Optional
 import sympy as sp
 
 from ..objects.vector_bundle import VectorBundle
-from ..operations.bundle_operations import Dual
+from ..objects.dual_bundle import DualBundle
 from ..objects.power_bundles import SymPower, Wedge
 
 
@@ -556,7 +556,7 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
         stored = expr.chern_character
         return tuple(_component(stored, i) for i in range(max_chern_degree + 1))
     
-    if isinstance(expr, Dual):
+    if isinstance(expr, DualBundle):
         inner_ch = _compute_chern_character(expr.child, max_chern_degree)
         return _ch_dual(inner_ch, max_chern_degree)
 

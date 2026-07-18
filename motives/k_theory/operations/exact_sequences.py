@@ -148,7 +148,7 @@ def _get_solve_variables(
     return tuple(variables)
 
 
-def long_exact_sequence(
+def exact_sequence_realtions(
     sequence: Sequence[sp.Expr],
     invariant: Invariant = "chern_character",
     component: int | None = None
@@ -269,7 +269,7 @@ def solve_exact_sequence(
 
     A single sequence can be passed directly as ``[E, F, G]``. Several
     sequences can be combined by passing ``[[E, F, G], [G, H, K]]``. Each
-    sequence is converted into equations by ``long_exact_sequence`` and all
+    sequence is converted into equations by ``exact_sequence_realtions`` and all
     equations are solved together with ``sympy.solve``.
 
     Equations are converted from ``Eq(lhs, rhs)`` to ``lhs - rhs = 0`` and
@@ -314,7 +314,7 @@ def solve_exact_sequence(
     equations: list[sp.Equality] = []
 
     for sequence in normalized_sequences:
-        sequence_equations = long_exact_sequence(sequence=sequence, invariant=invariant, component=component)
+        sequence_equations = exact_sequence_realtions(sequence=sequence, invariant=invariant, component=component)
 
         if isinstance(sequence_equations, sp.Equality):
             equations.append(sequence_equations)

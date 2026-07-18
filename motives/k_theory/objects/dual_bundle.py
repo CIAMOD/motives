@@ -3,7 +3,7 @@ import sympy as sp
 from motives.core.lambda_ring_expr import LambdaRingExpr
 
 
-class Dual(LambdaRingExpr, sp.Function):
+class DualBundle(LambdaRingExpr, sp.Function):
     """
     Formal dual of a vector-bundle expression.
 

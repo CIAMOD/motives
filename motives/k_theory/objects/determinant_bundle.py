@@ -48,14 +48,14 @@ class DeterminantBundle(VectorBundle):
             raise TypeError("DeterminantBundle expects a VectorBundle.")
 
         name = f"Det({bundle})"
-        return super().__new__(cls, name, bundle.scheme, rank=1, max_degree=bundle.max_chern_degree)
+        return super().__new__(cls, name, bundle.scheme, rank=1, max_degree=bundle.max_degree)
 
     def __init__(self, bundle: VectorBundle):
         if not isinstance(bundle, VectorBundle):
             raise TypeError("DeterminantBundle expects a VectorBundle.")
 
         self.bundle = bundle
-        max_degree = bundle.max_chern_degree
+        max_degree = bundle.max_degree
 
         chern_classes = [sp.Integer(1)] + [sp.Integer(0)] * max_degree
         chern_character = [sp.Integer(1)] + [sp.Integer(0)] * max_degree
