@@ -6,6 +6,7 @@ import sympy as sp
 
 from ..objects.vector_bundle import VectorBundle
 from ..objects.dual_bundle import DualBundle
+from ..objects.determinant_bundle import DeterminantBundle
 from ..objects.power_bundles import SymPower, Wedge
 
 
@@ -136,6 +137,29 @@ def _ch_scalar_mul(A: tuple[sp.Expr, ...], scalar: sp.Expr, max_chern_degree: in
         scalar * _component(A, i)
         for i in range(max_chern_degree + 1)
     )
+
+
+def _ch_determinant(A: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
+    """Compute the Chern character of a determinant line bundle.
+
+    If ``A`` represents ``ch(E)``, then the determinant satisfies
+
+        chi(det(E)) = ch1(E)^i / i!.
+
+    Parameters
+    ----------
+    A : tuple of sympy.Expr
+        Chern-character components of the original bundle.
+    max_chern_degree : int
+        Highest homogeneous degree retained.
+
+    Returns
+    -------
+    tuple of sympy.Expr
+        Chern-character components of ``det(E)``.
+    """
+    ch1 = _component(A, 1)
+    return tuple(sp.Integer(1) if i == 0 else sp.expand(ch1**i / sp.factorial(i)) for i in range(max_chern_degree + 1))
 
 
 def _ch_dual(A: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:
@@ -372,28 +396,41 @@ def _ch_wedge_power(A: tuple[sp.Expr, ...], n: int, max_chern_degree: int) -> tu
 
 
 def _vector_bundles(expr: sp.Expr) -> tuple[VectorBundle, ...]:
-    """
-    Return all vector-bundle atoms contained in an expression.
+    """Return the base vector bundles contained in an expression.
+
+    Derived bundles such as ``DualBundle`` and ``DeterminantBundle`` are
+    recursively replaced by the original bundles from which their
+    characteristic data are computed.
 
     Parameters
     ----------
-    expr
+    expr : sympy.Expr
         Expression to inspect.
 
     Returns
     -------
     tuple of VectorBundle
-        Vector bundles occurring as atoms of ``expr``. If ``expr`` is itself a
-        vector bundle, a one-element tuple is returned. Objects without SymPy's
-        atom interface produce an empty tuple.
+        Non-repeated base vector bundles contained in the expression.
     """
+    if isinstance(expr, (DualBundle, DeterminantBundle)):
+        return _vector_bundles(expr.bundle)
+
     if isinstance(expr, VectorBundle):
         return (expr,)
 
     try:
-        return tuple(expr.atoms(VectorBundle))
+        atoms = expr.atoms(VectorBundle)
     except AttributeError:
         return ()
+
+    bundles = []
+
+    for atom in atoms:
+        for bundle in _vector_bundles(atom):
+            if bundle not in bundles:
+                bundles.append(bundle)
+
+    return tuple(bundles)
 
 
 def _validate_same_scheme(expr: sp.Expr) -> None:
@@ -552,13 +589,17 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
         If a power has a non-integer or negative exponent, or if the expression
         contains an unsupported node type.
     """
+    if isinstance(expr, DualBundle):
+        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree)
+        return _ch_dual(inner_ch, max_chern_degree)
+
+    if isinstance(expr, DeterminantBundle):
+        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree)
+        return _ch_determinant(inner_ch, max_chern_degree)
+
     if isinstance(expr, VectorBundle):
         stored = expr.chern_character
         return tuple(_component(stored, i) for i in range(max_chern_degree + 1))
-    
-    if isinstance(expr, DualBundle):
-        inner_ch = _compute_chern_character(expr.child, max_chern_degree)
-        return _ch_dual(inner_ch, max_chern_degree)
 
     if isinstance(expr, SymPower):
         inner_expr = expr.child

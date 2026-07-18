@@ -6,7 +6,7 @@ from motives.core.lambda_ring_expr import LambdaRingExpr
 
 from .chern import chern_character, chern_class
 from .objects import Curve, Scheme, VectorBundle, Wedge, SymPower, DeterminantBundle, DualBundle
-from .operations import Det, End, Hom, sym, to_sym, to_wedge, wedge, long_exact_sequence, solve_exact_sequence
+from .operations import Det, Dual, End, Hom, sym, to_sym, to_wedge, wedge, exact_sequence_realtions, solve_exact_sequence
 
 LambdaRingExpr.to_wedge = to_wedge
 LambdaRingExpr.to_sym = to_sym

@@ -1,126 +1,100 @@
+from __future__ import annotations
+
 import sympy as sp
 
-from motives.core.lambda_ring_expr import LambdaRingExpr
+from .vector_bundle import VectorBundle
 
 
-class DualBundle(LambdaRingExpr, sp.Function):
-    """
-    Formal dual of a vector-bundle expression.
+class DualBundle(VectorBundle):
+    """Represent the dual of a vector bundle.
 
-    ``Dual(E)`` represents the dual bundle ``E^∨``. It is stored as an
-    operation node whose child is the original vector-bundle expression.
+    For a vector bundle E, its dual E^∨ is defined over the same scheme and
+    has the same rank:
 
-    Dualization satisfies
+        rank(E^∨) = rank(E).
 
-    ``Dual(Dual(E)) = E``.
+    Dualization changes the sign of every Chern root. Therefore, its Chern
+    classes and homogeneous Chern-character components satisfy
 
-    If the homogeneous Chern-character components of ``E`` are
-    ``ch_i(E)``, then
+        ci(E^∨) = (-1)^i ci(E),
+        chi(E^∨) = (-1)^i chi(E).
 
-    ``ch_i(E^∨) = (-1)^i ch_i(E)``.
+    The characteristic data of the dual are computed dynamically from the
+    original bundle. Consequently, changes to the Chern classes or Chern
+    character of E are immediately reflected in E^∨.
 
     Parameters
     ----------
-    operand
-        Vector bundle or vector-bundle expression whose dual is constructed.
+    bundle : VectorBundle
+        Vector bundle whose dual is represented.
+
+    Raises
+    ------
+    TypeError
+        If ``bundle`` is not a vector bundle.
     """
 
-    nargs = 1
+    def __new__(cls, bundle: VectorBundle):
+        """Create the symbolic object representing the dual bundle."""
+        if not isinstance(bundle, VectorBundle):
+            raise TypeError("DualBundle expects a VectorBundle.")
 
-    @classmethod
-    def eval(cls, operand):
-        """
-        Apply immediate canonical simplifications.
+        return super().__new__(cls, f"Dual({bundle})", bundle.scheme, rank=bundle.rank, max_degree=bundle.max_degree)
 
-        Double dualization is removed according to
+    def __init__(self, bundle: VectorBundle):
+        """Initialize the dual bundle from its original vector bundle."""
+        if not isinstance(bundle, VectorBundle):
+            raise TypeError("DualBundle expects a VectorBundle.")
 
-        ``(E^∨)^∨ = E``.
-
-        Scalar expressions are left unchanged by dualization.
-
-        Parameters
-        ----------
-        operand
-            Expression to dualize.
-
-        Returns
-        -------
-        sympy.Expr or None
-            Simplified expression when an immediate simplification applies,
-            or ``None`` to keep the formal ``Dual`` node.
-        """
-        if operand.is_Number:
-            return operand
-
-        if isinstance(operand, cls):
-            return operand.child
-
-        return None
+        self.bundle = bundle
+        super().__init__(f"Dual({bundle})", bundle.scheme, rank=bundle.rank, max_degree=bundle.max_degree)
 
     @property
-    def child(self) -> sp.Expr:
-        """
-        Return the expression whose dual is represented.
+    def chern_classes(self) -> tuple[sp.Expr, ...]:
+        """Return the Chern classes of the dual bundle.
 
-        Returns
-        -------
-        sympy.Expr
-            Operand stored inside the dual node.
+        The components are computed using
+
+            ci(E^∨) = (-1)^i ci(E).
         """
-        return self.args[0]
+        return tuple(sp.Integer(-1) ** i * self.bundle.c(i) for i in range(self.max_degree + 1))
+
+    @chern_classes.setter
+    def chern_classes(self, value) -> None:
+        """Prevent independent assignment of Chern classes to the dual bundle.
+
+        The value ``None`` is accepted internally while ``VectorBundle`` is
+        initialized. All other values are rejected because the classes of the
+        dual are determined by the original bundle.
+        """
+        if value is not None:
+            raise AttributeError("The Chern classes of a DualBundle are determined by its original bundle.")
 
     @property
-    def scheme(self):
+    def chern_character(self) -> tuple[sp.Expr, ...]:
+        """Return the Chern character of the dual bundle.
+
+        The components are computed using
+
+            chi(E^∨) = (-1)^i chi(E).
         """
-        Return the base scheme of the operand when available.
+        return tuple(sp.Integer(-1) ** i * self.bundle.ch(i) for i in range(self.max_degree + 1))
 
-        Returns
-        -------
-        Scheme or None
-            Scheme associated with the operand, or ``None`` when it cannot
-            be determined directly.
+    @chern_character.setter
+    def chern_character(self, value) -> None:
+        """Prevent independent assignment of a Chern character to the dual.
+
+        The value ``None`` is accepted internally while ``VectorBundle`` is
+        initialized. All other values are rejected because the character of
+        the dual is determined by the original bundle.
         """
-        return getattr(self.child, "scheme", None)
-
-    @property
-    def rank(self):
-        """
-        Return the rank of the dual bundle when available.
-
-        Dualization preserves rank:
-
-        ``rank(E^∨) = rank(E)``.
-
-        Returns
-        -------
-        sympy.Expr or None
-            Rank of the operand, or ``None`` when it cannot be determined.
-        """
-        return getattr(self.child, "rank", None)
-
-    @property
-    def max_degree(self):
-        """
-        Return the maximum characteristic degree of the operand.
-
-        Returns
-        -------
-        int or None
-            Maximum degree associated with the operand.
-        """
-        return getattr(self.child, "max_degree", None)
+        if value is not None:
+            raise AttributeError("The Chern character of a DualBundle is determined by its original bundle.")
 
     def _sympystr(self, printer) -> str:
-        """
-        Return the plain-text representation ``Dual(E)``.
-
-        The explicit function notation is used in plain text to avoid
-        confusing dualization with the multiplication operator ``*``.
-        """
-        return f"Dual({printer.doprint(self.child)})"
+        """Return the plain-text representation ``Dual(E)``."""
+        return f"Dual({printer.doprint(self.bundle)})"
 
     def _latex(self, printer) -> str:
-        """
-        Return the LaTeX representation ``E^\\vee``.
-        """
-        return rf"\left({printer._print(self.child)}\right)^\vee"
+        """Return the LaTeX representation of the dual bundle."""
+        return rf"\left({printer._print(self.bundle)}\right)^\vee"
