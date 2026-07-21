@@ -12,7 +12,7 @@ def test_root_package_exports_complete_public_api():
     expected = {
         "Curve", "Scheme", "VectorBundle", "Wedge", "SymPower", "DualBundle", "DeterminantBundle",
         "Dual", "Hom", "End", "Det", "chern_character", "chern_class", "wedge", "sym", "to_wedge",
-        "to_sym", "exact_sequence_realtions", "solve_exact_sequence"
+        "to_sym", "exact_sequence_relations", "solve_exact_sequence"
     }
     assert expected <= set(dir(kt))
 
@@ -21,8 +21,8 @@ def test_subpackage_exports_are_importable():
     """Verify that subpackage exports are importable."""
     from motives.k_theory.chern import chern_character, chern_class
     from motives.k_theory.objects import Curve, DeterminantBundle, DualBundle, Scheme, SymPower, VectorBundle, Wedge
-    from motives.k_theory.operations import Det, Dual, End, Hom, exact_sequence_realtions, solve_exact_sequence, sym, to_sym, to_wedge, wedge
-    assert all(callable(item) for item in (chern_character, chern_class, Curve, DeterminantBundle, DualBundle, Scheme, SymPower, VectorBundle, Wedge, Det, Dual, End, Hom, exact_sequence_realtions, solve_exact_sequence, sym, to_sym, to_wedge, wedge))
+    from motives.k_theory.operations import Det, Dual, End, Hom, exact_sequence_relations, solve_exact_sequence, sym, to_sym, to_wedge, wedge
+    assert all(callable(item) for item in (chern_character, chern_class, Curve, DeterminantBundle, DualBundle, Scheme, SymPower, VectorBundle, Wedge, Det, Dual, End, Hom, exact_sequence_relations, solve_exact_sequence, sym, to_sym, to_wedge, wedge))
 
 
 def test_expression_types_receive_k_theory_methods_after_import():
@@ -30,12 +30,6 @@ def test_expression_types_receive_k_theory_methods_after_import():
     for cls in (LambdaRingExpr, Add, Mul, Pow):
         for method in ("wedge", "sym", "to_wedge", "to_sym", "c", "ch"):
             assert callable(getattr(cls, method))
-
-
-def test_public_typo_is_stable_until_intentionally_renamed():
-    """Verify that public typo is stable until intentionally renamed."""
-    assert callable(kt.exact_sequence_realtions)
-    assert not hasattr(kt, "exact_sequence_relations")
 
 
 def test_methods_work_on_add_mul_and_pow(bundle_factory):

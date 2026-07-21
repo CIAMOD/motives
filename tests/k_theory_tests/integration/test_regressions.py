@@ -1,6 +1,6 @@
 import sympy as sp
 
-from motives.k_theory import Det, Dual, DualBundle, exact_sequence_realtions, solve_exact_sequence
+from motives.k_theory import Det, Dual, DualBundle, exact_sequence_relations, solve_exact_sequence
 
 
 def test_regression_dual_is_vector_bundle_with_direct_chern_access(bundle_factory):
@@ -36,7 +36,7 @@ def test_regression_exact_sequence_solver_returns_dictionary_solution(three_bund
 def test_regression_exact_sequence_function_uses_current_public_name(three_bundles):
     """Verify that regression exact sequence function uses current public name."""
     _, E, F, G = three_bundles
-    relation = exact_sequence_realtions([E, F, G], component=1)
+    relation = exact_sequence_relations([E, F, G], component=1)
     assert isinstance(relation, sp.Equality)
 
 

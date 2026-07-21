@@ -1,7 +1,7 @@
 import pytest
 import sympy as sp
 
-from motives.k_theory import VectorBundle, exact_sequence_realtions, solve_exact_sequence
+from motives.k_theory import VectorBundle, exact_sequence_relations, solve_exact_sequence
 from motives.k_theory.operations.exact_sequences import _get_solve_variables, _validate_exact_sequence
 
 from ..conftest import assert_expr_equal
@@ -41,7 +41,7 @@ def test_validate_exact_sequence_rejects_mixed_schemes(bundle_factory):
 def test_chern_character_relations_for_short_exact_sequence(three_bundles):
     """Verify that Chern character relations for short exact sequence."""
     _, E, F, G = three_bundles
-    equations = exact_sequence_realtions([E, F, G])
+    equations = exact_sequence_relations([E, F, G])
     assert len(equations) == 4
     for degree, equation in enumerate(equations):
         assert equation == sp.Eq(sp.expand(E.ch(degree) + G.ch(degree)), sp.expand(F.ch(degree)), evaluate=False)
@@ -50,7 +50,7 @@ def test_chern_character_relations_for_short_exact_sequence(three_bundles):
 def test_component_relation_returns_one_equation(three_bundles):
     """Verify that component relation returns one equation."""
     _, E, F, G = three_bundles
-    equation = exact_sequence_realtions([E, F, G], component=2)
+    equation = exact_sequence_relations([E, F, G], component=2)
     assert isinstance(equation, sp.Equality)
     assert equation == sp.Eq(E.ch(2) + G.ch(2), F.ch(2), evaluate=False)
 
@@ -58,7 +58,7 @@ def test_component_relation_returns_one_equation(three_bundles):
 def test_chern_class_relations_are_whitney_relations(three_bundles):
     """Verify that Chern class relations are whitney relations."""
     _, E, F, G = three_bundles
-    equations = exact_sequence_realtions([E, F, G], invariant="chern_classes")
+    equations = exact_sequence_relations([E, F, G], invariant="chern_classes")
     assert len(equations) == 3
     assert equations[0] == sp.Eq(E.c(1) + G.c(1), F.c(1), evaluate=False)
     assert_expr_equal(equations[1].lhs, E.c(2) + E.c(1) * G.c(1) + G.c(2))
@@ -72,7 +72,7 @@ def test_four_term_sequence_uses_alternating_even_odd_relation(bundle_factory):
     F = bundle_factory(scheme=X)
     G = bundle_factory(scheme=X)
     H = bundle_factory(scheme=X)
-    equation = exact_sequence_realtions([E, F, G, H], component=1)
+    equation = exact_sequence_relations([E, F, G, H], component=1)
     assert equation == sp.Eq(E.ch(1) + G.ch(1), F.ch(1) + H.ch(1), evaluate=False)
 
 
@@ -80,7 +80,7 @@ def test_invalid_invariant_is_rejected(three_bundles):
     """Verify that invalid invariant is rejected."""
     _, E, F, G = three_bundles
     with pytest.raises(ValueError, match="invariant must be"):
-        exact_sequence_realtions([E, F, G], invariant="invalid")
+        exact_sequence_relations([E, F, G], invariant="invalid")
 
 
 def test_get_solve_variables_expands_bundle_components(three_bundles):
