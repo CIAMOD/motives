@@ -8,8 +8,9 @@ from ..objects.vector_bundle import VectorBundle
 from .chern_character import (
     chern_character,
     _component,
+    _compute_chern_character,
     _infer_max_chern_degree,
-    _vector_bundles,
+    _validate_same_scheme,
 )
 
 
@@ -136,10 +137,10 @@ def _chern_character_using_chern_classes(expr: sp.Expr, max_chern_degree: int) -
     """
     Compute a Chern character using base-bundle Chern classes as input.
 
-    For every vector bundle in ``expr``, this function first computes the
-    induced Chern-character components from its stored Chern classes. These
-    temporary components are then passed to the regular ``chern_character``
-    evaluator.
+    For every base vector bundle in ``expr``, the stored Chern classes are
+    converted to Chern-character components using Newton's identities. The
+    resulting components are supplied directly to the recursive Chern-character
+    evaluator without modifying the bundle objects.
 
     Parameters
     ----------
@@ -151,40 +152,18 @@ def _chern_character_using_chern_classes(expr: sp.Expr, max_chern_degree: int) -
     Returns
     -------
     tuple of sympy.Expr
-        Chern character of ``expr`` expressed in terms of the original
-        bundles' Chern classes.
+        Chern character of ``expr`` expressed in terms of the original bundles'
+        stored Chern classes.
 
-    Notes
-    -----
-    The stored Chern character of each bundle is temporarily replaced during
-    the computation. A ``finally`` block restores every original value even if
-    evaluation raises an exception.
-
-    Because the function temporarily mutates the bundle objects, concurrent
-    evaluations involving the same instances should be avoided.
+    Raises
+    ------
+    ValueError
+        If the expression contains vector bundles over incompatible schemes.
+    NotImplementedError
+        If the expression contains an unsupported operation.
     """
-    bundles = _vector_bundles(expr)
-
-    original_chern_characters = {
-        bundle: bundle.chern_character
-        for bundle in bundles
-    }
-
-    try:
-        for bundle in bundles:
-            bundle._chern_character = _chern_character_from_chern_classes(
-                bundle,
-                max_chern_degree,
-            )
-
-        return chern_character(
-            expr,
-            max_chern_degree=max_chern_degree,
-        )
-
-    finally:
-        for bundle, original_chern_character in original_chern_characters.items():
-            bundle._chern_character = original_chern_character
+    _validate_same_scheme(expr)
+    return _compute_chern_character(expr, max_chern_degree, bundle_character_getter=_chern_character_from_chern_classes)
 
 
 def _chern_classes_from_chern_character(ch: tuple[sp.Expr, ...], max_chern_degree: int) -> tuple[sp.Expr, ...]:

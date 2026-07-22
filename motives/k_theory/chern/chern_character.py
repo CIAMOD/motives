@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 import sympy as sp
 
@@ -553,20 +553,28 @@ def _is_scalar_expression(expr: sp.Expr) -> bool:
     return len(_vector_bundles(expr)) == 0
 
 
-def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.Expr, ...]:
+def _compute_chern_character(
+    expr: sp.Expr,
+    max_chern_degree: int,
+    bundle_character_getter: Optional[Callable[[VectorBundle, int], tuple[sp.Expr, ...]]] = None,
+) -> tuple[sp.Expr, ...]:
     """
     Recursively evaluate the Chern character of an expression tree.
 
     The tree is processed from its leaves to its root according to the
     following K-theoretic interpretation:
 
-    - ``VectorBundle``: use its stored Chern-character components.
-    - ``Dual``: compute the character of the operand and apply ``ch_i(E^∨) = (-1)^i ch_i(E)``.
+    - ``VectorBundle``: use its stored Chern-character components, or the
+      components returned by ``bundle_character_getter`` when provided.
+    - ``Dual``: compute the character of the operand and apply
+      ``ch_i(E^∨) = (-1)^i ch_i(E)``.
+    - ``DeterminantBundle``: compute the character of the determinant line
+      bundle from the degree-one component of the original bundle.
     - ``Add``: interpret addition as direct sum and add characters.
     - ``Mul``: interpret multiplication as tensor product and multiply the
-    characters as graded series.
+      characters as graded series.
     - ``Pow``: interpret a non-negative integer power as repeated tensor
-    product.
+      product.
     - ``SymPower``: use the Adams-operation recurrence for symmetric powers.
     - ``Wedge``: use the Adams-operation recurrence for exterior powers.
     - Scalar expression: place the scalar in degree zero.
@@ -577,6 +585,10 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
         Expression to evaluate.
     max_chern_degree : int
         Highest homogeneous degree retained.
+    bundle_character_getter : callable, optional
+        Function receiving a base ``VectorBundle`` and the requested maximum
+        degree and returning the Chern-character components to use for that
+        bundle. If omitted, the character stored in the bundle is used.
 
     Returns
     -------
@@ -590,63 +602,55 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
         contains an unsupported node type.
     """
     if isinstance(expr, DualBundle):
-        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree)
+        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree, bundle_character_getter)
         return _ch_dual(inner_ch, max_chern_degree)
 
     if isinstance(expr, DeterminantBundle):
-        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree)
+        inner_ch = _compute_chern_character(expr.bundle, max_chern_degree, bundle_character_getter)
         return _ch_determinant(inner_ch, max_chern_degree)
 
     if isinstance(expr, VectorBundle):
-        stored = expr.chern_character
+        stored = expr.chern_character if bundle_character_getter is None else bundle_character_getter(expr, max_chern_degree)
         return tuple(_component(stored, i) for i in range(max_chern_degree + 1))
 
     if isinstance(expr, SymPower):
         inner_expr = expr.child
         n = int(expr.degree)
-        inner_ch = _compute_chern_character(inner_expr, max_chern_degree)
+        inner_ch = _compute_chern_character(inner_expr, max_chern_degree, bundle_character_getter)
         return _ch_sym_power(inner_ch, n, max_chern_degree)
 
     if isinstance(expr, Wedge):
         inner_expr = expr.child
         n = int(expr.degree)
-        inner_ch = _compute_chern_character(inner_expr, max_chern_degree)
+        inner_ch = _compute_chern_character(inner_expr, max_chern_degree, bundle_character_getter)
         return _ch_wedge_power(inner_ch, n, max_chern_degree)
 
     if isinstance(expr, sp.Add):
         result = _zero_ch(max_chern_degree)
-
         for arg in expr.args:
-            arg_ch = _compute_chern_character(arg, max_chern_degree)
+            arg_ch = _compute_chern_character(arg, max_chern_degree, bundle_character_getter)
             result = _ch_add(result, arg_ch, max_chern_degree)
-
         return result
 
     if isinstance(expr, sp.Mul):
         result = _one_ch(max_chern_degree)
-
         for arg in expr.args:
-            arg_ch = _compute_chern_character(arg, max_chern_degree)
+            arg_ch = _compute_chern_character(arg, max_chern_degree, bundle_character_getter)
             result = _ch_mul(result, arg_ch, max_chern_degree)
-
         return result
 
     if isinstance(expr, sp.Pow):
         exp = expr.exp
 
         if not isinstance(exp, (int, sp.Integer)):
-            raise NotImplementedError(
-                "Chern character computation only supports integer powers."
-            )
+            raise NotImplementedError("Chern character computation only supports integer powers.")
 
         exp = int(exp)
 
         if exp < 0:
-            raise NotImplementedError(
-                "Chern character computation only supports non-negative powers."
-            )
+            raise NotImplementedError("Chern character computation only supports non-negative powers.")
 
-        base_ch = _compute_chern_character(expr.base, max_chern_degree)
+        base_ch = _compute_chern_character(expr.base, max_chern_degree, bundle_character_getter)
         result = _one_ch(max_chern_degree)
 
         for _ in range(exp):
@@ -655,10 +659,7 @@ def _compute_chern_character(expr: sp.Expr, max_chern_degree: int) -> tuple[sp.E
         return result
 
     if _is_scalar_expression(expr):
-        return tuple(
-            [sp.sympify(expr)]
-            + [sp.Integer(0) for _ in range(max_chern_degree)]
-        )
+        return tuple([sp.sympify(expr)] + [sp.Integer(0) for _ in range(max_chern_degree)])
 
     raise NotImplementedError(
         f"Chern character computation is not supported for expressions "
